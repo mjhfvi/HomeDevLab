@@ -1,0 +1,25 @@
+{
+  "extends": "recommended-jenkinsfile",
+  "rules": {
+    "formatting.LineLength": "off",
+    "convention.NoDef": "off",
+    "DuplicateMapKey": "off",
+    "ClosureStatementOnOpeningLineOfMultipleLineClosure": "off",
+    "CatchException": {
+      "enabled": false
+    },
+    "UnusedVariable": {
+      "enabled": false
+    },
+    "Indentation": {
+      "severity": "warning",
+      "spacesPerIndentLevel": 4
+    },
+    "NestedBlockDepth": {
+      "maxNestedBlockDepth": 10
+    },
+    "DuplicateNumberLiteral": {
+      "ignoreNumbers": "0,1,2,10,100"
+    }
+  }
+}
