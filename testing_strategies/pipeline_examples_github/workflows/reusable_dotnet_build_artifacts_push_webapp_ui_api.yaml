@@ -1,0 +1,547 @@
+name: Reusable Dotnet Build Solution and Upload Artifacts
+
+on:
+  workflow_call:
+    inputs:
+      # DONTNET_PROJECT_FILE_PATH:
+      #     description: "Path to Solution File"
+      #     required: true
+      #     type: string
+      BUILD_PLATFPORM:
+        description: "Build Platform (e.g. x64)"
+        required: false
+        default: "x64"
+        type: string
+      BUILD_CONFIGURATION:
+        description: "Build Configuration (e.g. Debug, Release)"
+        required: false
+        default: "Release"
+        type: string
+      SOLUTION_FILE_PATH_API:
+        description: "Path to Solution File"
+        required: true
+        type: string
+      SOLUTION_FILE_PATH_UI:
+        description: "Path to Solution File"
+        required: true
+        type: string
+      VERSION_KEY_API:
+        description: "Version Key to Extract From CSPROJ file"
+        required: true
+        type: string
+      VERSION_KEY_UI:
+        description: "Version Key to Extract From CSPROJ file"
+        required: true
+        type: string
+      AZURE_WEBAPP_NAME_API:
+        description: "Azure WebApp URL"
+        required: true
+        type: string
+      AZURE_WEBAPP_NAME_UI:
+        description: "Azure WebApp URL"
+        required: true
+        type: string
+      RESOURCE_GROUP:
+        description: "Azure Resource Group Name"
+        required: true
+        type: string
+        default: "octopus-production-northcentralus"
+      REMOVE_NLOG_FILES:
+        description: "Remove NLog Files After Build"
+        required: false
+        type: string
+        default: "true"
+      SIGNED_FILES_WORKFLOW:
+        description: "Signed Files Workflow"
+        required: false
+        type: string
+        default: "false"
+      # HEALTH_CHECK_TEXT:
+      #     description: "Health Check Text to Verify WebApp is Running"
+      #     required: true
+      #     type: string
+      # HEALTH_CHECK_URL:
+      #     description: "Health Check URL Path"
+      #     required: false
+      #     type: string
+    outputs:
+      MSBUILD_VERSION:
+        description: "MSBuild Version"
+        value: ${{ jobs.build-solution.outputs.MSBUILD_VERSION }}
+      ASSEMBLY_NAME:
+        description: "Assembly Name"
+        value: ${{ jobs.build-solution.outputs.ASSEMBLY_NAME }}
+      ASSEMBLY_VERSION:
+        description: "Assembly Version"
+        value: ${{ jobs.build-solution.outputs.ASSEMBLY_VERSION }}
+
+jobs:
+  build-solution:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        PROJECT: [ui, api] # Define the items to iterate over
+        include:
+          - PROJECT: ui
+            REPOSITORY_NAME: octopus.ui
+            PROJECT_PATH: ui
+            SOLUTION_FILE_PATH: ${{ inputs.SOLUTION_FILE_PATH_UI }}
+            VERSION_KEY: ${{ inputs.VERSION_KEY_UI }}
+            AZURE_WEBAPP_NAME: ${{ inputs.AZURE_WEBAPP_NAME_UI }}
+            RESOURCE_GROUP: ${{ inputs.RESOURCE_GROUP }}
+            REMOVE_NLOG_FILES: ${{ inputs.REMOVE_NLOG_FILES }}
+            # SIGNED_FILES_WORKFLOW: ${{ inputs.SIGNED_FILES_WORKFLOW }}
+          - PROJECT: api
+            REPOSITORY_NAME: octopus.api
+            PROJECT_PATH: api
+            SOLUTION_FILE_PATH: ${{ inputs.SOLUTION_FILE_PATH_API }}
+            VERSION_KEY: ${{ inputs.VERSION_KEY_API }}
+            AZURE_WEBAPP_NAME: ${{ inputs.AZURE_WEBAPP_NAME_API }}
+            RESOURCE_GROUP: ${{ inputs.RESOURCE_GROUP }}
+            REMOVE_NLOG_FILES: ${{ inputs.REMOVE_NLOG_FILES }}
+            # SIGNED_FILES_WORKFLOW: ${{ inputs.SIGNED_FILES_WORKFLOW }}
+    timeout-minutes: 10 # Set a timeout for the job
+    steps:
+      - name: Checkout Git Repository - ${{ matrix.REPOSITORY_NAME }}
+        uses: actions/checkout@v4.2.2
+        with:
+          repository: octopusappdev/${{ matrix.REPOSITORY_NAME }}
+          ref: dev
+          path: ${{ matrix.PROJECT_PATH }}
+          token: ${{ secrets.TOKEN_GITHUB_PACKAGES_REGISTRY_WRITE_ACCESS }}
+          fetch-depth: "0" # Fetch all history for all tags and branches
+          fetch-tags: "0" # Fetch all tags
+          lfs: "false" # Fetch all LFS objects
+
+      - name: Add MSBuild to PATH (System Variable)
+        uses: microsoft/setup-msbuild@v2
+        with:
+          msbuild-architecture: x64
+          # vs-version: 'latest' # Use 'latest' OR '[17.0,16.5)' to get the version of Visual Studio you want.
+
+      - name: Dotnet add Nuget Source
+        run: dotnet nuget add source ${{ vars.AZURE_NUGET_SOURCE }} --name OCTOPUS --username ${{ vars.TOKEN_GITHUB_PACKAGES_REGISTRY_USER }} --password ${{ secrets.TOKEN_GITHUB_PACKAGES_REGISTRY_WRITE_ACCESS }}
+
+      - name: Dotnet Solution Restore
+        run: dotnet restore ${{ matrix.PROJECT_PATH }}\${{ matrix.SOLUTION_FILE_PATH }} --verbosity Normal
+
+      - name: Dotnet Solution Build
+        run: dotnet build ${{ matrix.PROJECT_PATH }}\${{ matrix.SOLUTION_FILE_PATH }} /nologo /nr:false /p:Configuration=${{ matrix.BUILD_CONFIGURATION }} /p:Platform="Any CPU" /p:DeployOnBuild=true /p:DeployDefaultTarget=WebPublish /p:WebPublishMethod=FileSystem /p:publishUrl="WebAppContent" --output "artifacts"
+
+      - name: Remove Nlog Files After Build
+        if: ${{ matrix.REMOVE_NLOG_FILES == 'true' }}
+        shell: pwsh
+        run: |
+          $nlogFiles = Get-ChildItem -Path "artifacts" -Recurse -Include "NLog.config", "NLog.dll", "NLog.Extensions.Logging.dll", "NLog.Web.AspNetCore.dll" -ErrorAction SilentlyContinue
+          foreach ($file in $nlogFiles) {
+              Write-Host "Removing NLog File: $($file.FullName)"
+              Remove-Item -Path $file.FullName -Force
+          }
+
+      - name: Remove Sections From WebConfig
+        run: |
+          $xml = [xml](Get-Content '${{ matrix.PROJECT_PATH }}\web.config')
+          $node = $xml.SelectSingleNode("//appSettings")
+          $node.ParentNode.RemoveChild($node) | Out-Null
+          $node = $xml.SelectSingleNode("//connectionStrings")
+          $node.ParentNode.RemoveChild($node) | Out-Null
+          $xml.Save('${{ matrix.PROJECT_PATH }}\web.config')
+
+      - name: Get Project Version Number
+        id: get_version
+        run: |
+          $XML = [xml](Get-Content ${{ matrix.PROJECT_PATH }}\${{ matrix.DONTNET_PROJECT_FILE_PATH }})
+          $VERSION = $XML.Project.PropertyGroup.Version
+          Write-Host "Application Version Number: $VERSION"
+          echo "VERSION_NUMBER=$VERSION" >> $env:GITHUB_OUTPUT
+
+      - name: Get MSBuild Version
+        id: get_msbuild_version
+        shell: pwsh
+        run: |
+          $MSBUILD_VERSION = & msbuild -version
+          echo "MSBUILD_VERSION=$MSBUILD_VERSION" >> $env:GITHUB_OUTPUT
+
+      # - name: Upload ZIP to Artifact Store
+      #   uses: actions/upload-artifact@v4.6.2
+      #   with:
+      #       name: ${{ github.run_id }}-ui
+      #       path: |
+      #           ${{ env.PROJECT_PATH }}\App_Code
+      #           ${{ env.PROJECT_PATH }}\App_Data
+      #           ${{ env.PROJECT_PATH }}\bin
+      #           ${{ env.PROJECT_PATH }}\Content
+      #           ${{ env.PROJECT_PATH }}\Images
+      #           ${{ env.PROJECT_PATH }}\librdkafka
+      #           ${{ env.PROJECT_PATH }}\ReportsBi
+      #           ${{ env.PROJECT_PATH }}\Scripts
+      #           ${{ env.PROJECT_PATH }}\Styles
+      #           ${{ env.PROJECT_PATH }}\Views
+      #           ${{ env.PROJECT_PATH }}\apple-touch-icon-114x114.png
+      #           ${{ env.PROJECT_PATH }}\apple-touch-icon-120x120.png
+      #           ${{ env.PROJECT_PATH }}\apple-touch-icon-144x144.png
+      #           ${{ env.PROJECT_PATH }}\apple-touch-icon-152x152.png
+      #           ${{ env.PROJECT_PATH }}\apple-touch-icon-180x180.png
+      #           ${{ env.PROJECT_PATH }}\apple-touch-icon-57x57.png
+      #           ${{ env.PROJECT_PATH }}\apple-touch-icon-60x60.png
+      #           ${{ env.PROJECT_PATH }}\apple-touch-icon-72x72.png
+      #           ${{ env.PROJECT_PATH }}\apple-touch-icon-76x76.png
+      #           ${{ env.PROJECT_PATH }}\ApplicationInsights.config
+      #           ${{ env.PROJECT_PATH }}\favicon.ico
+      #           ${{ env.PROJECT_PATH }}\Global.asax
+      #           ${{ env.PROJECT_PATH }}\grpc_csharp_ext.x64.dll
+      #           ${{ env.PROJECT_PATH }}\grpc_csharp_ext.x86.dll
+      #           ${{ env.PROJECT_PATH }}\libgrpc_csharp_ext.x64.dylib
+      #           ${{ env.PROJECT_PATH }}\libgrpc_csharp_ext.x64.so
+      #           ${{ env.PROJECT_PATH }}\robots.txt
+      #           ${{ env.PROJECT_PATH }}\Web.config
+      #       include-hidden-files: "false"
+      #       retention-days: "60"
+      #       overwrite: "false"
+      #       if-no-files-found: "error"
+
+      - name: Adding Information to Pipeline Summary
+        run: |
+          echo "## Pipeline Build Information"                                                                              >> $env:GITHUB_STEP_SUMMARY
+          echo "- ${{ matrix.PROJECT_PATH }} Project Version Tag: ${{ steps.get_version.outputs.VERSION_NUMBER }}"             >> $env:GITHUB_STEP_SUMMARY
+          echo "- ${{ matrix.PROJECT_PATH }} Project Build Artifact ID: ${{ steps.upload_artifacts.outputs.artifact-id }}"     >> $env:GITHUB_STEP_SUMMARY
+          echo "- ${{ matrix.PROJECT_PATH }} Project Build Download URL: ${{ steps.upload_artifacts.outputs.artifact-url }}"   >> $env:GITHUB_STEP_SUMMARY
+          # echo "- Dotnet Packages Security Reports: ${{ steps.upload_package_reports.outputs.artifact-url }}"             >> $env:GITHUB_STEP_SUMMARY
+
+    outputs:
+      MSBUILD_VERSION: ${{ steps.get_msbuild_version.outputs.MSBUILD_VERSION }}
+      ASSEMBLY_NAME: ${{ steps.get_version.outputs.ASSEMBLY_NAME || 'OCTOPUS.Microservices' }} # Default to OCTOPUS.Microservices if not found
+      ASSEMBLY_VERSION: ${{ steps.get_version.outputs.VERSION_NUMBER }}
+      ARTIFACTS_URL: ${{ steps.upload_artifacts.outputs.artifact-url }}
+      ARTIFACTS_RETENTION_DAYS: "14"
+
+  # build-solution-ui:
+  #     runs-on: windows-latest
+  #     env:
+  #         REPOSITORY_NAME: octopus.ui
+  #         PROJECT_PATH: ui
+  #     timeout-minutes: 10 # Set a timeout for the job
+  #     steps:
+  #         - name: Checkout Git Repository
+  #           uses: actions/checkout@v4.2.2
+  #           with:
+  #               # repository: octopusappdev/${{ env.REPOSITORY_NAME }}
+  #               # ref: dev
+  #               path: ${{ env.PROJECT_PATH }}
+  #               fetch-depth: "0" # Fetch all history for all tags and branches
+  #               fetch-tags: "0" # Fetch all tags
+  #               lfs: "false" # Fetch all LFS objects
+
+  #         - name: Add MSBuild to PATH (System Variable)
+  #           uses: microsoft/setup-msbuild@v2
+  #           with:
+  #               msbuild-architecture: x64
+  #               # vs-version: 'latest' # Use 'latest' OR '[17.0,16.5)' to get the version of Visual Studio you want.
+
+  #         - name: Dotnet add Nuget Source
+  #           run: dotnet nuget add source ${{ vars.AZURE_NUGET_SOURCE }} --name OCTOPUS --username ${{ vars.TOKEN_GITHUB_PACKAGES_REGISTRY_USER }} --password ${{ secrets.TOKEN_GITHUB_PACKAGES_REGISTRY_WRITE_ACCESS }}
+
+  #         - name: Dotnet Solution Restore
+  #           run: dotnet restore ${{ env.PROJECT_PATH }}\${{ inputs.DONTNET_PROJECT_FILE_PATH }} --verbosity Normal
+
+  #         - name: Dotnet Solution Build
+  #           run: dotnet build ${{ env.PROJECT_PATH }}\${{ inputs.DONTNET_PROJECT_FILE_PATH }} /nologo /nr:false /p:Configuration=${{ inputs.BUILD_CONFIGURATION }} /p:Platform="Any CPU" /p:DeployOnBuild=true /p:DeployDefaultTarget=WebPublish /p:WebPublishMethod=FileSystem /p:publishUrl="WebAppContent" --output "artifacts"
+
+  #         - name: Remove Nlog Files After Build
+  #           if: ${{ inputs.REMOVE_NLOG_FILES == 'true' }}
+  #           shell: pwsh
+  #           run: |
+  #               $nlogFiles = Get-ChildItem -Path "artifacts" -Recurse -Include "NLog.config", "NLog.dll", "NLog.Extensions.Logging.dll", "NLog.Web.AspNetCore.dll" -ErrorAction SilentlyContinue
+  #               foreach ($file in $nlogFiles) {
+  #                   Write-Host "Removing NLog File: $($file.FullName)"
+  #                   Remove-Item -Path $file.FullName -Force
+  #               }
+
+  #         - name: Remove Sections From WebConfig
+  #           run: |
+  #               $xml = [xml](Get-Content '${{ env.PROJECT_PATH }}\web.config')
+  #               $node = $xml.SelectSingleNode("//appSettings")
+  #               $node.ParentNode.RemoveChild($node) | Out-Null
+  #               $node = $xml.SelectSingleNode("//connectionStrings")
+  #               $node.ParentNode.RemoveChild($node) | Out-Null
+  #               $xml.Save('${{ env.PROJECT_PATH }}\web.config')
+
+  #         - name: Get Project Version Number
+  #           id: get_version
+  #           run: |
+  #               $XML = [xml](Get-Content ${{ env.PROJECT_PATH }}\${{ inputs.DONTNET_PROJECT_FILE_PATH }})
+  #               $VERSION = $XML.Project.PropertyGroup.Version
+  #               Write-Host "Application Version Number: $VERSION"
+  #               echo "VERSION_NUMBER=$VERSION" >> $env:GITHUB_OUTPUT
+
+  #         - name: Get MSBuild Version
+  #           id: get_msbuild_version
+  #           shell: pwsh
+  #           run: |
+  #               $MSBUILD_VERSION = & msbuild -version
+  #               echo "MSBUILD_VERSION=$MSBUILD_VERSION" >> $env:GITHUB_OUTPUT
+
+  #         - name: Upload ZIP to Artifact Store
+  #           uses: actions/upload-artifact@v4.6.2
+  #           with:
+  #               name: ${{ github.run_id }}-ui
+  #               path: |
+  #                   ${{ env.PROJECT_PATH }}\App_Code
+  #                   ${{ env.PROJECT_PATH }}\App_Data
+  #                   ${{ env.PROJECT_PATH }}\bin
+  #                   ${{ env.PROJECT_PATH }}\Content
+  #                   ${{ env.PROJECT_PATH }}\Images
+  #                   ${{ env.PROJECT_PATH }}\librdkafka
+  #                   ${{ env.PROJECT_PATH }}\ReportsBi
+  #                   ${{ env.PROJECT_PATH }}\Scripts
+  #                   ${{ env.PROJECT_PATH }}\Styles
+  #                   ${{ env.PROJECT_PATH }}\Views
+  #                   ${{ env.PROJECT_PATH }}\apple-touch-icon-114x114.png
+  #                   ${{ env.PROJECT_PATH }}\apple-touch-icon-120x120.png
+  #                   ${{ env.PROJECT_PATH }}\apple-touch-icon-144x144.png
+  #                   ${{ env.PROJECT_PATH }}\apple-touch-icon-152x152.png
+  #                   ${{ env.PROJECT_PATH }}\apple-touch-icon-180x180.png
+  #                   ${{ env.PROJECT_PATH }}\apple-touch-icon-57x57.png
+  #                   ${{ env.PROJECT_PATH }}\apple-touch-icon-60x60.png
+  #                   ${{ env.PROJECT_PATH }}\apple-touch-icon-72x72.png
+  #                   ${{ env.PROJECT_PATH }}\apple-touch-icon-76x76.png
+  #                   ${{ env.PROJECT_PATH }}\ApplicationInsights.config
+  #                   ${{ env.PROJECT_PATH }}\favicon.ico
+  #                   ${{ env.PROJECT_PATH }}\Global.asax
+  #                   ${{ env.PROJECT_PATH }}\grpc_csharp_ext.x64.dll
+  #                   ${{ env.PROJECT_PATH }}\grpc_csharp_ext.x86.dll
+  #                   ${{ env.PROJECT_PATH }}\libgrpc_csharp_ext.x64.dylib
+  #                   ${{ env.PROJECT_PATH }}\libgrpc_csharp_ext.x64.so
+  #                   ${{ env.PROJECT_PATH }}\robots.txt
+  #                   ${{ env.PROJECT_PATH }}\Web.config
+  #               include-hidden-files: "false"
+  #               retention-days: "60"
+  #               overwrite: "false"
+  #               if-no-files-found: "error"
+
+  #         - name: Adding Information to Pipeline Summary
+  #           run: |
+  #               echo "## Pipeline Build Information"                                                                >> $env:GITHUB_STEP_SUMMARY
+  #               echo "- ${{ env.PROJECT_PATH }} Project Version Tag: ${{ steps.get_version.outputs.VERSION_NUMBER }}"                       >> $env:GITHUB_STEP_SUMMARY
+  #               echo "- ${{ env.PROJECT_PATH }} Project Build Artifact ID: ${{ steps.upload_artifacts.outputs.artifact-id }}"               >> $env:GITHUB_STEP_SUMMARY
+  #               echo "- ${{ env.PROJECT_PATH }} Project Build Download URL: ${{ steps.upload_artifacts.outputs.artifact-url }}"             >> $env:GITHUB_STEP_SUMMARY
+  #               # echo "- Dotnet Packages Security Reports: ${{ steps.upload_package_reports.outputs.artifact-url }}" >> $env:GITHUB_STEP_SUMMARY
+
+  #     outputs:
+  #         MSBUILD_VERSION: ${{ steps.get_msbuild_version.outputs.MSBUILD_VERSION }}
+  #         ASSEMBLY_NAME: ${{ steps.get_version.outputs.ASSEMBLY_NAME || 'OCTOPUS.Microservices' }} # Default to OCTOPUS.Microservices if not found
+  #         ASSEMBLY_VERSION: ${{ steps.get_version.outputs.VERSION_NUMBER }}
+  #         ARTIFACTS_URL: ${{ steps.upload_artifacts.outputs.artifact-url }}
+  #         ARTIFACTS_RETENTION_DAYS: "14"
+
+  # build-solution-api:
+  #     runs-on: windows-latest
+  #     env:
+  #         REPOSITORY_NAME: octopus.api
+  #         PROJECT_PATH: api
+  #     timeout-minutes: 10 # Set a timeout for the job
+  #     steps:
+  #         - name: Checkout Git Repository
+  #           uses: actions/checkout@v4.2.2
+  #           with:
+  #               repository: octopusappdev/${{ env.REPOSITORY_NAME }}
+  #               # ref: dev
+  #               path: ${{ env.PROJECT_PATH }}
+  #               token: ${{ secrets.TOKEN_GITHUB_PACKAGES_REGISTRY_WRITE_ACCESS }}
+  #               fetch-depth: "0" # Fetch all history for all tags and branches
+  #               fetch-tags: "0" # Fetch all tags
+  #               lfs: "false" # Fetch all LFS objects
+
+  #         - name: Add MSBuild to PATH (System Variable)
+  #           uses: microsoft/setup-msbuild@v2
+  #           with:
+  #               msbuild-architecture: x64
+  #               # vs-version: 'latest' # Use 'latest' OR '[17.0,16.5)' to get the version of Visual Studio you want.
+
+  #         - name: Dotnet add Nuget Source
+  #           run: dotnet nuget add source ${{ vars.AZURE_NUGET_SOURCE }} --name OCTOPUS --username ${{ vars.TOKEN_GITHUB_PACKAGES_REGISTRY_USER }} --password ${{ secrets.TOKEN_GITHUB_PACKAGES_REGISTRY_WRITE_ACCESS }}
+
+  #         - name: Dotnet Solution Restore
+  #           run: dotnet restore ${{ env.PROJECT_PATH }}\${{ inputs.DONTNET_PROJECT_FILE_PATH }} --verbosity Normal
+
+  #         - name: Dotnet Solution Build
+  #           run: dotnet build ${{ env.PROJECT_PATH }}\${{ inputs.DONTNET_PROJECT_FILE_PATH }} /nologo /nr:false /p:Configuration=${{ inputs.BUILD_CONFIGURATION }} /p:Platform="Any CPU" /p:DeployOnBuild=true /p:DeployDefaultTarget=WebPublish /p:WebPublishMethod=FileSystem /p:publishUrl="WebAppContent" --output "artifacts"
+
+  #         - name: Remove Nlog Files After Build
+  #           if: ${{ inputs.REMOVE_NLOG_FILES == 'true' }}
+  #           shell: pwsh
+  #           run: |
+  #               $nlogFiles = Get-ChildItem -Path "artifacts" -Recurse -Include "NLog.config", "NLog.dll", "NLog.Extensions.Logging.dll", "NLog.Web.AspNetCore.dll" -ErrorAction SilentlyContinue
+  #               foreach ($file in $nlogFiles) {
+  #                   Write-Host "Removing NLog File: $($file.FullName)"
+  #                   Remove-Item -Path $file.FullName -Force
+  #               }
+
+  #         - name: Remove Sections From WebConfig
+  #           run: |
+  #               $xml = [xml](Get-Content '${{ env.PROJECT_PATH }}\web.config')
+  #               $node = $xml.SelectSingleNode("//appSettings")
+  #               $node.ParentNode.RemoveChild($node) | Out-Null
+  #               $node = $xml.SelectSingleNode("//connectionStrings")
+  #               $node.ParentNode.RemoveChild($node) | Out-Null
+  #               $xml.Save('${{ env.PROJECT_PATH }}\web.config')
+
+  #         - name: Get Project Version Number
+  #           id: get_version
+  #           run: |
+  #               $XML = [xml](Get-Content ${{ env.PROJECT_PATH }}\${{ inputs.DONTNET_PROJECT_FILE_PATH }})
+  #               $VERSION = $XML.Project.PropertyGroup.Version
+  #               Write-Host "Application Version Number: $VERSION"
+  #               echo "VERSION_NUMBER=$VERSION" >> $env:GITHUB_OUTPUT
+
+  #         - name: Get MSBuild Version
+  #           id: get_msbuild_version
+  #           shell: pwsh
+  #           run: |
+  #               $MSBUILD_VERSION = & msbuild -version
+  #               echo "MSBUILD_VERSION=$MSBUILD_VERSION" >> $env:GITHUB_OUTPUT
+
+  #         - name: Upload ZIP to Artifact Store
+  #           uses: actions/upload-artifact@v4.6.2
+  #           with:
+  #               name: ${{ github.run_id }}-ui
+  #               path: |
+  #                   ${{ env.PROJECT_PATH }}\OctopusAPIV2\App_Data
+  #                   ${{ env.PROJECT_PATH }}\OctopusAPIV2\Areas
+  #                   ${{ env.PROJECT_PATH }}\OctopusAPIV2\bin
+  #                   ${{ env.PROJECT_PATH }}\OctopusAPIV2\DataFiles
+  #                   ${{ env.PROJECT_PATH }}\OctopusAPIV2\dbmls
+  #                   ${{ env.PROJECT_PATH }}\OctopusAPIV2\OldApiLibrary
+  #                   ${{ env.PROJECT_PATH }}\OctopusAPIV2\ApplicationInsights.config
+  #                   ${{ env.PROJECT_PATH }}\OctopusAPIV2\favicon.ico
+  #                   ${{ env.PROJECT_PATH }}\OctopusAPIV2\Global.asax
+  #                   ${{ env.PROJECT_PATH }}\OctopusAPIV2\NLog.config
+  #                   ${{ env.PROJECT_PATH }}\OctopusAPIV2\Web.config
+  #               include-hidden-files: "false"
+  #               retention-days: "60"
+  #               overwrite: "false"
+  #               if-no-files-found: "error"
+
+  #         - name: Adding Information to Pipeline Summary
+  #           run: |
+  #               echo "## Pipeline Build Information"                                                                >> $env:GITHUB_STEP_SUMMARY
+  #               echo "- ${{ env.PROJECT_PATH }} Project Version Tag: ${{ steps.get_version.outputs.VERSION_NUMBER }}"                       >> $env:GITHUB_STEP_SUMMARY
+  #               echo "- ${{ env.PROJECT_PATH }} Project Build Artifact ID: ${{ steps.upload_artifacts.outputs.artifact-id }}"               >> $env:GITHUB_STEP_SUMMARY
+  #               echo "- ${{ env.PROJECT_PATH }} Project Build Download URL: ${{ steps.upload_artifacts.outputs.artifact-url }}"             >> $env:GITHUB_STEP_SUMMARY
+  #               # echo "- Dotnet Packages Security Reports: ${{ steps.upload_package_reports.outputs.artifact-url }}" >> $env:GITHUB_STEP_SUMMARY
+
+  #     outputs:
+  #         MSBUILD_VERSION: ${{ steps.get_msbuild_version.outputs.MSBUILD_VERSION }}
+  #         ASSEMBLY_NAME: ${{ steps.get_version.outputs.ASSEMBLY_NAME || 'OCTOPUS.Microservices' }} # Default to OCTOPUS.Microservices if not found
+  #         ASSEMBLY_VERSION: ${{ steps.get_version.outputs.VERSION_NUMBER }}
+  #         ARTIFACTS_URL: ${{ steps.upload_artifacts.outputs.artifact-url }}
+  #         ARTIFACTS_RETENTION_DAYS: "14"
+
+  # dotnet-certificate-sign:
+  #     runs-on: certificate
+  #     needs: build-solution
+  #     permissions: # Job-level permissions configuration starts here
+  #         contents: write # 'write' access to repository contents
+  #         pull-requests: write # 'write' access to pull requests
+  #     timeout-minutes: 30 # Set a timeout of 30 minutes for the job
+  #     steps:
+  #         - name: Download Artifacts from Previous Job
+  #           uses: actions/download-artifact@v5.0.0
+  #           with:
+  #               name: "build-artifacts"
+  #               path: "artifacts"
+
+  #         - name: Search Files in the Project to Sign
+  #           id: find_files_to_sign
+  #           shell: pwsh
+  #           run: |
+  #               $SearchPath = "artifacts"
+  #               $fileCount = 0
+
+  #               Write-Host "Starting search for Octopus files..."
+  #               Write-Host "Search path: $SearchPath"
+  #               Write-Host ""
+
+  #               # Search for .dll and .exe files containing 'octopus' in the filename (including all subfolders)
+  #               $files = Get-ChildItem -Path $SearchPath -Include *.dll,*.exe -File -Recurse -ErrorAction SilentlyContinue | Where-Object { $_.Name -like "*octopus*" }
+
+  #               foreach ($file in $files) {
+  #                   $fileCount++
+  #                   Write-Host "Processing [$fileCount]: $($file.FullName)"
+
+  #                   try {
+  #                       Write-Host "Signing Certificate Information to File"
+  #                       scsigntool /pin ${{ secrets.SCSIGNTOOL_PIN_CODE }} sign /a /sm /sha1 ${{ secrets.SCSIGNTOOL_CERTIFICATE_SHA }} /fd SHA256 /t "http://timestamp.digicert.com" /d ${{ needs.build-solution.outputs.ASSEMBLY_NAME || 'OCTOPUS.Microservices' }} /du "https://www.octopus-app.com" $($file.FullName)
+
+  #                       Write-Host "Checking That File Missing Certificate Information"
+  #                       signtool verify /pa $($file.FullName)
+  #                   }
+  #                   catch {
+  #                       Write-Host "  Error: $($_.Exception.Message)"
+  #                   }
+  #                   Write-Host ""
+  #               }
+  #               Write-Host "Search completed, Total files found: $fileCount"
+
+  #         - name: Upload Artifacts
+  #           id: upload_artifacts
+  #           uses: actions/upload-artifact@v4.6.2
+  #           with:
+  #               name: "signed-artifacts-${{ env.PROJECT_PATH }}"
+  #               path: "artifacts/*"
+  #               retention-days: 14
+  #               include-hidden-files: "false"
+  #               overwrite: "false"
+  #               if-no-files-found: "error"
+
+  #         - name: Adding Information to Pipeline Summary
+  #           run: |
+  #               echo "## Pipeline Build Information" >> $env:GITHUB_STEP_SUMMARY
+  #               echo "- Assembly Name in Certificate: ${{ steps.get_version.outputs.ASSEMBLY_NAME }}" >> $env:GITHUB_STEP_SUMMARY
+  #               echo "- Processed Files: ${{ steps.find_files_to_sign.outputs.FILE_LIST }}" >> $env:GITHUB_STEP_SUMMARY
+  #               # echo "- Signed Certificate SHA: ${{ secrets.SCSIGNTOOL_CERTIFICATE_SHA }}" >> $env:GITHUB_STEP_SUMMARY
+  #               echo "---" >> $env:GITHUB_STEP_SUMMARY
+
+  # webapp-push-slot-ui:
+  #     # needs: [dotnet-certificate-sign]
+  #     runs-on: ubuntu-latest
+  #     env:
+  #         REPOSITORY_NAME: octopus.ui
+  #         PROJECT_PATH: ui
+  #     steps:
+  #         - name: Get Current WebApp Version - ${{ env.REPOSITORY_NAME }}
+  #           run: |
+  #               URL=${{ inputs.AZURE_WEBAPP_URL }}
+  #               echo "Getting Current Webapp Version in URL: $URL"
+  #               WEBAPP_VERSION=$(curl -s $URL | grep -oE '[a-zA-Z0-9_-]+\.[0-9]+\.[0-9]+')
+  #               echo "- Current Webapp Version: $WEBAPP_VERSION" >> $GITHUB_STEP_SUMMARY
+
+  #         - name: Download Artifacts from Previous Job
+  #           uses: actions/download-artifact@v5.0.0
+  #           with:
+  #               name: "signed-artifacts-${{ env.PROJECT_PATH }}"
+  #               path: "artifacts"
+
+  #         - uses: vimtor/action-zip@v1.2
+  #           with:
+  #               files: artifacts/
+  #               dest: artifacts.zip
+
+  #         - name: Azure Login
+  #           run: az login --service-principal --username ${{ vars.AZURE_CLIENT_NAME_PROD }} --password ${{ secrets.AZURE_CLIENT_SECRET_PROD }} --tenant ${{ vars.AZURE_TENANT_ID }}
+
+  #         # - name: DEBUG - List Content
+  #         #   run: ls -la
+
+  #         # - name: DEBUG - deployment credentials
+  #         #   run: az webapp deployment list-publishing-credentials --name octopus-prod-us-webapp-connect-api/slots/beta --resource-group octopus-production-northcentralus
+
+  #         - name: Deploy WebApp to ${{ inputs.WEBAPP_SLOT }} Slot
+  #           run: az webapp deploy --src-path artifacts.zip --type zip --ids /subscriptions/${{ vars.AZURE_SUBSCRIPTION_ID }}/resourceGroups/${{ inputs.RESOURCE_GROUP }}/providers/Microsoft.Web/sites/${{ inputs.AZURE_WEBAPP_NAME_URL }}/slots/${{ inputs.WEBAPP_SLOT }}
+
+  #         - name: Adding Information to Pipeline Summary
+  #           run: |
+  #               echo "## Pipeline Build Information" >> $GITHUB_STEP_SUMMARY
+  #               echo "- Swap Slot: ${{ inputs.WEBAPP_SLOT }}" >> $GITHUB_STEP_SUMMARY
+  #               echo "- WebApp URL: [${{ inputs.AZURE_WEBAPP_NAME_URL }}](https://${{ inputs.AZURE_WEBAPP_NAME_URL }})" >> $GITHUB_STEP_SUMMARY
+  #               echo "---" >> $GITHUB_STEP_SUMMARY

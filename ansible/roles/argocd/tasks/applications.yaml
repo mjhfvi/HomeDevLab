@@ -1,0 +1,65 @@
+---
+- name: Create a 'octopus' namespace
+  when: kubernetes_master | default(false) | bool
+  become: true
+  kubernetes.core.k8s:
+    name: octopus
+    api_version: v1
+    kind: Namespace
+    state: present
+    kubeconfig: /etc/kubernetes/admin.conf
+  tags: [argocd_setup, argocd_docker_registry]
+- name: Create Kubernetes Secret 'docker-registry-secret' for Octopus Docker Registry
+  become: true
+  when: kubernetes_master | default(false) | bool
+  command: "kubectl create secret -n octopus docker-registry docker-registry-secret --docker-server={{ docker_registry_secret_repository }} --docker-username={{ docker_registry_secret_username }} --docker-password={{ docker_registry_secret_password }}"
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf # Ensure kubectl uses the correct config on the master
+  tags: [argocd_setup, argocd_docker_registry]
+# - name: Create ArgoCD application
+#   uri:
+#     url: "https://{{ ARGOCD_URL }}/api/v1/applications"
+#     method: POST
+#     headers:
+#       Authorization: "Bearer {{ ARGOCD_TOKEN }}"
+#       Content-Type: "application/json"
+#     body_format: json
+#     body:
+#       metadata:
+#         name: "{{ APP_NAME }}"
+#         namespace: "argocd"
+#       spec:
+#         project: "default"
+#         source:
+#           repoURL: "https://{{ ARGOCD_HELM_REPO }}/stash/scm/do/helm.git"
+#           path: "vault-secrets-webhook"
+#           targetRevision: "master"
+#           helm:
+#             parameters:
+#               - name: "replicaCount"
+#                 value: "1"
+#               - name: "env.VAULT_IMAGE"
+#                 value: "vault:1.11.11"
+#               - name: "resources.limits.memory"
+#                 value: "256Mi"
+#               - name: "resources.limits.cpu"
+#                 value: "250m"
+#         destination:
+#           server: "https://kubernetes.default.svc"
+#           namespace: "test-app-yaml"
+#         syncPolicy:
+#           automated:
+#             prune: true
+#             selfHeal: true
+#     return_content: yes
+#     validate_certs: no
+#   register: response
+
+# - name: DEBUG Show 'docker_registry_secret' Output
+#   when: kubernetes_master | default(false) | bool
+#   register: docker_registry_secret
+#   debug:
+#     msg: "{{ lookup('ansible.builtin.template', 'docker-registry-secret.json.j2') | b64encode }}"
+#   tags:
+#     - argocd_setup
+#     - argocd_docker_registry

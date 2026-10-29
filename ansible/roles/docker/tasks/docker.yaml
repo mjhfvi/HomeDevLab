@@ -1,0 +1,134 @@
+---
+- name: Download Docker GPG key
+  become: true
+  get_url:
+    url: https://download.docker.com/linux/{{ ansible_os_family | lower }}/gpg # Or appropriate URL for your distribution
+    dest: /etc/apt/trusted.gpg.d/docker.asc # Use .asc or .gpg extension
+    mode: "0644"
+  tags: [docker_setup, docker_apt]
+- name: Add Docker APT Repository into Sources list
+  become: true
+  apt_repository:
+    repo:
+      deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }}
+      stable
+    state: present
+    update_cache: true
+    # filename: docker-apt-keyring
+  tags: [docker_setup, docker_apt]
+- name: Install Docker and its Dependencies
+  become: true
+  apt:
+    name: "{{ packages }}"
+    state: present
+    update_cache: true
+  vars:
+    packages:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+  # notify:
+  #   - docker status
+  tags:
+    - docker_setup
+- name: Create an Empty file for the Containerd Module
+  become: true
+  copy:
+    content: ""
+    dest: /etc/modules-load.d/containerd.conf
+    force: false
+  tags: [docker_setup]
+- name: Configure Modules for Containerd
+  become: true
+  blockinfile:
+    path: /etc/modules-load.d/containerd.conf
+    block: |
+      overlay
+      br_netfilter
+  tags: [docker_setup]
+- name: Create an Empty file for Kubernetes sysctl params
+  become: true
+  copy:
+    content: ""
+    dest: /etc/sysctl.d/99-kubernetes-cri.conf
+    force: false
+  tags: [docker_setup]
+- name: Ensure containerd 'config.toml' Exists
+  become: true
+  shell: containerd config default > /etc/containerd/config.toml
+  args:
+    creates: /etc/containerd/config.toml
+  tags: [docker_setup, docker_config_toml]
+
+- name: Remove 'disabled_plugins' from 'config.toml'
+  become: true
+  lineinfile:
+    path: /etc/containerd/config.toml
+    regexp: disabled_plugins
+    line: "# disabled_plugins = []"
+    state: present
+    backup: true
+  tags: [docker_setup, docker_config_toml]
+- name: Configuring the systemd 'SystemdCgroup' driver for Containerd
+  become: true
+  lineinfile:
+    path: /etc/containerd/config.toml
+    regexp: SystemdCgroup = false
+    line: "            SystemdCgroup = true" # Keep the spaces
+    state: present
+  tags:
+    - docker_setup
+    - docker_config_toml
+
+# - name: load br_netfilter kernel module
+#   modprobe:
+#     name: br_netfilter
+#     state: present
+
+# - name: Ensure br_netfilter is enabled.
+#   become: true
+#   modprobe:
+#     name: br_netfilter
+#     state: present
+#   tags:
+#     - docker_module
+#     - docker_setup
+- name: load overlay kernel module
+  become: true
+  command: modprobe overlay
+  tags: [docker_setup]
+- name: load br_netfilter kernel module
+  become: true
+  command: modprobe br_netfilter
+  tags: [docker_setup]
+- name: set bridge-nf-call-iptables
+  become: true
+  sysctl:
+    name: net.bridge.bridge-nf-call-iptables
+    value: "1"
+  tags: [docker_setup]
+- name: set ip_forward
+  become: true
+  sysctl:
+    name: net.ipv4.ip_forward
+    value: "1"
+  tags: [docker_setup]
+
+- name: Create /etc/crictl.yaml from Jinja2 Template
+  become: true
+  template:
+    src: templates/crictl.yaml.j2
+    dest: /etc/crictl.yaml
+    owner: root
+    group: root
+    mode: "0644"
+  tags: [docker_setup]
+
+- name: Enable and Start Containerd Service
+  become: true
+  systemd:
+    name: containerd
+    state: restarted
+    enabled: true
+    daemon-reload: true
+  tags: [docker_setup]

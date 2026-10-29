@@ -1,0 +1,95 @@
+name: Reusable Docker Image Load Testing Workflow
+
+on:
+  workflow_call:
+    inputs:
+      TOKEN_GITHUB_PACKAGES_REGISTRY_USER:
+        description: "GitHub Packages Registry User"
+        required: true
+        type: string
+    # outputs:
+    #   REPOSITORY_NAME:
+    #     description: "Docker Image Repository Name"
+    #     value: ${{ jobs.build-push-docker-image.outputs.REPOSITORY_NAME }}
+
+jobs:
+  docker-image-load-testing:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Set Repository Data to Environment Variables
+      id: set_repository_data
+      run: |
+        # echo "GIT_SHA=$(git rev-parse --short=7 HEAD)"                          >> $GITHUB_OUTPUT
+        # echo "DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")"                            >> $GITHUB_OUTPUT
+        # echo "LAST_TAG=$(git describe --tags --abbrev=0)"                       >> $GITHUB_OUTPUT
+        echo "LAST_TAG=$(git tag --sort=committerdate | tail -1)"               >> $GITHUB_OUTPUT
+        echo "REPOSITORY_NAME=$(echo ${{ github.repository }} | cut -d'/' -f2)" >> $GITHUB_OUTPUT
+
+    - uses: actions/setup-node@v6
+      with:
+        node-version: 20.x
+
+    - name: Checkout 'devops.azure.pipeline.templates' Git Repository
+      uses: actions/checkout@v4.2.2
+      with:
+        repository: "octopusappdev/devops.azure.pipeline.templates"
+        ref: "main"
+        token: ${{ secrets.TOKEN_GITHUB_PACKAGES_REGISTRY_WRITE_ACCESS }}
+        path: templates
+
+    - name: Copy Docker Files to Root Folder
+      run: |
+        cp templates/k6/*.js .
+
+    - name: Login to GitHub Container Registry (GHCR) # GitHub Action source https://github.com/docker/login-action
+      uses: docker/login-action@v3.4.0
+      with:
+        registry: ghcr.io
+        username: ${{ vars.TOKEN_GITHUB_PACKAGES_REGISTRY_USER }}
+        password: ${{ secrets.TOKEN_GITHUB_PACKAGES_REGISTRY_WRITE_ACCESS }}
+
+    - name: Pull Docker image ${{ steps.set_repository_data.outputs.REPOSITORY_NAME }}:latest
+      run: docker pull ghcr.io/octopusappdev/${{ steps.set_repository_data.outputs.REPOSITORY_NAME }}:latest
+
+    # - name: Run Docker Container from Image ${{ steps.set_repository_data.outputs.REPOSITORY_NAME }}:latest
+    #   uses: addnab/docker-run-action@v3
+    #   with:
+    #     username: ${{ vars.TOKEN_GITHUB_PACKAGES_REGISTRY_USER }}
+    #     password: ${{ secrets.TOKEN_GITHUB_PACKAGES_REGISTRY_WRITE_ACCESS }}
+    #     registry: ghcr.io
+    #     image: ghcr.io/octopusappdev/${{ steps.set_repository_data.outputs.REPOSITORY_NAME }}:latest
+    #     # run: echo "hello world"
+
+    - name: Run Docker Container from Image
+      run: docker run -d -p 8080:8080 ghcr.io/octopusappdev/${{ steps.set_repository_data.outputs.REPOSITORY_NAME }}:latest
+
+    - name: Setup k6 Load Testing Tool
+      uses: grafana/setup-k6-action@v1.1.0
+      # with:
+      #   k6-version: '1.4.2'
+
+    - name: Run k6 Load Testing Script
+      uses: grafana/run-k6-action@v1.3.1
+      with:
+        path: |
+          ./*.js
+        # path: ./script.js
+        flags: --vus 10 --duration 20s # optional: flags to pass to each k6 test (default: none)
+        parallel: false # optional: run tests in parallel (default: false)
+        fail-fast: false # optional: fail the step early if any test fails (default: true)
+        cloud-run-locally: false # optional: run tests locally even if K6_CLOUD_TOKEN is set (default: false)
+        only-verify-scripts: false # optional: only verify scripts without executing them (default: false)
+      env:
+        K6_WEB_DASHBOARD_EXPORT: html-report.html
+        K6_WEB_DASHBOARD: true
+
+    - name: Upload Artifacts
+      id: upload_artifacts
+      uses: actions/upload-artifact@v4.6.2
+      with:
+        name: "k6-html-report"
+        path: "html-report.html"
+        retention-days: 14
+
+    outputs:
+      ARTIFACTS_URL: ${{ steps.upload_artifacts.outputs.artifact-url }}

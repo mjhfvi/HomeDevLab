@@ -1,0 +1,16 @@
+---
+# roles:
+#   # Install a role from Ansible Galaxy.
+#   - name: community.docker
+#   - name: community.kubernetes
+collections:
+  # Install a collection from Ansible Galaxy.
+  - name: community.general
+  - name: community.docker
+  - name: kubernetes.core
+  # - name: ansible.security
+  # - name: ansible.utils
+## install manually
+# ansible-galaxy collection install community.general
+# ansible-galaxy collection install community.docker
+# ansible-galaxy collection install kubernetes.core

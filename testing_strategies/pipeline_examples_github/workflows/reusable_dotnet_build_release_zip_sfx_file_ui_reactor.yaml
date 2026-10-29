@@ -1,0 +1,438 @@
+# Check README.md file in 'devops.azure.pipeline.templates' for more information
+# Github actions variables https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/store-information-in-variables
+name: Reusable DontNet Reactor CI/CD
+
+on:
+  workflow_call:
+    inputs:
+      BUILDPLATFORM:
+        description: "Build Platform"
+        required: true
+        type: string
+        default: "x64"
+      BUILDCONFIGURATION:
+        description: "Build Configuration"
+        required: true
+        type: string
+        default: "Release" # Options: Debug, Release Default: Release
+      RESOURCE_GROUP:
+        description: "Azure Resource Group"
+        required: true
+        type: string
+        # default: "octopus-development-israelcentral"
+      SOLUTION_UI:
+        description: "Solution File to Build"
+        required: true
+        type: string
+        # default: "Octopus3.sln"
+      VERSIONKEY_UI:
+        description: "Version Key"
+        required: true
+        type: string
+        # default: "numOfOctopusVersion"
+      AZURE_WEBAPP_NAME:
+        description: "Azure Web App Name"
+        required: true
+        type: string
+        # default: "octopus-dev-il-webapp-ui"
+      # WEBAPP_SLOT:
+      #   description: "Azure Web App Slot"
+      #   required: true
+      #   type: string
+      #   default: "staging"
+      DONTNET_PROJECT_FILE_PATH:
+        description: "Path to .NET Project File"
+        required: true
+        type: string
+      SOLUTION_FILE:
+        description: "Path to .NET Solution File"
+        required: true
+        type: string
+      SIGNED_FILES_WORKFLOW:
+        description: "Whether to Sign Files in the Workflow"
+        required: false
+        default: true
+        type: boolean
+      ZIP_FILE_CREATE_PASSWORD:
+        description: "Password to Create Zip File"
+        required: false
+        type: string
+        default: Yes
+      COMPILER_SECURITY:
+        description: "Enable Compiler Security Job NET Reactor to Harden Binaries"
+        required: false
+        default: false
+        type: string
+    outputs:
+      AZURE_WEBAPP_NAME:
+        description: "Azure Web App Name"
+        value: ${{ jobs.build-dotnet-solution-artifact.outputs.AZURE_WEBAPP_NAME }}
+      VERSION_NUMBER:
+        description: "Version Number from web.config"
+        value: ${{ jobs.build-dotnet-solution-artifact.outputs.VERSION_NUMBER }}
+      ARTIFACTS_URL:
+        description: "URL to Download Artifacts"
+        value: ${{ jobs.build-dotnet-solution-artifact.outputs.ARTIFACTS_URL }}
+      ARTIFACTS_URL_SIGNED:
+        description: "URL to Download Signed Artifacts"
+        value: ${{ jobs.build-dotnet-solution-artifact.outputs.ARTIFACTS_URL_SIGNED }}
+      ARTIFACTS_RETENTION_DAYS_SIGNED:
+        description: "Retention Days for Signed Artifacts"
+        value: ${{ jobs.create-sfx-package.outputs.ARTIFACTS_RETENTION_DAYS_SIGNED }}
+      SFX_PACKAGE_UNSIGNED_EXECUTABLE_URL:
+        description: "URL to Download Signed Artifacts"
+        value: ${{ jobs.sign-executable-artifact.outputs.SFX_PACKAGE_UNSIGNED_EXECUTABLE_URL }}
+      SFX_PACKAGE_RETENTION_DAYS:
+        description: "Retention Days for Signed Artifacts"
+        value: ${{ jobs.create-sfx-package.outputs.SFX_PACKAGE_RETENTION_DAYS }}
+      SFX_PACKAGE_PASSWORD:
+        description: "Retention Days for Signed Artifacts"
+        value: ${{ jobs.create-sfx-package.outputs.SFX_PACKAGE_PASSWORD }}
+      SFX_PACKAGE_SIGNED_EXECUTABLE_URL:
+        description: "URL to Download Signed Artifacts"
+        value: ${{ jobs.sign-executable-artifact.outputs.SFX_PACKAGE_SIGNED_EXECUTABLE_URL }}
+
+jobs: # check runners status https://www.githubstatus.com/
+  build-dotnet-solution-artifact:
+    runs-on: certificate
+    timeout-minutes: 30 # Set a timeout of 30 minutes for the job
+    steps:
+      - name: Checkout Git Repository
+        uses: actions/checkout@v4.2.2
+        with:
+          repository: octopusappdev/integrations.agrint
+          token: ${{ secrets.TOKEN_GITHUB_PACKAGES_REGISTRY_WRITE_ACCESS }}
+          ref: ${{ github.ref }}
+          fetch-depth: "0" # Fetch all history for all tags and branches
+          fetch-tags: "0" # Fetch all tags
+          lfs: "false" # Fetch all LFS objects
+          # path: "ui"
+
+      - name: Dotnet add Nuget Source
+        run: |
+          dotnet nuget remove source OCTOPUS
+          dotnet nuget add source ${{ vars.NUGET_SOURCE_GITHUB }} --name OCTOPUS --username ${{ vars.TOKEN_GITHUB_PACKAGES_REGISTRY_USER }} --password ${{ secrets.TOKEN_GITHUB_PACKAGES_REGISTRY_WRITE_ACCESS }}
+
+      - name: Dotnet Solution Restore
+        run: dotnet restore ${{ inputs.DONTNET_PROJECT_FILE_PATH }} --verbosity ${{ github.ref == 'refs/heads/dev' && 'diagnostic' || 'normal' }} # Sets the verbosity level, values are quiet, minimal, normal, detailed, diagnostic, The default is minimal.
+
+      - name: Dotnet Solution Build
+        run: dotnet build ${{ inputs.DONTNET_PROJECT_FILE_PATH }} /nologo /nr:false /p:Configuration=${{ vars.BUILD_CONFIGURATION }} /p:Platform="Any CPU" /p:DeployOnBuild=true /p:DeployDefaultTarget=WebPublish /p:WebPublishMethod=FileSystem /p:publishUrl="WebAppContent" --output "artifacts"
+
+      - name: Dotnet Publish Project to Artifacts Folder
+        run: dotnet publish ${{ inputs.DONTNET_PROJECT_FILE_PATH }} --configuration Release --output ./artifacts
+
+      - name: Add MSBuild to PATH (System Variable)
+        uses: microsoft/setup-msbuild@v2
+        with:
+          msbuild-architecture: ${{ inputs.BUILDPLATFORM }}
+          # vs-version: 'latest' # Use 'latest' OR '[17.0,16.5)' to get the version of Visual Studio
+
+      - name: Run .NET Reactor # https://www.eziriz.com/help/command_line_parameters/index.html
+        id: dotnet-reactor
+        run: |
+          dotNET_Reactor.Console.exe -file "./artifacts/${{ inputs.SOLUTION_FILE }}.dll" -targetfile "./artifacts/${{ inputs.SOLUTION_FILE }}.dll" -licensed
+          Write-Host "Obfuscation Completed Successfully"
+
+      # Write-Host "Removing .hash Files Generated by .NET Reactor"
+      # Get-ChildItem *.hash | foreach { Remove-Item -Path $_.FullName }
+
+      # - name: Run .NET Reactor # https://github.com/marketplace/actions/net-reactor-run
+      #   uses: eziriz/dotnet-reactor-run-action@v1.0.0
+      #   id: dotnet-reactor
+      #   with:
+      #     input_path: '$GITHUB_WORKSPACE\artifacts\${{ inputs.SOLUTION_FILE }}.dll'
+      #     output_path: '$GITHUB_WORKSPACE\artifacts\${{ inputs.SOLUTION_FILE }}.dll'
+      #     additional_arguments: "-licensed -quiet"
+      #     # project_file: '$GITHUB_WORKSPACE\artifacts\DotNetReactorProject.xml'
+
+      # - name: Get Version Number
+      #   id: get_version
+      #   run: |
+      #       $VERSION = Select-Xml -Path "web.config" -XPath "/configuration/appSettings/add" | Select-Object -ExpandProperty Node | Where-Object Key -match ${{ inputs.VERSIONKEY_UI }} | select -expand Value
+      #       Write-Host "UI Version: $VERSION"
+      #       echo "VERSION_NUMBER=$VERSION" >> $env:GITHUB_OUTPUT
+
+      # - name: Remove Sections From WebConfig
+      #   run: |
+      #       $xml = [xml](Get-Content 'OCTOPUS.API\web.config')
+      #       $node = $xml.SelectSingleNode("//appSettings")
+      #       $node.ParentNode.RemoveChild($node) | Out-Null
+      #       $node = $xml.SelectSingleNode("//connectionStrings")
+      #       $node.ParentNode.RemoveChild($node) | Out-Null
+      #       $xml.Save('OCTOPUS.API\web.config')
+
+      - name: Upload ZIP to Artifact
+        uses: actions/upload-artifact@v4.6.2
+        id: upload_zip_artifacts
+        with:
+          name: dotnet-artifacts
+          path: artifacts
+          include-hidden-files: "false"
+          retention-days: "60"
+          overwrite: "false"
+          if-no-files-found: "error"
+
+    outputs:
+      AZURE_WEBAPP_NAME_URL: ${{ inputs.AZURE_WEBAPP_NAME_URL }}
+      VERSION_NUMBER: ${{ steps.get_version.outputs.VERSION_NUMBER }}
+      ARTIFACTS_URL: ${{ steps.upload_zip_artifacts.outputs.artifact-url }}
+
+  # sign-code-files:
+  #   runs-on: certificate
+  #   needs: build-dotnet-solution-artifact
+  #   timeout-minutes: 10 # Set a timeout for the job
+  #   steps:
+  #     - name: Add MSBuild to PATH (System Variable)
+  #       uses: microsoft/setup-msbuild@v2
+  #       with:
+  #         msbuild-architecture: x64
+  #         # vs-version: 'latest' # Use 'latest' OR '[17.0,16.5)' to get the version of Visual Studio you want.
+
+  #     - name: Download Artifacts from Previous Job
+  #       uses: actions/download-artifact@v5.0.0
+  #       with:
+  #         name: dotnet-artifacts
+  #         path: artifacts
+
+  #     - name: Signing dll and exe Files with Certificate
+  #       #   if: ${{ inputs.SIGNED_FILES_WORKFLOW == true }}
+  #       id: find_files_to_sign
+  #       shell: pwsh
+  #       run: |
+  #         $SearchPath = "artifacts"
+  #         $fileCount = 0
+
+  #         Write-Host "Searching for *.dll and *.exe Files to Sign ..."
+  #         Write-Host "Search path: $SearchPath"
+  #         Write-Host ""
+
+  #         $files = Get-ChildItem -Path $SearchPath -Include *.dll,*.exe -File -Recurse -ErrorAction SilentlyContinue | Where-Object { $_.Name -like "*octopus*" }
+
+  #         foreach ($file in $files) {
+  #             $fileCount++
+  #             Write-Host "Processing [$fileCount]: $($file.FullName)"
+
+  #             try {
+  #                 Write-Host "Signing Certificate Information to File"
+  #                 scsigntool /pin ${{ secrets.SCSIGNTOOL_PIN_CODE }} sign /a /sm /sha1 ${{ secrets.SCSIGNTOOL_CERTIFICATE_SHA }} /fd SHA256 /t "http://timestamp.digicert.com" /d ${{ needs.build-nuget-package-push.outputs.ASSEMBLY_NAME || 'OCTOPUS.Microservices' }} /du "https://www.octopus-app.com" $($file.FullName)
+
+  #                 Write-Host "Checking That File Missing Certificate Information"
+  #                 signtool verify /pa $($file.FullName)
+  #             }
+  #             catch {
+  #                 Write-Host "  Error: $($_.Exception.Message)"
+  #             }
+  #             Write-Host ""
+  #         }
+  #         Write-Host "Search completed, Total files found: $fileCount"
+  #         echo "SIGNED_FILES_COUNT=$fileCount" >> $env:GITHUB_OUTPUT
+  #         echo "SIGNED_FILES_WORKFLOW=${{ inputs.SIGNED_FILES_WORKFLOW }}" >> $env:GITHUB_OUTPUT
+
+  #     - name: Upload Artifacts
+  #       id: upload_artifacts
+  #       uses: actions/upload-artifact@v4.6.2
+  #       with:
+  #         name: singned-dotnet-artifacts
+  #         path: artifacts
+  #         retention-days: 14
+
+  #   outputs:
+  #     SIGNED_FILES_COUNT: ${{ steps.find_files_to_sign.outputs.SIGNED_FILES_COUNT || '0' }} # Default to 0 if no files were signed
+  #     ARTIFACTS_URL_SIGNED: ${{ steps.upload_artifacts.outputs.artifact-url }}
+  #     ARTIFACTS_RETENTION_DAYS_SIGNED: "14"
+
+  # create-sfx-package:
+  #   runs-on: windows-latest
+  #   needs: sign-code-files
+  #   timeout-minutes: 10 # Set a timeout for the job
+  #   steps:
+  #     - name: Download Artifacts from Previous Job
+  #       uses: actions/download-artifact@v5.0.0
+  #       with:
+  #         name: singned-dotnet-artifacts
+  #         path: artifacts
+
+  #     # - name: Generate Random Password
+  #     #   id: generated_password
+  #     #   if: ${{ inputs.ZIP_FILE_CREATE_PASSWORD == 'Yes' }}
+  #     #   uses: aammirmirza/RandomPasswordGenerator@v1.1
+  #     #   with:
+  #     #       length: 20
+
+  #     # - name: Set Generated Password as an Environment Variable
+  #     #   if: ${{ inputs.ZIP_FILE_CREATE_PASSWORD == 'Yes' }}
+  #     #   run: |
+  #     #       echo "Generated Password: ${{ steps.generated_password.outputs.password }}"
+  #     #   #   $GENERATED_PASSWORD=${{ steps.generated-password.outputs.password }}
+
+  #     # - name: DEBUG - testing variables
+  #     #   shell: pwsh
+  #     #   run: echo ${GITHUB_SHA::7}
+
+  #     - name: Create Configuration File for SFX Package
+  #       id: create_config_file
+  #       shell: pwsh
+  #       run: |
+  #         cd artifacts
+  #         $lines = @(
+  #             ";!@Install@!UTF-8!"
+  #             "InstallPath=."
+  #             "GUIMode=0"
+  #             "Title=Octopus Application"
+  #             "BeginPrompt=Do You Want to Extract Files?"
+  #             "FinishMessage=Extraction is Complete. Press OK to exit."
+  #             "ErrorMessage=An error occurred."
+  #             "Progress=yes"
+  #             "RunProgram=setup.exe"
+  #             ";!@InstallEnd@!"
+  #         )
+
+  #         Add-Content -Path "config.txt" -Value $lines
+
+  #     - name: Install 7Zip SFX Package Using Chocolatey
+  #       id: install_7zip_sfx_package
+  #       shell: pwsh
+  #       run: |
+  #         choco install 7zip  -y
+
+  #         cd artifacts
+  #         Write-Host 'Downloading and Extracting 7-Zip Development Kit'
+  #         Invoke-WebRequest -Uri "https://www.7-zip.org/a/lzma2501.7z" -OutFile "lzma.7z"
+  #         7z x "lzma.7z" -y
+  #         copy .\bin\*.sfx .
+
+  #         Write-Host 'Download and Extracting 7-Zip Extra Tools'
+  #         Invoke-WebRequest -Uri "https://www.7-zip.org/a/7z2501-x64.exe" -OutFile "7Z.7z"
+  #         7z x "7Z.7z" -y
+
+  #         echo "7ZIP_EXTRA_DOWNLOADED=$true" >> $env:GITHUB_OUTPUT
+  #         echo "SFX_PACKAGE_INSTALLED=$true" >> $env:GITHUB_OUTPUT
+
+  #     - name: Create SFX Package from Signed Artifacts
+  #       id: create_sfx_package
+  #       shell: pwsh
+  #       run: |
+  #         cd artifacts
+  #         Write-Host 'Creating Self-Extracting Executable Package'
+  #         if ('${{ inputs.ZIP_FILE_CREATE_PASSWORD }}' -eq 'Yes') {
+  #             7z a Octopus.exe -sfx.\7zSD.sfx *.dll *.exe -xr!7*.* -xr!Uninstall.exe -p"${{ github.sha }}"
+  #         } else {
+  #             7z a Octopus.exe -sfx.\7zSD.sfx *.dll *.exe -xr!7*.* -xr!Uninstall.exe
+  #         }
+
+  #     - name: Upload Self-Extracting Executable Artifacts
+  #       id: upload_executable_artifact
+  #       uses: actions/upload-artifact@v4.6.2
+  #       with:
+  #         name: unsingned-executable-artifact
+  #         path: .\artifacts\Octopus.exe
+  #         retention-days: 14
+
+  #   outputs:
+  #     SFX_PACKAGE_UNSIGNED_EXECUTABLE_URL: ${{ steps.upload_executable_artifact.outputs.artifact-url }}
+  #     SFX_PACKAGE_RETENTION_DAYS: "14"
+  #     SFX_PACKAGE_PASSWORD: ${{ inputs.ZIP_FILE_CREATE_PASSSWORD == 'Yes' && github.sha || 'no password set' }}
+
+  # sign-executable-artifact:
+  #   runs-on: certificate
+  #   needs: create-sfx-package
+  #   timeout-minutes: 10 # Set a timeout for the job
+  #   steps:
+  #     - name: Add MSBuild to PATH (System Variable)
+  #       uses: microsoft/setup-msbuild@v2
+  #       with:
+  #         msbuild-architecture: x64
+  #         # vs-version: 'latest' # Use 'latest' OR '[17.0,16.5)' to get the version of Visual Studio you want.
+
+  #     - name: Download Artifacts from Previous Job
+  #       uses: actions/download-artifact@v5.0.0
+  #       with:
+  #         name: unsingned-executable-artifact
+  #         path: artifact
+
+  #     - name: Signing 'Octopus.exe' File with Certificate
+  #       #   if: ${{ inputs.SIGNED_FILES_WORKFLOW == true }}
+  #       id: find_singned_files_to_sign
+  #       shell: pwsh
+  #       run: |
+  #         cd artifact
+  #         scsigntool /pin ${{ secrets.SCSIGNTOOL_PIN_CODE }} sign /a /sm /sha1 ${{ secrets.SCSIGNTOOL_CERTIFICATE_SHA }} /fd SHA256 /t "http://timestamp.digicert.com" /d ${{ needs.build-nuget-package-push.outputs.ASSEMBLY_NAME || 'OCTOPUS.Microservices' }} /du "https://www.octopus-app.com" Octopus.exe
+
+  #         Write-Host "Checking That File Missing Certificate Information"
+  #         signtool verify /pa Octopus.exe
+
+  #         echo "SIGNED_FILES_COUNT=$fileCount" >> $env:GITHUB_OUTPUT
+  #         echo "SIGNED_FILES_WORKFLOW=${{ inputs.SIGNED_FILES_WORKFLOW }}" >> $env:GITHUB_OUTPUT
+
+  #     - name: Upload Singned Executable Artifacts
+  #       id: upload_singned_executable_artifact
+  #       uses: actions/upload-artifact@v4.6.2
+  #       with:
+  #         name: singned-executable-artifact
+  #         path: .\artifact\Octopus.exe
+  #         retention-days: 14
+
+  #   outputs:
+  #     SFX_PACKAGE_SIGNED_EXECUTABLE_URL: ${{ steps.upload_singned_executable_artifact.outputs.artifact-url }}
+
+  # code-compiler-security:
+  #   runs-on: certificate
+  #   needs: sign-executable-artifact
+  #   if: ${{ inputs.COMPILER_SECURITY == true }}
+  #   timeout-minutes: 10 # Set a timeout for the job
+  #   steps:
+  #     - name: Download Artifacts from Previous Job
+  #       uses: actions/download-artifact@v5.0.0
+  #       with:
+  #         # name: singned-dotnet-artifacts
+  #         name: dotnet-artifacts
+  #         path: artifacts
+
+  #     - name: Run .NET Reactor # https://github.com/marketplace/actions/net-reactor-run
+  #       uses: eziriz/dotnet-reactor-run-action@v1.0.0
+  #       with:
+  #         version: "6.8.0.0"
+  #         license: ${{ secrets.NET_REACTOR_LICENSE }}
+  #         additional_arguments: "-licensed -quiet"
+  #         # input_path: '$GITHUB_WORKSPACE\path\to\assembly.dll'
+  #         # output_path: '$GITHUB_WORKSPACE\path\to\obfuscated\<AssemblyFileName>'
+  #         # project_file: '$GITHUB_WORKSPACE\artifacts\DotNetReactorProject.xml'
+
+  # webapp-push-slot-ui:
+  #   needs: [sign-executable-artifact]
+  #   runs-on: webapp
+  #   env:
+  #     REPOSITORY_NAME: octopus.ui
+  #     PROJECT_PATH: ui
+  #   steps:
+  #     - name: Download Artifacts from Previous Job
+  #       uses: actions/download-artifact@v5.0.0
+  #       with:
+  #         name: singned-dotnet-artifacts
+  #         path: artifacts
+
+  #     # - name: Get Current WebApp Version - ${{ env.REPOSITORY_NAME }}
+  #     #   run: |
+  #     #       URL=${{ inputs.AZURE_WEBAPP_URL }}
+  #     #       echo "Getting Current Webapp Version in URL: $URL"
+  #     #       WEBAPP_VERSION=$(curl -s $URL | grep -oE '[a-zA-Z0-9_-]+\.[0-9]+\.[0-9]+')
+  #     #       echo "- Current Webapp Version: $WEBAPP_VERSION" >> $GITHUB_STEP_SUMMARY
+
+  #     - uses: vimtor/action-zip@v1.2
+  #       with:
+  #         files: artifacts/
+  #         dest: artifacts.zip
+
+  #     - name: Azure Login
+  #       run: az login --service-principal --username ${{ vars.AZURE_CLIENT_NAME_PROD }} --password ${{ secrets.AZURE_CLIENT_SECRET_PROD }} --tenant ${{ vars.AZURE_TENANT_ID }}
+
+  #     - name: Deploy WebApp to ${{ inputs.WEBAPP_SLOT }} Slot
+  #       run: az webapp deployment source config-zip --src artifacts.zip --subscription ${{ vars.AZURE_SUBSCRIPTION_ID }} --resource-group ${{ inputs.RESOURCE_GROUP }} --name ${{ inputs.AZURE_WEBAPP_NAME_URL }} --slot ${{ inputs.WEBAPP_SLOT }}
+
+  #     - name: Adding Information to Pipeline Summary
+  #       run: |
+  #         echo "## Pipeline Build Information" >> $GITHUB_STEP_SUMMARY
+  #         echo "- Swap Slot: ${{ inputs.WEBAPP_SLOT }}" >> $GITHUB_STEP_SUMMARY
+  #         echo "- WebApp URL: [${{ inputs.AZURE_WEBAPP_NAME_URL }}](https://${{ inputs.AZURE_WEBAPP_NAME_URL }})" >> $GITHUB_STEP_SUMMARY
+  #         echo "---" >> $GITHUB_STEP_SUMMARY

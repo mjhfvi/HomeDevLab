@@ -1,0 +1,158 @@
+---
+# - name: DEBUG Show IP address for Master node
+#   when: kubernetes_master | default(false) | bool
+#   debug:
+#     msg: "{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}"
+#   tags: [kubeadm_setup, kubeadm_init, kubeadm_test]
+
+- name: Initialize the Kubernetes Cluster using 'kubeadm'
+  become: true
+  when: kubernetes_master | default(false) | bool
+  command: kubeadm init --service-cidr=10.96.0.0/12 --pod-network-cidr=10.244.0.0/16
+  # --control-plane-endpoint=51.4.105.117:6443 --apiserver-advertise-address={{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}
+  register: kubeadm_init_command_result
+  tags: [kubeadm_setup, kubeadm_init]
+
+# - name: Ensure required variable is defined
+#   when: kubernetes_master | default(false) | bool and "'connection refused' in kubeadm_init_command_result.stdout"
+#   ansible.builtin.fail:
+#     msg: "Error when Running 'kubeadm init': {{ kubeadm_init_command_result.stdout }}"
+#   # when: "'connection refused' in kubeadm_init_command_result.stdout"
+#   tags: [kubeadm_setup, kubeadm_init]
+
+# # Install CNI
+# - name: Install 'calico' CNI pod network
+#   when: kubernetes_master | default(false) | bool
+#   command: kubectl create -f https://docs.projectcalico.org/v3.4/getting-started/kubernetes/installation/hosted/calico.yaml
+#   environment:
+#     KUBECONFIG: /etc/kubernetes/admin.conf  # Ensure kubectl uses the correct config on the master
+
+- name: Ensure group "{{ ansible_user }}" exists
+  become: true
+  group:
+    name: "{{ ansible_user }}"
+    state: present
+  tags: [kubeadm_setup, kubeadm_config, kubeadm_config_files]
+- name: Create '.kube' Directory
+  become: true
+  file:
+    path: .kube/
+    state: directory
+    mode: "0755"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+  tags: [kubeadm_setup, kubeadm_config, kubeadm_config_files]
+- name: Copy 'admin.conf' file to '.kube' Directory on Master Node
+  become: true
+  when: kubernetes_master | default(false) | bool
+  copy:
+    src: /etc/kubernetes/admin.conf
+    dest: /home/{{ ansible_user }}/.kube/config
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0600"
+    remote_src: true
+  tags: [kubeadm_setup, kubeadm_config, kubeadm_config_files]
+- name: Create '/run/flannel' Directory
+  become: true
+  file:
+    path: /run/flannel/
+    state: directory
+    mode: "0755"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+  tags: [kubeadm_setup, kubeadm_config, kubeadm_config_files, kubeadm_cni]
+- name: Install 'flannel' CNI pod network
+  become: true
+  when: kubernetes_master | default(false) | bool
+  command: kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf # Ensure kubectl uses the correct config on the master
+  tags: [kubeadm_setup, kubeadm_config, kubeadm_cni]
+- name: Setup Flannel 'subnet.env'
+  become: true
+  copy:
+    dest: /run/flannel/subnet.env
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0600"
+    content: |
+      FLANNEL_NETWORK=10.244.0.0/16
+      FLANNEL_SUBNET=10.244.0.1/24
+      FLANNEL_MTU=1450
+      FLANNEL_IPMASQ=true
+      FLANNEL_IPV6_SUBNET=fc00::/48
+      FLANNEL_IPV6_SUBNET=fc00:0:0:1::/64
+  tags: [kubeadm_setup, kubeadm_config, kubeadm_cni]
+
+- name: Generate Kubernetes Cluster Token
+  become: true
+  when: kubernetes_master | default(false) | bool
+  command: kubeadm token create --print-join-command
+  register: kubeadm_join_command
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf # Ensure kubectl uses the correct config on the master
+  tags: [kubeadm_setup, kubeadm_config, kubeadm_join, kubeadm_token]
+
+- name: DEBUG Show 'kubeadm_join_command' Output in Master
+  when: kubernetes_master | default(false) | bool
+  debug:
+    msg: "{{ kubeadm_join_command.stdout_lines[0] }}"
+  tags: [kubeadm_setup, kubeadm_config, kubeadm_join, kubeadm_token]
+
+- name: Save Kubernetes Cluster Token as fact
+  when: kubernetes_master | default(false) | bool
+  set_fact:
+    kubeadm_join_command_result: "{{ kubeadm_join_command.stdout_lines[0] }}"
+  delegate_to: localhost
+  delegate_facts: true
+  tags:
+    - kubeadm_setup
+    - kubeadm_config
+    - kubeadm_join
+    - kubeadm_token
+
+# - name: DEBUG Show 'kubeadm_join_command' Output in Worker Nodes
+#   when: not kubernetes_master | default(false) | bool
+#   debug:
+#     msg: "{{ hostvars.localhost.kubeadm_join_command_result }}"
+#   tags:
+#     - kubeadm_setup
+#     - kubeadm_config
+#     - kubeadm_join
+
+- name: Execute 'kubeadm join' Command on Worker Nodes to cluster
+  become: true
+  when: not kubernetes_master | default(false) | bool
+  command: "{{ hostvars.localhost.kubeadm_join_command_result }} --ignore-preflight-errors=Port-10250"
+  tags: [kubeadm_setup, kubeadm_config, kubeadm_join]
+- name: Fetch 'admin.conf' file to localhost
+  become: true
+  when: kubernetes_master | default(false) | bool
+  fetch:
+    src: /etc/kubernetes/admin.conf
+    dest: /tmp/config
+    mode: "0755"
+    flat: true
+  tags: [kubeadm_setup, kubeadm_config]
+- name: Copy kubectl 'config' file to Worker Nodes
+  become: true
+  when: not kubernetes_master | default(false) | bool
+  copy:
+    src: /tmp/config
+    dest: /home/{{ ansible_user }}/.kube/config
+    mode: "0755"
+    # flat: true
+  tags: [kubeadm_setup, kubeadm_config]
+- name: Include Health Check Tasks
+  include_tasks: health.yaml
+  when: kubernetes_master | default(false) | bool
+  tags: [kubeadm_setup, kubeadm_health]
+- name: Restart kubelet Service
+  when: kubernetes_master | default(false) | bool
+  become: true
+  service:
+    name: kubelet
+    daemon_reload: true
+    state: restarted
+  tags: [kubeadm_setup]

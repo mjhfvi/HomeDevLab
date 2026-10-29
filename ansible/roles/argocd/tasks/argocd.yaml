@@ -1,0 +1,38 @@
+---
+- name: Download ArgoCD CLI binary
+  become: true
+  when: kubernetes_master | default(false) | bool
+  get_url:
+    url: https://github.com/argoproj/argo-cd/releases/download/v{{ argocd_cli_version }}/argocd-linux-amd64
+    dest: /usr/local/bin/argocd
+    mode: "0755" # Make the downloaded binary executable
+  tags: [argocd_setup, argocd_install]
+- name: Verify ArgoCD CLI installation
+  command: argocd version --client
+  register: argocd_version_output
+  # changed_when: false
+  tags: [argocd_setup, argocd_install]
+- name: Create a 'argocd' namespace
+  when: kubernetes_master | default(false) | bool
+  become: true
+  kubernetes.core.k8s:
+    name: argocd
+    api_version: v1
+    kind: Namespace
+    state: present
+    kubeconfig: /etc/kubernetes/admin.conf
+  # environment:
+  #   KUBECONFIG: /etc/kubernetes/admin.conf
+  tags: [argocd_setup, argocd_service]
+- name: Apply Argo CD Manifests
+  become: true
+  when: kubernetes_master | default(false) | bool
+  # run_once: true
+  kubernetes.core.k8s:
+    src: https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+    state: present
+    namespace: argocd
+    kubeconfig: /etc/kubernetes/admin.conf
+  # environment:
+  #   KUBECONFIG: /etc/kubernetes/admin.conf
+  tags: [argocd_setup, argocd_service]

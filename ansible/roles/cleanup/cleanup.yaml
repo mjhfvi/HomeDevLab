@@ -1,0 +1,41 @@
+---
+# - name: Cleanup 'kubeadm_join_command.sh' Script from Localhost
+#   delegate_to: localhost
+#   file:
+#     path: /tmp/kubeadm_join_command.sh
+#     state: absent
+- name: Cleanup 'kubeadm_join_command.sh' Script from Worker Nodes
+  file:
+    path: /tmp/kubeadm_join_command.sh
+    state: absent
+
+# - name: Cleanup 'admin.conf' Script from Localhost
+#   delegate_to: localhost
+#   file:
+#     path: /tmp/admin.conf
+#     state: absent
+- name: Cleanup 'admin.conf' Script from Worker Nodes
+  file:
+    path: /tmp/admin.conf
+    state: absent
+
+# - name: Cleanup 'admin.conf' file
+#   lineinfile:
+#     path: /home/{{ ansible_user }}/.kube/config
+#     regexp: "'"
+#     state: absent
+#   tags:
+#     - kubeadm_setup
+#     - kubeadm_config
+#     - kubeadm_join_test
+
+# - name: Cleanup 'admin.conf' file
+#   become: true
+#   replace:
+#     path: /home/{{ ansible_user }}/.kube/config  # Replace with the actual path to your file
+#     regexp: '^- '  # Matches '- ' at the beginning of a line
+#     replace: ''  # Replaces the matched string with an empty string (effectively removing it)
+#   tags:
+#     - kubeadm_setup
+#     - kubeadm_config
+#     - kubeadm_join_test

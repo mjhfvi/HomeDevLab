@@ -1,0 +1,6 @@
+---
+- name: Running Cleanup Common Playbooks
+  include_tasks:
+    file: cleanup.yaml
+  # register: cleanup_setup
+  tags: [cleanup_setup]

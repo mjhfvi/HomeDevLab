@@ -1,0 +1,57 @@
+# Github actions variables https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/store-information-in-variables
+# Add PAT: https://github.com/settings/personal-access-tokens
+name: Reusable Ai Review Action
+
+on:
+  workflow_call:
+    inputs:
+      SYSTEM_MESSAGE:
+        description: "The system message to guide the AI's behavior."
+        required: true
+        type: string
+      USER_MESSAGE:
+        description: "The user's message or query for the AI."
+        required: true
+        type: string
+    # outputs:
+
+jobs:
+  # check runners status https://www.githubstatus.com/
+  ai-review:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout Git Repository
+      uses: actions/checkout@v4.2.2
+      with:
+        fetch-depth: "0" # Fetch all history for all tags and branches
+        fetch-tags: "0" # Fetch all tags
+        lfs: "false" # Fetch all LFS objects
+
+    - name: AI Review
+      uses: |
+        py "import os
+            from azure.ai.inference import ChatCompletionsClient
+            from azure.ai.inference.models import SystemMessage, UserMessage
+            from azure.core.credentials import AzureKeyCredential
+
+            endpoint = "https://models.github.ai/inference"
+            model = "openai/gpt-4.1"
+            token = os.environ["GITHUB_TOKEN"]
+
+            client = ChatCompletionsClient(
+                endpoint=endpoint,
+                credential=AzureKeyCredential(token),
+            )
+
+            response = client.complete(
+                messages=[
+                    SystemMessage("You are a helpful assistant."),
+                    UserMessage("What is the capital of France?"),
+                ],
+                temperature=1.0,
+                top_p=1.0,
+                model=model
+            )
+
+            print(response.choices[0].message.content)
+            "

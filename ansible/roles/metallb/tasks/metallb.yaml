@@ -1,0 +1,52 @@
+---
+- name: Install 'metallb' Helm Repository
+  become: true
+  when: kubernetes_master | default(false) | bool
+  kubernetes.core.helm_repository:
+    name: metallb
+    repo_url: https://metallb.github.io/metallb
+    state: present
+    kubeconfig: /etc/kubernetes/admin.conf
+  # environment:
+  #   KUBECONFIG: /etc/kubernetes/admin.conf
+  tags: [metallb_setup]
+
+- name: Install 'metallb' using Helm Chart
+  become: true
+  when: kubernetes_master | default(false) | bool
+  kubernetes.core.helm:
+    name: metallb
+    chart_ref: metallb/metallb
+    release_namespace: metallb-system
+    create_namespace: true
+    # values:
+    #   replicaCount: 1
+    #   image:
+    #     tag: latest
+    state: present
+    kubeconfig: /etc/kubernetes/admin.conf
+  # environment:
+  #   KUBECONFIG: /etc/kubernetes/admin.conf
+  tags: [metallb_setup]
+
+- name: Pause for 10 seconds before adding 'metallb' resources
+  ansible.builtin.pause:
+    seconds: 10
+  tags: [metallb_setup]
+
+- name: Create Kubernetes Manifest for 'metallb' 'IPAddressPool'
+  become: true
+  when: kubernetes_master | default(false) | bool
+  kubernetes.core.k8s:
+    state: present
+    kubeconfig: /etc/kubernetes/admin.conf
+    definition:
+      apiVersion: metallb.io/v1beta1
+      kind: IPAddressPool
+      metadata:
+        name: first-pool
+        namespace: metallb-system
+      spec:
+        addresses:
+          - "{{ metallb_IPAddressPool}}"
+  tags: [metallb_setup]

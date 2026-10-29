@@ -1,0 +1,1 @@
+pwsh -command "& { . ../../../../../scripts/azure_devops_allowlist.ps1; AddAzureDevopsToWebAppAllowlist -Location \"canadacentral\" -Subscription \"3065bfa3-4d71-4423-979a-8e0d9be7726a\" -ResourceGroupName \"octopus-production-northcentralus\" -WebAppName \"octopus-prod-us-webapp-notify\" -SlotName \"production\" -Type "cloudflare" }" 

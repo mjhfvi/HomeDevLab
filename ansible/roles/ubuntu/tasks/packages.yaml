@@ -1,0 +1,23 @@
+---
+- name: Install Packages using APT
+  become: true
+  # ignore_errors: true
+  apt:
+    name:
+      - nfs-kernel-server
+      - nfs-common
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - gnupg-agent
+      - software-properties-common
+      - python3-pip
+    state: present
+    update_cache: true
+  tags: [ubuntu_setup, packages_install, apt_install]
+- name: Install Python packages using pip
+  become: true
+  pip:
+    name: kubernetes
+    state: present
+  tags: [ubuntu_setup, packages_install, pip_install]

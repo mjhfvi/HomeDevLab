@@ -1,0 +1,21 @@
+---
+kubernetes_version: "1.33"
+argocd_cli_version: "3.1.0"
+helm_cli_version: "3.18.5"
+
+## Source: https://github.com/githubixx/ansible-role-cni/tree/master
+# CNI plugin
+cni_version: "1.7.1"
+cni_bin_directory: /opt/cni/bin
+# cni_conf_directory: "/etc/cni/net.d"
+cni_tmp_directory: /tmp/cni-tools
+cni_os: linux
+cni_arch: amd64
+cni_archive: cni-plugins-{{ cni_os }}-{{ cni_arch }}-v{{ cni_version }}.tgz
+cni_url: https://github.com/containernetworking/plugins/releases/download/v{{ cni_version }}/{{ cni_archive }}
+# cni_restart_kubelet: false
+
+# Docker registry Variables
+docker_registry_secret_repository: "ghcr.io"
+docker_registry_secret_username: ""
+docker_registry_secret_password: ""

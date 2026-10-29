@@ -1,0 +1,14 @@
+---
+- name: Running Playbooks
+  hosts: all
+  gather_facts: true # use in kubeadm 'ClusterConfiguration' tasks
+  roles:
+    - role: checklist
+    - role: ubuntu
+    - role: docker
+    - role: kubernetes
+    - role: helm
+    - role: argocd
+    - role: traefik
+    - role: metallb
+    - role: cleanup

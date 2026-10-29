@@ -1,0 +1,9 @@
+---
+- name: Running General Porpoise Tasks
+  include_tasks:
+    file: checklist.yaml
+  tags: [checklist_setup, os_checklist]
+- name: Running General Porpoise Tasks
+  include_tasks:
+    file: validation.yaml
+  tags: [checklist_setup, os_gether_facts]

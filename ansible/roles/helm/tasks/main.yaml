@@ -1,0 +1,6 @@
+---
+- name: Running Helm Common Playbooks
+  include_tasks:
+    file: helm.yaml
+  # register: helm_setup
+  tags: [helm_setup, helm_install]

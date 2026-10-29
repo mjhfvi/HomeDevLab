@@ -1,0 +1,21 @@
+name: Build Actions Cache
+
+# on:
+#   workflow_dispatch: # allows manual triggering
+#   schedule:
+#     - cron: '0 * * * *'
+
+# concurrency:
+#   group: ${{ github.workflow }}-${{ github.head_ref && github.ref || github.run_id }}
+#   cancel-in-progress: true
+
+jobs:
+  ubuntu-24-vulkan-cache:
+    runs-on: ubuntu-24.04
+
+    steps:
+    - name: Setup Vulkan SDK
+      uses: ./.github/actions/linux-setup-vulkan
+      with:
+        path: ./vulkan_sdk
+        version: ${{ env.VULKAN_SDK_VERSION }}

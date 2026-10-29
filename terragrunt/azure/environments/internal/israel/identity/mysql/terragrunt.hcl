@@ -1,0 +1,19 @@
+include "root" {
+  path = find_in_parent_folders("root.hcl")
+  expose = true
+}
+
+terraform{
+  source = "../../../../../modules//user-assigned-identity"
+}
+
+dependency "resource_group" {
+  config_path = "../../resource-group"
+}
+
+inputs = {
+  resource_group_name = dependency.resource_group.outputs.name
+  name = "octopus-internal-il-mysql-admin"
+}
+
+prevent_destroy = true

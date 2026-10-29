@@ -1,0 +1,154 @@
+name: Reusable Dotnet Docker Image Build and Push to GitHub Container Registry (GHCR)
+
+# https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/control-workflow-concurrency
+# concurrency: # control how many workflow runs or jobs can run simultaneously
+#   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+#   cancel-in-progress: true
+
+on:
+  workflow_call:
+    inputs:
+      SOLUTION_FILE:
+        description: "Solution File to Build with the Extention .slnx"
+        required: true
+        type: string
+      TOKEN_GITHUB_PACKAGES_REGISTRY_USER:
+        description: "GitHub Packages Registry User"
+        required: true
+        type: string
+
+jobs:
+  build-dotnet-source-files:
+    runs-on: windows-latest
+    environment:
+      name: production
+    steps:
+    - name: Checkout Git Repository
+      uses: actions/checkout@v4.2.2
+      with:
+        fetch-depth: "0" # Fetch all history for all tags and branches
+        fetch-tags: "0" # Fetch all tags
+        lfs: "false" # Fetch all LFS objects
+
+    # - name: Added Support for .NET 10 # the current action only supports 9.0 so we added this action as a workaround
+    #   uses: actions/setup-dotnet@v5.0.1 # Action to set up .NET
+    #   with:
+    #     dotnet-version: "10.0.x" # Specify the .NET 10 version
+
+    - name: Dotnet Add Nuget Source
+      run: dotnet nuget add source ${{ vars.NUGET_SOURCE_GITHUB }} --name OCTOPUS --username ${{ vars.TOKEN_GITHUB_PACKAGES_REGISTRY_USER }} --password ${{ secrets.TOKEN_GITHUB_PACKAGES_REGISTRY_WRITE_ACCESS }}
+
+    - name: Dotnet Run Unit Tests
+      shell: pwsh
+      id: run_unit_tests
+      continue-on-error: true
+      run: |
+        dotnet restore ${{ inputs.SOLUTION_FILE }}.slnx
+        dotnet build --no-restore ${{ inputs.SOLUTION_FILE }}.slnx
+        dotnet test ${{ inputs.SOLUTION_FILE }}.slnx --no-build --configuration Release --verbosity normal --blame-crash-collect-always --blame-crash --results-directory results 2>&1 | Tee-Object -FilePath test-output.log
+
+    - name: Capture Unit Test Logs
+      if: always()
+      id: unit_test_logs
+      shell: pwsh
+      run: |
+        if (Test-Path test-output.log) {
+          $allLogs = Get-Content test-output.log -Raw
+          $startPattern = "Starting test execution, please wait"
+
+          if ($allLogs -match $startPattern) {
+            $startIndex = $allLogs.IndexOf($startPattern)
+            $filteredLogs = $allLogs.Substring($startIndex)
+          } else {
+            $filteredLogs = $allLogs
+          }
+
+          # Remove duplicate lines
+          $lines = $filteredLogs -split "`n"
+          $uniqueLines = $lines | Select-Object -Unique
+          $filteredLogs = $uniqueLines -join "`n"
+
+          "LOGS<<EOF" >> $env:GITHUB_OUTPUT
+          $filteredLogs >> $env:GITHUB_OUTPUT
+          "EOF" >> $env:GITHUB_OUTPUT
+        } else {
+          "LOGS=No test logs available" >> $env:GITHUB_OUTPUT
+        }
+
+    - name: AI Analysis on Test Failure
+      if: steps.run_unit_tests.outcome == 'failure'
+      id: ai_failure_prompt
+      uses: actions/ai-inference@v1
+      with:
+        model: openai/gpt-4o
+        max-tokens: 2000
+        prompt: |
+          Unit tests failed. Analyze the test logs and provide a fix.
+
+          Your response should include:
+          1) Root cause analysis of which tests failed and why
+          2) Specific code changes needed to fix the failing tests
+          3) File paths and line numbers to modify
+          4) Complete code snippets with the fixes applied
+
+          Test logs:
+          ${{ steps.unit_test_logs.outputs.LOGS }}
+        # - name: AI Analysis on Test Success
+        #   if: steps.build.outcome == 'success'
+        #   id: ai_success
+        #   uses: actions/ai-inference@v1
+        #   with:
+        #     model: gpt-4o
+        #     prompt: |
+        #       All unit tests passed. Analyze the test logs and suggest improvements.
+
+        #       Your response should include:
+        #       1) Test coverage analysis - identify untested edge cases
+        #       2) Additional test cases that should be added
+        #       3) Code quality improvements for better testability
+        #       4) Suggested refactoring for the tested code
+        #       5) Performance optimization opportunities
+
+        #       Test logs:
+        #       ${{ steps.logs.outputs.LOGS }}
+        #     max-tokens: 2000
+
+        # - name: Display AI Analysis in Summary
+        #   if: always()
+        #   shell: pwsh
+        #   run: |
+        #     if ("${{ steps.build.outcome }}" -eq "failure") {
+        #       "## 🔴 Unit Tests Failed - AI Analysis" >> $env:GITHUB_STEP_SUMMARY
+        #       "" >> $env:GITHUB_STEP_SUMMARY
+        #       "${{ steps.ai_failure.outputs.response }}" >> $env:GITHUB_STEP_SUMMARY
+        #     } elseif ("${{ steps.build.outcome }}" -eq "success") {
+        #       "## ✅ Unit Tests Passed - AI Suggestions" >> $env:GITHUB_STEP_SUMMARY
+        #       "" >> $env:GITHUB_STEP_SUMMARY
+        #       "${{ steps.ai_success.outputs.response }}" >> $env:GITHUB_STEP_SUMMARY
+        #     }
+
+        # - name: Save AI analysis to file
+        #   if: always()
+        #   shell: pwsh
+        #   run: |
+        #     if ("${{ steps.build.outcome }}" -eq "failure") {
+        #       "${{ steps.ai_failure.outputs.response }}" | Out-File -FilePath ai-fix-suggestions.md
+        #     } elseif ("${{ steps.build.outcome }}" -eq "success") {
+        #       "${{ steps.ai_success.outputs.response }}" | Out-File -FilePath ai-improvement-suggestions.md
+        #     }
+
+        # - name: Upload AI analysis
+        #   if: always()
+        #   uses: actions/upload-artifact@v4
+        #   with:
+        #     name: ai-analysis
+        #     path: ai-*-suggestions.md
+        #     if-no-files-found: warn
+
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v4.6.2
+      with:
+        name: "source-files-artifacts"
+        if-no-files-found: ignore
+        path: "results"
+        retention-days: 21

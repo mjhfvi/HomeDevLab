@@ -1,0 +1,132 @@
+variable "environment_name" {
+    description = "Environment Name"
+    type        = string
+    sensitive   = false
+    nullable    = false
+    default     = "Testing"
+
+    validation {
+        condition     = length(var.environment_name) > 0
+        error_message = "Validation: 'environment_name' Must be Provided and Not be Empty"
+    }
+}
+
+variable "aws_region" {
+    description = "AWS Region"
+    type        = string
+    sensitive   = false
+    nullable    = false
+    default     = "us-east-1"
+
+    validation {
+        condition     = length(var.aws_region) > 0
+        error_message = "Validation: 'aws_region' Must be Provided and Not be Empty"
+    }
+}
+
+variable "vpc_name" {
+    description = "VPC Name"
+    type        = string
+    sensitive   = false
+    nullable    = false
+    default     = ""
+}
+
+variable "vpc_id" {
+    description = "ID of the VPC"
+    type        = string
+    sensitive   = false
+    nullable    = false
+    default     = ""
+}
+
+variable "cidr_default" {
+    description = "CIDR Default"
+    type        = string
+    sensitive   = false
+    nullable    = false
+    default     = "10.0.0.0/16"
+
+    validation {
+        condition     = length(var.cidr_default) > 0
+        error_message = "Validation: 'cidr_default' Must be Provided and Not be Empty"
+    }
+}
+
+variable "private_subnet_a" {
+    description = "Private Subnets A"
+    type        = string
+    sensitive   = false
+    nullable    = false
+    default     = "10.0.1.0/24"
+
+#     validation {
+#         condition     = length(var.private_subnets) > 0
+#         error_message = "Validation: 'private_subnets' Must be Provided and Not be Empty"
+#     }
+}
+
+variable "private_subnet_b" {
+    description = "Private Subnets B"
+    type        = string
+    sensitive   = false
+    nullable    = false
+    default     = "10.0.2.0/24"
+
+    # validation {
+    #     condition     = length(var.private_subnets) > 0
+    #     error_message = "Validation: 'private_subnets' Must be Provided and Not be Empty"
+    # }
+}
+
+variable "public_subnet_a" {
+    description = "Public Subnets A"
+    type        = string
+    sensitive   = false
+    nullable    = false
+    default     = "10.0.3.0/24"
+
+    # validation {
+    #     condition     = length(var.public_subnets_a) > 0
+    #     error_message = "Validation: 'public_subnets_a' Must be Provided and Not be Empty"
+    # }
+}
+
+variable "public_subnet_b" {
+    description = "Public Subnets B"
+    type        = string
+    sensitive   = false
+    nullable    = false
+    default     = "10.0.4.0/24"
+
+    # validation {
+    #     condition     = length(var.public_subnets_b) > 0
+    #     error_message = "Validation: 'public_subnets_b' Must be Provided and Not be Empty"
+    # }
+}
+
+variable "s3_bucket_name" {
+    description = "S3 Bucket Name"
+    type        = string
+    sensitive   = false
+    nullable    = false
+    default     = "default-s3-bucket"
+
+    validation {
+        condition     = length(var.s3_bucket_name) > 0
+        error_message = "Validation: 's3_bucket_name' Must be Provided and Not be Empty"
+    }
+}
+
+variable "create_bucket" {
+    description = "Create S3 Bucket"
+    type        = bool
+    sensitive   = false
+    nullable    = false
+    default     = false
+
+    validation {
+        condition     = var.create_bucket == true || var.create_bucket == false
+        error_message = "Validation: 'create_bucket' Must be a Boolean Value (true or false)"
+    }
+}

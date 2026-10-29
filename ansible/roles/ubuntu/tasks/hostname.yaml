@@ -1,0 +1,6 @@
+---
+- name: Update Hostname from Inventory 'hostname_name' Variable
+  become: true
+  hostname:
+    name: '{{ hostname_name }}'
+  tags: [ubuntu_setup, hostname_update]

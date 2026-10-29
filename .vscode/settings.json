@@ -11,15 +11,8 @@
   "editor.insertSpaces": false,
   "extensions.autoRestart": false,
   "files.exclude": {
-    "**/.DS_Store": true,
-    ".build": true,
     ".git": true,
-    ".profile-oss": true,
-    ".vscode-test": true,
-    "build/**/*.js": {
-      "when": "$(basename).ts"
-    },
-    "build/**/*.js.map": true,
+    ".vscode": true,
     ".editorconfig": true,
     ".gitconfig": true,
     ".gitignore": true,
@@ -35,7 +28,7 @@
     "tox.ini": true,
     ".typos.toml": true,
     ".cspell.json": true,
-    "cli/target": true
+    ".groovylintrc.json": true
   },
   "files.trimTrailingWhitespace": true,
   "git.branchProtection": [],

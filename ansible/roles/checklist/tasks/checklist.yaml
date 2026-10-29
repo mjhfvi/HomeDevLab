@@ -1,0 +1,180 @@
+---
+# OS Version Consistency Check Task
+# Add this after gathering facts from all hosts
+- name: Gather OS information from all hosts
+  setup:
+    gather_subset:
+      - '!all'
+      - '!any'
+      - distribution
+      - distribution_version
+      - distribution_major_version
+      - os_family
+  tags: [checklist_setup, os_checklist]
+- name: Collect OS details from all hosts
+  set_fact:
+    host_os_info:
+      hostname: '{{ inventory_hostname }}'
+      os_distribution: '{{ ansible_distribution }}'
+      os_version: '{{ ansible_distribution_version }}'
+      os_major_version: '{{ ansible_distribution_major_version }}'
+      os_family: '{{ ansible_os_family }}'
+  tags: [checklist_setup, os_checklist]
+- name: Aggregate OS information
+  set_fact:
+    all_hosts_os_info: "{{ all_hosts_os_info | default([]) + [hostvars[item]['host_os_info']] }}"
+  loop: "{{ groups['all'] }}"
+  run_once: true
+  tags: [checklist_setup, os_checklist]
+- name: Display OS information for all hosts
+  debug:
+    msg:
+      - 'Host: {{ item.hostname }}'
+      - 'OS: {{ item.os_distribution }} {{ item.os_version }}'
+      - 'Family: {{ item.os_family }}'
+      - '---'
+  loop: '{{ all_hosts_os_info }}'
+  run_once: true
+  tags: [checklist_setup, os_checklist]
+- name: Check for OS distribution consistency
+  set_fact:
+    unique_distributions: "{{ all_hosts_os_info | map(attribute='os_distribution') | list | unique }}"
+    unique_versions: "{{ all_hosts_os_info | map(attribute='os_version') | list | unique }}"
+    unique_families: "{{ all_hosts_os_info | map(attribute='os_family') | list | unique }}"
+  run_once: true
+  tags: [checklist_setup, os_checklist]
+- name: Determine OS consistency status
+  set_fact:
+    os_consistent: '{{ (unique_distributions | length == 1) and (unique_versions | length == 1) }}'
+    distribution_consistent: '{{ unique_distributions | length == 1 }}'
+    version_consistent: '{{ unique_versions | length == 1 }}'
+    family_consistent: '{{ unique_families | length == 1 }}'
+  run_once: true
+  tags: [checklist_setup, os_checklist]
+- name: Display consistency summary
+  debug:
+    msg:
+      - === OS CONSISTENCY CHECK RESULTS ===
+      - 'Total hosts checked: {{ all_hosts_os_info | length }}'
+      - "Unique distributions: {{ unique_distributions | join(', ') }}"
+      - "Unique versions: {{ unique_versions | join(', ') }}"
+      - "Unique families: {{ unique_families | join(', ') }}"
+      - ''
+      - 'Distribution consistent: {{ distribution_consistent }}'
+      - 'Version consistent: {{ version_consistent }}'
+      - 'Overall consistent: {{ os_consistent }}'
+  run_once: true
+  tags: [checklist_setup, os_checklist]
+- name: Show detailed differences when inconsistent
+  debug:
+    msg:
+      - === DETECTED OS DIFFERENCES ===
+      - '{% for item in all_hosts_os_info %}{{ item.hostname }}: {{ item.os_distribution }}
+        {{ item.os_version }}{% endfor %}'
+      - ''
+      - 'WARNING: Different OS versions detected across hosts!'
+      - This may cause issues with package management and compatibility.
+  run_once: true
+  when: not os_consistent
+  tags: [checklist_setup, os_checklist]
+- name: Create summary of host groups by OS
+  set_fact:
+    hosts_by_os: >-
+      {{
+        all_hosts_os_info |
+        groupby('os_distribution') |
+        map('list') |
+        map('groupby', 'os_version') |
+        map('map', 'list') |
+        list
+      }}
+  run_once: true
+  when: not os_consistent
+  tags: [checklist_setup, os_checklist]
+- name: Display host groupings by OS version
+  debug:
+    msg:
+      - === HOSTS GROUPED BY OS VERSION ===
+      - "{% for dist_group in hosts_by_os %}{% for version_group in dist_group %}{{ version_group[0].os_distribution }}\
+        \ {{ version_group[0].os_version }}: {{ version_group | map(attribute='hostname') | join(', ') }}{%\
+        \ endfor %}{% endfor %}"
+  run_once: true
+  when: not os_consistent
+  tags: [checklist_setup, os_checklist]
+- name: Pause for user confirmation when OS versions differ
+  pause:
+    prompt: |
+      ⚠️  WARNING: OS VERSION INCONSISTENCY DETECTED ⚠️
+      Different operating system versions have been detected across your hosts:
+      {% for item in all_hosts_os_info %}
+      • {{ item.hostname }}: {{ item.os_distribution }} {{ item.os_version }}
+      {% endfor %}
+      This inconsistency may cause:
+      - Package installation failures
+      - Configuration incompatibilities
+      - Unexpected behavior in playbooks
+      - Service startup issues
+      Recommendations:
+      1. Standardize OS versions across all hosts
+      2. Use conditional tasks based on OS version
+      3. Test thoroughly on each OS variant
+      Do you want to continue with the deployment? (yes/no)
+  register: user_confirmation
+  run_once: true
+  when:
+    - not os_consistent
+    - require_user_confirmation | default(true) | bool
+  tags: [checklist_setup, os_checklist]
+- name: Validate user response
+  fail:
+    msg: |
+      Deployment cancelled by user due to OS version inconsistency.
+      Please standardize your OS versions or set 'require_user_confirmation: false' to bypass this check.
+  when:
+    - not os_consistent
+    - require_user_confirmation | default(true) | bool
+    - user_confirmation.user_input | lower not in ['yes', 'y', 'true']
+  run_once: true
+  tags: [checklist_setup, os_checklist]
+- name: Log continuation decision
+  debug:
+    msg: User confirmed to continue deployment despite OS version differences.
+  when:
+    - not os_consistent
+    - require_user_confirmation | default(true) | bool
+    - user_confirmation.user_input | lower in ['yes', 'y', 'true']
+  run_once: true
+  tags: [checklist_setup, os_checklist]
+- name: Set OS consistency flags for use in other playbooks
+  set_fact:
+    os_versions_consistent: '{{ os_consistent }}'
+    mixed_os_environment: '{{ not os_consistent }}'
+    primary_os_distribution: "{{ unique_distributions[0] if unique_distributions | length == 1 else 'mixed' }}"
+    primary_os_version: "{{ unique_versions[0] if unique_versions | length == 1 else 'mixed' }}"
+  tags: [checklist_setup, os_checklist]
+- name: Success message for Consistent OS Versions
+  debug:
+    msg: |
+      ✅ OS CONSISTENCY CHECK PASSED
+      All {{ all_hosts_os_info | length }} hosts are running {{ primary_os_distribution }} {{ primary_os_version }}
+      Proceeding with deployment...
+  run_once: true
+  when: os_consistent
+  tags:
+    - checklist_setup
+    - os_checklist
+
+# - name: Check if a 'admin.conf' file exists
+#   stat:
+#     path: /etc/kubernetes/admin.conf
+#   register: admin_conf_exists
+#   tags:
+#
+#     - kube_checklist
+
+# - name: Pause playbook and wait for user confirmation
+#   pause:
+#     prompt: "Found a 'admin.conf' file. Maybe you have a working cluster? Press Enter to continue or Ctrl+C then 'c' to continue early, or 'a' to abort"
+#   tags:
+#
+#     - kube_checklist

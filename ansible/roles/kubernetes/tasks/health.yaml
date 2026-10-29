@@ -1,0 +1,36 @@
+---
+## cluster Health Workflow
+# - name: Gather Kubernetes cluster information
+#   when: kubernetes_master | default(false) | bool
+#   kubernetes.core.k8s_cluster_info:
+#   register: cluster_info
+
+# - name: DEBUG Show 'kubeadm_join_command' Output
+#   when: kubernetes_master | default(false) | bool
+#   debug:
+#     msg: "{{ cluster_info.stdout_lines }}"
+- name: Verify Kubernetes Cluster Health
+  become: true
+  when: kubernetes_master | default(false) | bool
+  shell: |
+    kubectl get nodes
+  register: cluster_health_check
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf  # Ensure kubectl uses the correct config on the master
+  # until: "cluster_health_check.rc == 0 and 'Ready' in cluster_health_check.stdout"
+  # retries: 3
+  # delay: 5
+  # changed_when: false
+  # failed_when: "'NotReady' in cluster_health_check.stderr"
+  # failed_when: "'Error' in cluster_health_check.stderr or 'failed' in cluster_health_check.stderr or 'NotReady' in cluster_health_check.stderr"
+  tags: [kubeadm_setup, kubeadm_config, kubeadm_health]
+- name: Display Cluster Health Check Results
+  when: cluster_health_check is failed
+  debug:
+    msg: Kubernetes Cluster is not Ready, Please fix issues
+  tags: [kubeadm_setup, kubeadm_config, kubeadm_health]
+- name: Display Cluster Health Check Results
+  when: cluster_health_check is not failed
+  debug:
+    msg: Kubernetes Cluster in Status Ready
+  tags: [kubeadm_setup, kubeadm_config, kubeadm_health]

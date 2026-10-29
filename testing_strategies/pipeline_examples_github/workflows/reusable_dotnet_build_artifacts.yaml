@@ -1,0 +1,187 @@
+name: Reusable Dotnet Build Solution and Upload Artifacts
+
+on:
+  workflow_call:
+    inputs:
+      DONTNET_PROJECT_FILE_PATH:
+        description: 'Path to Solution File'
+        required: true
+        type: string
+      BUILD_CONFIGURATION:
+        description: 'Build Configuration (e.g. Debug, Release)'
+        required: false
+        default: 'Release'
+        type: string
+      VERSION_KEY:
+        description: 'Version Key to Extract From CSPROJ file'
+        required: true
+        type: string
+    outputs:
+      MSBUILD_VERSION:
+        description: 'MSBuild Version'
+        value: ${{ jobs.build-solution.outputs.MSBUILD_VERSION }}
+      ASSEMBLY_NAME:
+        description: 'Assembly Name'
+        value: ${{ jobs.build-solution.outputs.ASSEMBLY_NAME }}
+      ASSEMBLY_VERSION:
+        description: 'Assembly Version'
+        value: ${{ jobs.build-solution.outputs.ASSEMBLY_VERSION }}
+
+jobs:
+  build-solution:
+    runs-on: windows-latest
+    timeout-minutes: 10         # Set a timeout for the job
+    steps:
+      - name: Checkout Git Repository
+        uses: actions/checkout@v4.2.2
+        with:
+          fetch-depth: '0'   # Fetch all history for all tags and branches
+          fetch-tags: '0'    # Fetch all tags
+          lfs: 'false'       # Fetch all LFS objects
+
+      - name: Add MSBuild to PATH (System Variable)
+        uses: microsoft/setup-msbuild@v2
+        with:
+          msbuild-architecture: x64
+          # vs-version: 'latest' # Use 'latest' OR '[17.0,16.5)' to get the version of Visual Studio you want.
+
+      - name: Dotnet add Nuget Source
+        run: dotnet nuget add source ${{ vars.AZURE_NUGET_SOURCE }} --name OCTOPUS --username ${{ vars.TOKEN_GITHUB_PACKAGES_REGISTRY_USER }} --password ${{ secrets.TOKEN_GITHUB_PACKAGES_REGISTRY_WRITE_ACCESS }}
+
+      - name: Dotnet Solution Restore
+        run: dotnet restore ${{ inputs.DONTNET_PROJECT_FILE_PATH }} --verbosity Normal
+
+      - name: Dotnet Solution Build
+        run: dotnet build ${{ inputs.DONTNET_PROJECT_FILE_PATH }} /nologo /nr:false /p:Configuration=${{ inputs.BUILD_CONFIGURATION }} /p:Platform="Any CPU" /p:DeployOnBuild=true /p:DeployDefaultTarget=WebPublish /p:WebPublishMethod=FileSystem /p:publishUrl="WebAppContent" --output "artifacts"
+
+      - name: Dotnet List Package Outdated
+        continue-on-error: true
+        id: outdated_packages
+        run: |
+          dotnet list ${{ inputs.DONTNET_PROJECT_FILE_PATH }} package --outdated | Out-File -FilePath outdated_packages.txt -Encoding utf8
+          # echo "OUTDATED_PACKAGES=$(dotnet list ${{ inputs.DONTNET_PROJECT_FILE_PATH }} package --outdated)" >> $env:GITHUB_OUTPUT
+
+      - name: Dotnet List Package Vulnerable
+        continue-on-error: true
+        id: vulnerable_packages
+        run: |
+          dotnet list ${{ inputs.DONTNET_PROJECT_FILE_PATH }} package --vulnerable | Out-File -FilePath vulnerable_packages.txt -Encoding utf8
+          # echo "VULNERABLE_PACKAGES=$(dotnet list ${{ inputs.DONTNET_PROJECT_FILE_PATH }} package --vulnerable)" >> $env:GITHUB_OUTPUT
+
+      - name: Dotnet List Package Deprecated
+        continue-on-error: true
+        id: deprecated_packages
+        run: |
+          dotnet list ${{ inputs.DONTNET_PROJECT_FILE_PATH }} package --deprecated | Out-File -FilePath deprecated_packages.txt -Encoding utf8
+          # echo "DEPRECATED_PACKAGES=$(dotnet list ${{ inputs.DONTNET_PROJECT_FILE_PATH }} package --deprecated)" >> $env:GITHUB_OUTPUT
+
+      - name: Upload Dotnet List Package Reports
+        id: upload_package_reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: package-artifact
+          path: |
+            deprecated_packages.txt
+            vulnerable_packages.txt
+            outdated_packages.txt
+
+      - name: Get Project Version Number
+        id: get_version
+        run: |
+            $XML = [xml](Get-Content ${{ inputs.DONTNET_PROJECT_FILE_PATH }})
+            $VERSION = $XML.Project.PropertyGroup.Version
+            Write-Host "Application Version Number: $VERSION"
+            echo "VERSION_NUMBER=$VERSION" >> $env:GITHUB_OUTPUT
+
+      - name: Get MSBuild Version
+        id: get_msbuild_version
+        shell: pwsh
+        run: |
+          $MSBUILD_VERSION = & msbuild -version
+          echo "MSBUILD_VERSION=$MSBUILD_VERSION" >> $env:GITHUB_OUTPUT
+
+      - name: Upload Artifacts
+        id: upload_artifacts
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: 'dotnet-artifacts'
+          path: 'artifacts'
+          retention-days: 14
+
+      - name: Adding Information to Pipeline Summary
+        run: |
+            echo "## Pipeline Build Information"                                                              >> $env:GITHUB_STEP_SUMMARY
+            echo "- Project Version Tag: ${{ steps.get_version.outputs.VERSION_NUMBER }}"                     >> $env:GITHUB_STEP_SUMMARY
+            echo "- Project Build Artifact ID: ${{ steps.upload_artifacts.outputs.artifact-id }}"             >> $env:GITHUB_STEP_SUMMARY
+            echo "- Project Build Download URL: ${{ steps.upload_artifacts.outputs.artifact-url }}"           >> $env:GITHUB_STEP_SUMMARY
+            echo "- Dotnet Packages Security Reports: ${{ steps.upload_package_reports.outputs.artifact-url }}" >> $env:GITHUB_STEP_SUMMARY
+
+    outputs:
+      MSBUILD_VERSION: ${{ steps.get_msbuild_version.outputs.MSBUILD_VERSION }}
+      ASSEMBLY_NAME: ${{ steps.get_version.outputs.ASSEMBLY_NAME || 'OCTOPUS.Microservices' }}  # Default to OCTOPUS.Microservices if not found
+      ASSEMBLY_VERSION: ${{ steps.get_version.outputs.VERSION_NUMBER }}
+      ARTIFACTS_URL: ${{ steps.upload_artifacts.outputs.artifact-url }}
+      ARTIFACTS_RETENTION_DAYS: '14'
+
+  sign-code-files:
+    runs-on: certificate
+    needs: build-solution
+    timeout-minutes: 10         # Set a timeout for the job
+    steps:
+      - name: Add MSBuild to PATH (System Variable)
+        uses: microsoft/setup-msbuild@v2
+        with:
+          msbuild-architecture: x64
+          # vs-version: 'latest' # Use 'latest' OR '[17.0,16.5)' to get the version of Visual Studio you want.
+
+      - name: Download Artifacts from Previous Job
+        uses: actions/download-artifact@v5.0.0
+        with:
+          name: 'dotnet-artifacts'
+          path: 'artifacts'
+
+      - name: Signing dll and exe Files with Certificate
+        id: find_files_to_sign
+        shell: pwsh
+        run: |
+          $SearchPath = "artifacts"
+          $fileCount = 0
+
+          Write-Host "Searching for dll and exe Files to Sign ..."
+          Write-Host "Search path: $SearchPath"
+          Write-Host ""
+
+          # Search for .dll and .exe files containing 'octopus' in the filename (including all subfolders)
+          $files = Get-ChildItem -Path $SearchPath -Include *.dll,*.exe -File -Recurse -ErrorAction SilentlyContinue | Where-Object { $_.Name -like "*octopus*" }
+
+          foreach ($file in $files) {
+              $fileCount++
+              Write-Host "Processing [$fileCount]: $($file.FullName)"
+
+              try {
+                  Write-Host "Signing Certificate Information to File"
+                  scsigntool /pin ${{ secrets.SCSIGNTOOL_PIN_CODE }} sign /a /sm /sha1 ${{ secrets.SCSIGNTOOL_CERTIFICATE_SHA }} /fd SHA256 /t "http://timestamp.digicert.com" /d ${{ needs.build-nuget-package-push.outputs.ASSEMBLY_NAME || 'OCTOPUS.Microservices' }} /du "https://www.octopus-app.com" $($file.FullName)
+
+                  Write-Host "Checking That File Missing Certificate Information"
+                  signtool verify /pa $($file.FullName)
+              }
+              catch {
+                  Write-Host "  Error: $($_.Exception.Message)"
+              }
+              Write-Host ""
+          }
+          Write-Host "Search completed, Total files found: $fileCount"
+          echo "SIGNED_FILES_COUNT=$fileCount" >> $env:GITHUB_OUTPUT
+
+      - name: Upload Artifacts
+        id: upload_artifacts
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: 'singned-dotnet-artifacts'
+          path: 'artifacts'
+          retention-days: 14
+
+    outputs:
+      SIGNED_FILES_COUNT: ${{ steps.find_files_to_sign.outputs.SIGNED_FILES_COUNT || '0' }}  # Default to 0 if no files were signed
+      ARTIFACTS_URL_SIGNED: ${{ steps.upload_artifacts.outputs.artifact-url }}
+      ARTIFACTS_RETENTION_DAYS_SIGNED: '14'

@@ -1,0 +1,217 @@
+# Check README.md file in 'devops.azure.pipeline.templates' for more information
+# Github actions variables https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/store-information-in-variables
+name: Reusable DontNet Build Release ZIP File CI/CD
+
+on:
+    workflow_call:
+        inputs:
+            BUILDPLATFORM:
+                description: "Build Platform"
+                required: true
+                type: string
+                default: "x64"
+            BUILDCONFIGURATION:
+                description: "Build Configuration"
+                required: true
+                type: string
+                default: "Release" # Options: Debug, Release Default: Release
+            RESOURCE_GROUP:
+                description: "Azure Resource Group"
+                required: true
+                type: string
+                default: "octopus-development-israelcentral"
+            SOLUTION_UI:
+                description: "Solution File to Build"
+                required: true
+                type: string
+                # default: "Octopus3.sln"
+            VERSIONKEY_UI:
+                description: "Version Key"
+                required: true
+                type: string
+                # default: "numOfOctopusVersion"
+            AZURE_WEBAPP_NAME:
+                description: "Azure Web App Name"
+                required: true
+                type: string
+                # default: "octopus-dev-il-webapp-ui"
+            DONTNET_PROJECT_FILE_PATH:
+                description: "Path to .NET Project File"
+                required: true
+                type: string
+            SIGNED_FILES_WORKFLOW:
+                description: "Whether to Sign Files in the Workflow"
+                required: false
+                default: true
+                type: boolean
+        outputs:
+            AZURE_WEBAPP_NAME:
+                description: "Azure Web App Name"
+                value: ${{ jobs.build-dotnet-solution-artifact.outputs.AZURE_WEBAPP_NAME }}
+            VERSION_NUMBER:
+                description: "Version Number from web.config"
+                value: ${{ jobs.build-dotnet-solution-artifact.outputs.VERSION_NUMBER }}
+            ARTIFACTS_URL:
+                description: "URL to Download Artifacts"
+                value: ${{ jobs.build-dotnet-solution-artifact.outputs.artifact-url }}
+            ARTIFACTS_URL_SIGNED:
+                description: "URL to Download Signed Artifacts"
+                value: ${{ jobs.build-dotnet-solution-artifact.outputs.ARTIFACTS_URL_SIGNED }}
+            ARTIFACTS_RETENTION_DAYS_SIGNED:
+                description: "Retention Days for Signed Artifacts"
+                value: ${{ jobs.build-dotnet-solution-artifact.outputs.ARTIFACTS_RETENTION_DAYS_SIGNED }}
+
+jobs: # check runners status https://www.githubstatus.com/
+    build-dotnet-solution-artifact:
+        runs-on: windows-latest
+        timeout-minutes: 30 # Set a timeout of 30 minutes for the job
+        steps:
+            - name: Checkout Git Repository
+              uses: actions/checkout@v4.2.2
+              with:
+                  # repository: octopusappdev/octopus.ui
+                  # token: ${{ secrets.TOKEN_GITHUB_PACKAGES_REGISTRY_WRITE_ACCESS }}
+                  # ref: ${{ github.ref }}
+                  fetch-depth: "0" # Fetch all history for all tags and branches
+                  fetch-tags: "0" # Fetch all tags
+                  lfs: "false" # Fetch all LFS objects
+                  # path: "ui"
+
+            - name: Add MSBuild to PATH (System Variable)
+              uses: microsoft/setup-msbuild@v2
+              with:
+                  msbuild-architecture: ${{ inputs.BUILDPLATFORM }}
+                  # vs-version: 'latest' # Use 'latest' OR '[17.0,16.5)' to get the version of Visual Studio
+
+            - name: Dotnet add Nuget Source
+              run: dotnet nuget add source ${{ vars.AZURE_NUGET_SOURCE }} --name OCTOPUS --username ${{ vars.TOKEN_GITHUB_PACKAGES_REGISTRY_USER }} --password ${{ secrets.TOKEN_GITHUB_PACKAGES_REGISTRY_WRITE_ACCESS }}
+
+            - name: Dotnet NuGet Restore
+              run: dotnet restore ${{ inputs.DONTNET_PROJECT_FILE_PATH }} --verbosity Normal
+
+            - name: Dotnet Solution Build
+              run: msbuild ${{ inputs.DONTNET_PROJECT_FILE_PATH }} /nologo /nr:false /p:Configuration=${{ inputs.BUILDCONFIGURATION }} /p:Platform="Any CPU" /p:DeployOnBuild=true /p:DeployDefaultTarget=WebPublish /p:WebPublishMethod=FileSystem /p:publishUrl="WebAppContent"
+
+            - name: Get Version Number
+              id: get_version
+              run: |
+                  $VERSION = Select-Xml -Path "web.config" -XPath "/configuration/appSettings/add" | Select-Object -ExpandProperty Node | Where-Object Key -match ${{ inputs.VERSIONKEY_UI }} | select -expand Value
+                  Write-Host "UI Version: $VERSION"
+                  echo "VERSION_NUMBER=$VERSION" >> $env:GITHUB_OUTPUT
+
+            - name: Remove Sections From WebConfig
+              run: |
+                  $xml = [xml](Get-Content 'web.config')
+                  $node = $xml.SelectSingleNode("//appSettings")
+                  $node.ParentNode.RemoveChild($node) | Out-Null
+                  $node = $xml.SelectSingleNode("//connectionStrings")
+                  $node.ParentNode.RemoveChild($node) | Out-Null
+                  $xml.Save('web.config')
+
+            - name: Upload ZIP to Artifact
+              uses: actions/upload-artifact@v4.6.2
+              id: upload_zip_ui
+              with:
+                  name: ${{ github.run_id }}-artifact
+                  path: |
+                      App_Code
+                      App_Data
+                      bin
+                      Content
+                      Images
+                      librdkafka
+                      ReportsBi
+                      Scripts
+                      Styles
+                      Views
+                      apple-touch-icon-114x114.png
+                      apple-touch-icon-120x120.png
+                      apple-touch-icon-144x144.png
+                      apple-touch-icon-152x152.png
+                      apple-touch-icon-180x180.png
+                      apple-touch-icon-57x57.png
+                      apple-touch-icon-60x60.png
+                      apple-touch-icon-72x72.png
+                      apple-touch-icon-76x76.png
+                      ApplicationInsights.config
+                      favicon.ico
+                      Global.asax
+                      grpc_csharp_ext.x64.dll
+                      grpc_csharp_ext.x86.dll
+                      libgrpc_csharp_ext.x64.dylib
+                      libgrpc_csharp_ext.x64.so
+                      robots.txt
+                      Web.config
+                  include-hidden-files: "false"
+                  retention-days: "60"
+                  overwrite: "false"
+                  if-no-files-found: "error"
+
+        outputs:
+            AZURE_WEBAPP_NAME: ${{ inputs.AZURE_WEBAPP_NAME }}
+            VERSION_NUMBER: ${{ steps.get_version.outputs.VERSION_NUMBER }}
+            ARTIFACTS_URL: ${{ steps.upload_zip_ui.outputs.artifact-url }}
+
+    sign-code-files:
+        runs-on: certificate
+        needs: build-dotnet-solution-artifact
+        timeout-minutes: 10 # Set a timeout for the job
+        steps:
+            - name: Add MSBuild to PATH (System Variable)
+              uses: microsoft/setup-msbuild@v2
+              with:
+                  msbuild-architecture: x64
+                  # vs-version: 'latest' # Use 'latest' OR '[17.0,16.5)' to get the version of Visual Studio you want.
+
+            - name: Download Artifacts from Previous Job
+              uses: actions/download-artifact@v5.0.0
+              with:
+                  name: "dotnet-artifacts"
+                  path: "artifacts"
+
+            - name: Signing dll and exe Files with Certificate
+              if: ${{ inputs.SIGNED_FILES_WORKFLOW == true }}
+              id: find_files_to_sign
+              shell: pwsh
+              run: |
+                  $SearchPath = "artifacts"
+                  $fileCount = 0
+
+                  Write-Host "Searching for *.dll and *.exe Files to Sign ..."
+                  Write-Host "Search path: $SearchPath"
+                  Write-Host ""
+
+                  $files = Get-ChildItem -Path $SearchPath -Include *.dll,*.exe -File -Recurse -ErrorAction SilentlyContinue | Where-Object { $_.Name -like "*octopus*" }
+
+                  foreach ($file in $files) {
+                      $fileCount++
+                      Write-Host "Processing [$fileCount]: $($file.FullName)"
+
+                      try {
+                          Write-Host "Signing Certificate Information to File"
+                          scsigntool /pin ${{ secrets.SCSIGNTOOL_PIN_CODE }} sign /a /sm /sha1 ${{ secrets.SCSIGNTOOL_CERTIFICATE_SHA }} /fd SHA256 /t "http://timestamp.digicert.com" /d ${{ needs.build-nuget-package-push.outputs.ASSEMBLY_NAME || 'OCTOPUS.Microservices' }} /du "https://www.octopus-app.com" $($file.FullName)
+
+                          Write-Host "Checking That File Missing Certificate Information"
+                          signtool verify /pa $($file.FullName)
+                      }
+                      catch {
+                          Write-Host "  Error: $($_.Exception.Message)"
+                      }
+                      Write-Host ""
+                  }
+                  Write-Host "Search completed, Total files found: $fileCount"
+                  echo "SIGNED_FILES_COUNT=$fileCount" >> $env:GITHUB_OUTPUT
+                  echo "SIGNED_FILES_WORKFLOW=${{ inputs.SIGNED_FILES_WORKFLOW }}" >> $env:GITHUB_OUTPUT
+
+            - name: Upload Artifacts
+              id: upload_artifacts
+              uses: actions/upload-artifact@v4.6.2
+              with:
+                  name: "singned-dotnet-artifacts"
+                  path: "artifacts"
+                  retention-days: 14
+
+        outputs:
+            SIGNED_FILES_COUNT: ${{ steps.find_files_to_sign.outputs.SIGNED_FILES_COUNT || '0' }} # Default to 0 if no files were signed
+            ARTIFACTS_URL_SIGNED: ${{ steps.upload_artifacts.outputs.artifact-url }}
+            ARTIFACTS_RETENTION_DAYS_SIGNED: "14"

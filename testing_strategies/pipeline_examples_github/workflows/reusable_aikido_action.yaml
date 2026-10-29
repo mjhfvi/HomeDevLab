@@ -1,0 +1,35 @@
+name: Reusable Build Example
+
+on:
+  workflow_call:
+    inputs:
+      MINIMUM_SEVERITY:
+        description: 'Minimum severity level for security scans'
+        required: true
+        default: 'CRITICAL'
+        type: string
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Git Repository
+        uses: actions/checkout@v4.2.2
+        with:
+          fetch-depth: '0'   # Fetch all history for all tags and branches
+          fetch-tags: '0'    # Fetch all tags
+          lfs: 'false'       # Fetch all LFS objects
+
+      - name: Detect new vulnerabilities
+        uses: AikidoSec/github-actions-workflow@v1.0.13
+        with:
+            secret-key: ${{ secrets.AIKIDO_SECRET_KEY }} # https://app.aikido.dev/settings/integrations/continuous-integration
+            timeout-seconds: 180
+            fail-on-timeout: true
+            fail-on-dependency-scan: true
+            # fail-on-sast-scan: false
+            # fail-on-iac-scan: false
+            # minimum-severity: ${{ inputs.MINIMUM_SEVERITY }} # Options: 'LOW', 'MEDIUM', 'HIGH', 'CRITICAL'
+            # post-scan-status-comment: 'off'
+            # post-sast-review-comments: 'off'
+            # github-token: ${{ secrets.GITHUB_TOKEN }} # Optional - Must be set only if you want Aikido to post a comment on the PR

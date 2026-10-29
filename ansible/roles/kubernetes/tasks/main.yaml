@@ -1,0 +1,29 @@
+---
+- name: Running kubernetes Common Playbooks
+  # when: docker_setup.succeeded
+  include_tasks:
+    file: kubernetes.yaml
+  register: kube_checklist
+  tags: [kubernetes_setup, kubernetes_apt, cni-install]
+- name: Running kubeadm Initialize Playbooks
+  # when: kube_checklist.succeeded
+  include_tasks:
+    file: kubeadm.yaml
+  # register: kubeadm_init
+  tags:
+    - kubeadm_setup
+    - kubeadm_init
+    - kubeadm_config
+    - kubeadm_join
+    - kubeadm_cni
+    - kubeadm_health
+    - kubeadm_test
+    - kubeadm_config_files
+    - kubeadm_token
+    - kubeadm_join_command
+- name: Running Rmote Access Initialize Playbooks
+  when: remote_access == true
+  include_tasks:
+    file: kubeadm_remote_access.yaml
+  # register: kubeadm_init
+  tags: [kubeadm_remote_access]

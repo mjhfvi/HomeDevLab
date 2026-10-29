@@ -1,0 +1,9 @@
+---
+- name: Running ArgoCD Common Playbooks
+  include_tasks:
+    file: argocd.yaml
+  tags: [argocd_setup, argocd_install, argocd_service]
+- name: Running ArgoCD Applications Playbooks
+  include_tasks:
+    file: applications.yaml
+  tags: [argocd_setup, argocd_docker_registry, argocd_applications]

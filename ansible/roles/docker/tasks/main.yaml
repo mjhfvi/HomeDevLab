@@ -1,0 +1,5 @@
+---
+- name: Running Docker Common Playbooks
+  include_tasks:
+    file: docker.yaml
+  tags: [docker_setup, docker_apt, docker_config_toml]

@@ -1,0 +1,5 @@
+---
+- name: Running Metallb Common Playbooks
+  include_tasks:
+    file: metallb.yaml
+  tags: [metallb_setup]

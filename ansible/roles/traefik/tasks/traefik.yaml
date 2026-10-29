@@ -1,0 +1,30 @@
+---
+- name: Install Traefik Helm Repository
+  become: true
+  when: kubernetes_master | default(false) | bool
+  kubernetes.core.helm_repository:
+    name: traefik
+    repo_url: https://traefik.github.io/charts
+    state: present
+    kubeconfig: /etc/kubernetes/admin.conf
+  # environment:
+  #   KUBECONFIG: /etc/kubernetes/admin.conf
+  tags: [traefik_setup]
+
+- name: Install Traefik using Helm Chart
+  become: true
+  when: kubernetes_master | default(false) | bool
+  kubernetes.core.helm:
+    name: traefik
+    chart_ref: traefik/traefik
+    release_namespace: traefik
+    create_namespace: true
+    # values:
+    #   replicaCount: 1
+    #   image:
+    #     tag: latest
+    state: present
+    kubeconfig: /etc/kubernetes/admin.conf
+  # environment:
+  #   KUBECONFIG: /etc/kubernetes/admin.conf
+  tags: [traefik_setup]

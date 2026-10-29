@@ -1,0 +1,581 @@
+name: Reusable Dotnet Docker Image Build and Push to GitHub Container Registry (GHCR)
+
+# https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/control-workflow-concurrency
+# concurrency: # control how many workflow runs or jobs can run simultaneously
+#   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+#   cancel-in-progress: true
+
+on:
+  workflow_call:
+    inputs:
+      ENVIRONMENT:
+        description: "Kubernetes Environment to Deploy to"
+        required: true
+        type: string
+      #   default: "octopus-dev-il-01"
+      DOCKER_NO_CACHE:
+        description: "Docker Build Cache Usage"
+        required: true
+        type: string
+      SOLUTION_FILE:
+        description: "Solution File to Build with the Extention .slnx"
+        required: true
+        type: string
+      TOKEN_GITHUB_PACKAGES_REGISTRY_USER:
+        description: "GitHub Packages Registry User"
+        required: true
+        type: string
+      # BUILD_WORKFLOW:
+      #   description: "Build Workflow to Execute (publish/test)"
+      #   required: true
+      #   type: string
+      BUILD_WITH_WARNASERROR:
+        description: "Whether to Build with Warnings as Errors Enabled"
+        required: true
+        type: string
+      SIGNED_SOURCE_FILES_WORKFLOW:
+        description: "Whether to Sign Files in the Workflow"
+        required: true
+        type: string
+      OBFUSCATION_SOURCE_FILES_WORKFLOW:
+        description: "Whether to Obfuscation the source files"
+        required: false
+        type: string
+    outputs:
+      MAIN_TAG:
+        description: "Docker Image Main Tag"
+        value: ${{ jobs.docker-image-build-push.outputs.MAIN_TAG }}
+      DEV_TAG:
+        description: "Docker Image Dev Tag"
+        value: ${{ jobs.docker-image-build-push.outputs.DEV_TAG }}
+      REPOSITORY_NAME:
+        description: "Docker Image Repository Name"
+        value: ${{ jobs.docker-image-build-push.outputs.REPOSITORY_NAME }}
+      ARTIFACTS_URL_SIGNED:
+        description: "URL to Download Signed Artifacts"
+        value: ${{ jobs.secure-source-code.outputs.ARTIFACTS_URL_SIGNED }}
+      ARTIFACTS_RETENTION_DAYS_SIGNED:
+        description: "Number of Days to Retain Signed Artifacts"
+        value: ${{ jobs.secure-source-code.outputs.ARTIFACTS_RETENTION_DAYS_SIGNED }}
+      SIGNED_FILES_COUNT:
+        description: "Number of Files Signed"
+        value: ${{ jobs.secure-source-code.outputs.SIGNED_FILES_COUNT }}
+      ARTIFACTS_TOTAL_FILES:
+        description: "Number of Files in Artifacts"
+        value: ${{ jobs.build-dotnet-source-files.outputs.ARTIFACTS_TOTAL_FILES }}
+      SFX_PACKAGE_UNSIGNED_EXECUTABLE_URL:
+        description: "URL to Download Signed Artifacts"
+        value: ${{ jobs.secure-code-create-sfx-package.outputs.SFX_PACKAGE_UNSIGNED_EXECUTABLE_URL }}
+      SFX_PACKAGE_RETENTION_DAYS:
+        description: "Retention Days for Signed Artifacts"
+        value: ${{ jobs.secure-code-create-sfx-package.outputs.SFX_PACKAGE_RETENTION_DAYS }}
+      SFX_PACKAGE_PASSWORD:
+        description: "Retention Days for Signed Artifacts"
+        value: ${{ jobs.secure-code-create-sfx-package.outputs.SFX_PACKAGE_PASSWORD }}
+      SFX_PACKAGE_SIGNED_EXECUTABLE_URL:
+        description: "URL to Download Signed Artifacts"
+        value: ${{ jobs.secure-code-create-sfx-package.outputs.SFX_PACKAGE_SIGNED_EXECUTABLE_URL }}
+      ARTIFACTS_SHA256SUMS_FILE:
+        description: "URL to Download Artifacts SHA256SUMS File"
+        value: ${{ jobs.build-dotnet-source-files.outputs.ARTIFACTS_SHA256SUMS_FILE }}
+      DOTNET_TARGET_FRAMEWORK:
+        description: "The .NET Target Framework used for the Build"
+        value: ${{ jobs.build-dotnet-source-files.outputs.DOTNET_TARGET_FRAMEWORK }}
+
+jobs:
+  build-dotnet-source-files:
+    runs-on: windows-latest
+    steps:
+    - name: Checkout Git Repository
+      uses: actions/checkout@v4.2.2
+      with:
+        fetch-depth: "0" # Fetch all history for all tags and branches
+        fetch-tags: "0" # Fetch all tags
+        lfs: "false" # Fetch all LFS objects
+
+    # - name: Added Support for .NET 10 # the current action only supports 9.0 so we added this action as a workaround
+    #   uses: actions/setup-dotnet@v5.0.1 # Action to set up .NET
+    #   with:
+    #     dotnet-version: "10.0.x" # Specify the .NET 10 version
+
+    - name: Extract Target Framework Value
+      id: extract-target-framework
+      shell: pwsh
+      run: |
+        $fileName = "${{ inputs.SOLUTION_FILE }}.csproj"
+        $projectFile = Get-ChildItem -Path . -Recurse -Filter $fileName | Select-Object -First 1
+
+        if ($null -eq $projectFile) {
+            Write-Error "Could not find project file '$fileName' anywhere in the repository."
+            exit 1
+        }
+
+        $content = Get-Content -Path $projectFile.FullName -Raw
+
+        if ($content -match '<TargetFramework>(.*?)</TargetFramework>') {
+          $targetFramework = $matches[1]
+          echo "Target Framework: $targetFramework"
+          echo "TARGET_FRAMEWORK=$targetFramework" >> $env:GITHUB_OUTPUT
+        } elseif ($content -match '<TargetFrameworks>(.*?)</TargetFrameworks>') {
+          $targetFrameworks = $matches[1]
+          echo "Target Framework: $targetFrameworks"
+          echo "TARGET_FRAMEWORK=$targetFrameworks" >> $env:GITHUB_OUTPUT
+        }
+        else {
+          Write-Error "TargetFramework or TargetFrameworks not found in project file"
+          exit 1
+        }
+
+    - name: Dotnet Add Nuget Source
+      run: dotnet nuget add source ${{ vars.NUGET_SOURCE_GITHUB }} --name OCTOPUS --username ${{ vars.TOKEN_GITHUB_PACKAGES_REGISTRY_USER }} --password ${{ secrets.TOKEN_GITHUB_PACKAGES_REGISTRY_WRITE_ACCESS }}
+
+    - name: Dotnet Run Publish to Build Source Artifacts
+      run: dotnet publish ${{ inputs.SOLUTION_FILE }}.slnx --configuration Release ${{ inputs.BUILD_WITH_WARNASERROR == 'true' && '-warnaserror' || '' }} --artifacts-path './artifacts'
+
+    - name: Count Number of Artifacts Files
+      id: count-artifacts
+      # if: github.event.pull_request.merged == true
+      shell: pwsh
+      run: |
+        # Get files from artifacts folder
+        $files = Get-ChildItem -Path "./artifacts" -Recurse -File
+
+        # Output the count in multiple ways
+        Write-Host "##[group]Artifacts Analysis"
+        Write-Host "Total files found: $($files.Count)"
+        Write-Host "##[endgroup]"
+
+        # Set GitHub Actions output for later use
+        echo "TOTAL_FILES=$($files.Count)" >> $env:GITHUB_OUTPUT
+
+        # Also output as environment variable if needed
+        # echo "FILES_COUNT=$($files.Count)" >> $env:GITHUB_ENV
+
+        # Write to log file
+        # "Artifacts count: $($files.Count)" | Out-File -FilePath "./count-log.txt"
+
+    - name: Build SHA256 File for Artifacts
+      id: hashing_files
+      # if: github.event.pull_request.merged == true
+      shell: pwsh
+      run: |
+        $OUTPUTFILE = "artifacts\publish\${{ inputs.SOLUTION_FILE }}\release\artifact-sha256sums.txt"
+        $introText = @"
+        # Octopus Release Artifacts - SHA256 Verification
+        # Generated: $(Get-Date -Format "yyyy-MM-dd HH:mm:ss UTC")Z
+        #
+        # Verify file integrity using SHA256 checksum
+        # -------------------------------------------
+        # To verify a downloaded file matches our published artifact:
+        #
+        # PowerShell:
+        #   Get-FileHash -Algorithm SHA256 -Path "filename.txt"
+        #
+        # CMD:
+        #   certutil -hashfile filename.txt SHA256
+        #
+        # Linux/Mac:
+        #   sha256sum filename.txt
+        #
+        # Compare the displayed hash with the corresponding value below.
+        # Matching hashes confirm the file is authentic and unmodified.
+        #
+        # -------------------------------------------------------------------
+        # FILE                                      SHA256 CHECKSUM
+        # -------------------------------------------------------------------
+
+
+        "@
+        $introText >> $OUTPUTFILE
+        Get-ChildItem -Path "artifacts/publish/${{ inputs.SOLUTION_FILE }}/release" -Recurse -File | ForEach-Object {
+          $hash = Get-FileHash -Path $_.FullName -Algorithm SHA256
+          $relativePath = $_.FullName.Substring((Get-Item "artifacts").FullName.Length + 1)
+          "$($hash.Hash)  $relativePath" >> $OUTPUTFILE
+        }
+        Write-Host "SHA256 hashes written to $OUTPUTFILE"
+
+    - name: Upload Artifacts sha256sums File
+      id: upload_sha256sums_artifacts
+      # if: github.event.pull_request.merged == true
+      uses: actions/upload-artifact@v4.6.2
+      with:
+        name: "artifact-sha256sums-file"
+        path: "artifacts/publish/${{ inputs.SOLUTION_FILE }}/release/artifact-sha256sums.txt"
+        retention-days: 14
+
+    - name: Upload Artifacts
+      id: upload_artifacts
+      # if: github.event.pull_request.merged == true
+      uses: actions/upload-artifact@v4.6.2
+      with:
+        name: "source-files-artifacts"
+        path: "artifacts/publish/${{ inputs.SOLUTION_FILE }}/release"
+        retention-days: 14
+
+    outputs:
+      ARTIFACTS_URL: ${{ steps.upload_artifacts.outputs.artifact-url }}
+      ARTIFACTS_RETENTION_DAYS: "14"
+      ARTIFACTS_TOTAL_FILES: ${{ steps.count-artifacts.outputs.TOTAL_FILES }}
+      ARTIFACTS_SHA256SUMS_FILE: ${{ steps.upload_sha256sums_artifacts.outputs.artifact-url }}
+      DOTNET_TARGET_FRAMEWORK: ${{ steps.extract-target-framework.outputs.TARGET_FRAMEWORK == 'net9.0' && '9.0-noble' || steps.extract-target-framework.outputs.TARGET_FRAMEWORK == 'net10.0' && '10.0-noble' }}
+
+  secure-source-code:
+    runs-on: certificate
+    needs: build-dotnet-source-files
+    # if: github.event.pull_request.merged == true
+    timeout-minutes: 10 # Set a timeout for the job
+    steps:
+    - name: 'Cleanup build folder'
+      shell: cmd
+      run: |
+        # Delete all files and subdirectories in the current directory, including hidden ones
+        if exist "*" del /F /S /Q "*"
+        if exist ".*" del /F /S /Q ".*"
+
+    - name: Download Artifacts from Previous Job
+      uses: actions/download-artifact@v5.0.0
+      with:
+        name: "source-files-artifacts"
+        path: "artifacts"
+
+    - name: Run .NET Reactor # https://www.eziriz.com/help/command_line_parameters/index.html
+      if: inputs.OBFUSCATION_SOURCE_FILES_WORKFLOW == 'true'
+      shell: pwsh
+      id: dotnet-reactor
+      run: |
+        dotNET_Reactor.Console.exe -file "./artifacts/${{ inputs.SOLUTION_FILE }}.dll" -targetfile "./artifacts/${{ inputs.SOLUTION_FILE }}.dll" -licensed
+        Write-Host "Obfuscation Completed Successfully"
+
+    - name: Upload Obfuscation Artifacts
+      if: inputs.OBFUSCATION_SOURCE_FILES_WORKFLOW == 'true'
+      id: upload_obfuscation_artifacts
+      uses: actions/upload-artifact@v4.6.2
+      with:
+        name: "source-files-obfuscation-artifacts"
+        path: "artifacts"
+        retention-days: 14
+
+    - name: Signing dll and exe Files with Certificate
+      if: inputs.SIGNED_SOURCE_FILES_WORKFLOW == 'true'
+      id: find_files_to_sign
+      shell: pwsh
+      run: |
+        $SearchPath = "artifacts"
+        $fileCount = 0
+
+        Write-Host "Searching for *.dll and *.exe Files to Sign ..."
+        Write-Host "Search path: $SearchPath"
+        Write-Host ""
+
+        $files = Get-ChildItem -Path $SearchPath -Include *.dll,*.exe -File -Recurse -ErrorAction SilentlyContinue | Where-Object { $_.Name -like "*octopus*" }
+
+        foreach ($file in $files) {
+            $fileCount++
+            Write-Host "Processing [$fileCount]: $($file.FullName)"
+
+            try {
+                Write-Host "Signing Certificate Information to File"
+                scsigntool /pin ${{ secrets.SCSIGNTOOL_PIN_CODE }} sign /a /sm /sha1 ${{ secrets.SCSIGNTOOL_CERTIFICATE_SHA }} /fd SHA256 /t "http://timestamp.digicert.com" /d ${{ needs.build-nuget-package-push.outputs.ASSEMBLY_NAME || 'OCTOPUS.Microservices' }} /du "https://www.octopus-app.com" $($file.FullName)
+
+                Write-Host "Checking That File Missing Certificate Information"
+                signtool verify /pa $($file.FullName)
+            }
+            catch {
+                Write-Host "  Error: $($_.Exception.Message)"
+            }
+            Write-Host ""
+        }
+        Write-Host "Search completed, Total files found: $fileCount"
+        echo "SIGNED_FILES_COUNT=$fileCount" >> $env:GITHUB_OUTPUT
+        echo "SIGNED_SOURCE_FILES_WORKFLOW=${{ inputs.SIGNED_SOURCE_FILES_WORKFLOW }}" >> $env:GITHUB_OUTPUT
+
+    - name: Upload Signed Artifacts
+      if: inputs.SIGNED_SOURCE_FILES_WORKFLOW == 'true'
+      id: upload_signed_artifacts
+      uses: actions/upload-artifact@v4.6.2
+      with:
+        name: "source-files-signed-artifacts"
+        path: "artifacts"
+        retention-days: 14
+
+    outputs:
+      SIGNED_FILES_COUNT: ${{ steps.find_files_to_sign.outputs.SIGNED_FILES_COUNT || '0' }} # Default to 0 if no files were signed
+      ARTIFACTS_URL_SIGNED: ${{ steps.upload_signed_artifacts.outputs.artifact-url }}
+      ARTIFACTS_RETENTION_DAYS_SIGNED: "14"
+
+  docker-image-build-push:
+    needs: [ build-dotnet-source-files, secure-source-code ]
+    # if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # 'write' access to repository contents
+      pull-requests: write # 'write' access to pull requests
+    timeout-minutes: 30 # Set a timeout for the job
+    steps:
+    - name: Checkout Git Repository
+      uses: actions/checkout@v4.2.2
+      with:
+        fetch-depth: "0" # Fetch all history for all tags and branches
+        fetch-tags: "0" # Fetch all tags
+        lfs: "false" # Fetch all LFS objects
+
+    - name: Download Artifacts from Previous Job
+      uses: actions/download-artifact@v5.0.0
+      with:
+        name: ${{ inputs.OBFUSCATION_SOURCE_FILES_WORKFLOW == 'true' && inputs.SIGNED_SOURCE_FILES_WORKFLOW == 'true' && 'source-files-obfuscation-artifacts' || inputs.OBFUSCATION_SOURCE_FILES_WORKFLOW == 'true' && inputs.SIGNED_SOURCE_FILES_WORKFLOW != 'true' && 'source-files-obfuscation-artifacts' || inputs.OBFUSCATION_SOURCE_FILES_WORKFLOW != 'true' && inputs.SIGNED_SOURCE_FILES_WORKFLOW == 'true' && 'source-files-signed-artifacts' || inputs.OBFUSCATION_SOURCE_FILES_WORKFLOW != 'true' && inputs.SIGNED_SOURCE_FILES_WORKFLOW != 'true' && 'source-files-artifacts' }}
+        path: "artifacts"
+
+    - name: Checkout 'devops.azure.pipeline.templates' Git Repository
+      uses: actions/checkout@v4.2.2
+      with:
+        repository: "octopusappdev/devops.azure.pipeline.templates"
+        ref: "main"
+        token: ${{ secrets.TOKEN_GITHUB_PACKAGES_REGISTRY_WRITE_ACCESS }}
+        path: templates
+
+    - name: Copy Docker Files to Root Folder
+      run: cp templates/docker/templates/{dockerfile_dotnet,.dockerignore} .
+
+    - name: Login to GitHub Container Registry (GHCR) # GitHub Action source https://github.com/docker/login-action
+      uses: docker/login-action@v3.4.0
+      with:
+        registry: ghcr.io
+        username: ${{ vars.TOKEN_GITHUB_PACKAGES_REGISTRY_USER }}
+        password: ${{ secrets.TOKEN_GITHUB_PACKAGES_REGISTRY_WRITE_ACCESS }}
+
+    - name: Set Repository Data to Environment Variables
+      id: set_repository_data
+      run: |
+        echo "GIT_SHA=$(git rev-parse --short=7 HEAD)"                          >> $GITHUB_OUTPUT
+        echo "DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")"                            >> $GITHUB_OUTPUT
+        # echo "LAST_TAG=$(git describe --tags --abbrev=0)"                     >> $GITHUB_OUTPUT
+        echo "LAST_TAG=$(git tag --sort=committerdate | tail -1)"               >> $GITHUB_OUTPUT
+        echo "REPOSITORY_NAME=$(echo ${{ github.repository }} | cut -d'/' -f2)" >> $GITHUB_OUTPUT
+
+    - name: Get Latest Tag for 'Production' and Increment Patch Number
+      id: increment_version
+      run: |
+        VERSION=${{ steps.set_repository_data.outputs.LAST_TAG }}
+
+        echo "Split Tag Version into major.minor.patch"
+        IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+
+        echo "Validate Tag Number"
+        if ! [[ "$MAJOR" =~ ^[0-9]+$ ]] || ! [[ "$MINOR" =~ ^[0-9]+$ ]] || ! [[ "$PATCH" =~ ^[0-9]+$ ]]; then
+          echo "Error: Invalid version format"
+          exit 1
+        fi
+
+        echo "Increment Patch Version to Tag"
+        NEW_PATCH=$((PATCH + 1))
+        NEW_VERSION="${MAJOR}.${MINOR}.${NEW_PATCH}"
+
+        echo "New version: $NEW_VERSION"
+        echo "MAIN_TAG=$NEW_VERSION" >> $GITHUB_OUTPUT
+
+        echo "Check if Tag Already Exists in Repository"
+        if git rev-parse "$NEW_VERSION" >/dev/null 2>&1; then
+          echo "Error: Tag $NEW_VERSION already exists"
+          exit 1
+        fi
+
+    - name: Setup QEMU for Buildx # GitHub Action to install QEMU static binaries
+      uses: docker/setup-qemu-action@v3
+
+    - name: Setup Docker Buildx Settings
+      uses: docker/setup-buildx-action@v3
+      with:
+        platforms: linux/amd64 # Builder node platforms options - linux/amd64, linux/arm64
+
+    - name: Build Health Check File
+      # if: github.event.pull_request.merged == true
+      shell: pwsh
+      run: |
+        $buildTimestamp = Get-Date -Format "yyyy-MM-ddTHH:mm:ssZ"
+
+        $healthInfo = @{
+          tag_version = "${{ github.ref == 'refs/heads/main' && steps.set_repository_data.outputs.LAST_TAG || steps.increment_version.outputs.MAIN_TAG }}"
+          branch="${{ github.ref_name }}"
+          environment = "${{ github.ref == 'refs/heads/main' && 'production' || 'development' }}"
+          git_commit = "${{ github.sha }}"
+          build_timestamp = $buildTimestamp
+        }
+        $jsonData = $healthInfo | ConvertTo-Json -Depth 2
+        $jsonData | Out-File -FilePath "artifacts\health-check.txt" -Encoding UTF8
+
+    - name: Build Docker Image and Push to GitHub Container Registry (GHCR)
+      uses: docker/build-push-action@v6.18.0
+      id: docker_build
+      with:
+        context: .
+        file: dockerfile_dotnet
+        push: true
+        platforms: linux/amd64 # List of target platforms for build - linux/amd64,linux/arm64
+        no-cache: ${{ inputs.DOCKER_NO_CACHE }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+        build-args: |
+          OS_FROM=${{ needs.build-dotnet-source-files.outputs.DOTNET_TARGET_FRAMEWORK }}
+          SOLUTION_FILE=${{ inputs.SOLUTION_FILE }}
+          TOKEN_GITHUB_CONTAINER_REGISTRY_ACCESS_USER=${{ vars.TOKEN_GITHUB_PACKAGES_REGISTRY_USER }}
+          TOKEN_GITHUB_CONTAINER_REGISTRY_ACCESS_PASSWORD=${{ secrets.TOKEN_GITHUB_PACKAGES_REGISTRY_WRITE_ACCESS }}
+        labels: |
+          org.opencontainers.image.environment='${{ github.ref == 'refs/heads/main' && 'production' || 'development' }}'
+          org.opencontainers.image.repository.branch='${{ github.ref_name }}'
+          org.opencontainers.image.repository.tag='${{ github.ref == 'refs/heads/main' && steps.set_repository_data.outputs.LAST_TAG || steps.increment_version.outputs.MAIN_TAG }}'
+          org.opencontainers.image.commit.sha='${{ github.ref == 'refs/heads/main' && steps.set_repository_data.outputs.LAST_TAG || steps.set_repository_data.outputs.GIT_SHA }}'
+          org.opencontainers.image.commit.sha.full='${{ github.sha }}'
+          org.opencontainers.image.pipeline.number='${{ github.run_number }}'
+          org.opencontainers.image.pipeline.user.builder='${{ github.actor }}'
+          org.opencontainers.image.created.date='${{ steps.set_repository_data.outputs.DATE }}'
+          org.opencontainers.image.source=https://github.com/octopusappdev/${{ steps.set_repository_data.outputs.REPOSITORY_NAME }}
+        # annotations: |
+        #   org.opencontainers.image.description='${{  }}'
+        tags: |
+          ghcr.io/octopusappdev/${{ steps.set_repository_data.outputs.REPOSITORY_NAME }}:${{ github.ref == 'refs/heads/main' && 'latest' || 'dev' }}
+          ghcr.io/octopusappdev/${{ steps.set_repository_data.outputs.REPOSITORY_NAME }}:${{ github.ref == 'refs/heads/main' && steps.set_repository_data.outputs.LAST_TAG || steps.set_repository_data.outputs.GIT_SHA }}
+
+    - name: Bump Tag Version and Push New Tag '${{ github.ref == 'refs/heads/main' && steps.set_repository_data.outputs.LAST_TAG }}'
+      uses: mathieudutour/github-tag-action@v6.2
+      if: github.ref == 'refs/heads/main' && steps.increment_version.outcome == 'success'
+      with:
+        github_token: ${{ secrets.TOKEN_GITHUB_PACKAGES_REGISTRY_WRITE_ACCESS }} # Using Write Access to be able to push new tag to repository
+        tag_prefix: ""
+        custom_tag: ${{ steps.increment_version.outputs.MAIN_TAG }}
+        default_bump: false
+
+    - name: Checkout '${{ inputs.ENVIRONMENT }}' Git Repository
+      uses: actions/checkout@v4.2.2
+      with:
+        repository: "octopusappdev/${{ inputs.ENVIRONMENT }}"
+        ref: "main"
+        token: ${{ secrets.TOKEN_GITHUB_PACKAGES_REGISTRY_WRITE_ACCESS }}
+        path: temporary
+
+    - name: Update Docker Tag '${{ github.ref == 'refs/heads/main' && steps.set_repository_data.outputs.LAST_TAG || steps.set_repository_data.outputs.GIT_SHA }}' in 'deployment.yaml'
+      uses: fjogeleit/yaml-update-action@v0.16.1
+      with:
+        valueFile: "./temporary/octopus/${{ steps.set_repository_data.outputs.REPOSITORY_NAME }}/templates/deployment.yaml"
+        propertyPath: "spec.template.spec.containers[0].image"
+        value: "ghcr.io/octopusappdev/${{ steps.set_repository_data.outputs.REPOSITORY_NAME }}:${{ github.ref == 'refs/heads/main' && steps.set_repository_data.outputs.LAST_TAG || steps.set_repository_data.outputs.GIT_SHA }}"
+        masterBranchName: main
+        updateFile: true
+        commitChange: false
+        message: "Update Image Version to ${{ github.ref == 'refs/heads/main' && steps.set_repository_data.outputs.LAST_TAG || steps.set_repository_data.outputs.GIT_SHA }}"
+
+    - name: Add Commit 'deployment.yaml' File to '${{ inputs.ENVIRONMENT }}' Git Repository
+      continue-on-error: true
+      run: |
+        cd ./temporary/
+        git config user.name ${{ github.actor }}
+        git config user.email ${{ github.actor }}@github.com
+        git add './octopus/${{ steps.set_repository_data.outputs.REPOSITORY_NAME }}/templates/deployment.yaml'
+        git commit -m "Update Docker Tag ${{ github.ref == 'refs/heads/main' && steps.set_repository_data.outputs.LAST_TAG || steps.set_repository_data.outputs.GIT_SHA }} in deployment.yaml for ArgoCD"
+
+    - name: Push Commit Changes to '${{ inputs.ENVIRONMENT }}' Git Repository
+      uses: ad-m/github-push-action@v0.8.0
+      with:
+        repository: "octopusappdev/${{ inputs.ENVIRONMENT }}"
+        branch: "main"
+        directory: ./temporary/
+        github_token: ${{ secrets.TOKEN_GITHUB_PACKAGES_REGISTRY_WRITE_ACCESS }} # Using Write Access to be able to push commit changes to repository
+
+    outputs:
+      MAIN_TAG: ${{ steps.set_repository_data.outputs.LAST_TAG }}
+      DEV_TAG: ${{ steps.set_repository_data.outputs.GIT_SHA }}
+      REPOSITORY_NAME: ${{ steps.set_repository_data.outputs.REPOSITORY_NAME }}
+
+  secure-code-create-sfx-package:
+    runs-on: certificate
+    needs: [ build-dotnet-source-files, secure-source-code, docker-image-build-push ]
+    # if: github.event.pull_request.merged == true
+    timeout-minutes: 10 # Set a timeout for the job
+    steps:
+    - name: Download Artifacts from Previous Job
+      uses: actions/download-artifact@v5.0.0
+      with:
+        name: ${{ inputs.OBFUSCATION_SOURCE_FILES_WORKFLOW == 'true' && inputs.SIGNED_SOURCE_FILES_WORKFLOW == 'true' && 'source-files-obfuscation-artifacts' || inputs.OBFUSCATION_SOURCE_FILES_WORKFLOW != 'true' && inputs.SIGNED_SOURCE_FILES_WORKFLOW == 'true' && 'source-files-signed-artifacts' || inputs.OBFUSCATION_SOURCE_FILES_WORKFLOW == 'true' && inputs.SIGNED_SOURCE_FILES_WORKFLOW != 'true' && 'source-files-obfuscation-artifacts' || inputs.OBFUSCATION_SOURCE_FILES_WORKFLOW != 'true' && inputs.SIGNED_SOURCE_FILES_WORKFLOW != 'true' && 'source-files-artifacts' }}
+        path: artifacts
+
+    - name: Create Configuration File for SFX Package
+      id: create_config_file
+      shell: pwsh
+      run: |
+        cd artifacts
+        $lines = @(
+            ";!@Install@!UTF-8!"
+            "InstallPath=."
+            "GUIMode=0"
+            "Title=Octopus Application"
+            "BeginPrompt=Do You Want to Extract Files?"
+            "FinishMessage=Extraction is Complete. Press OK to exit."
+            "ErrorMessage=An error occurred."
+            "Progress=yes"
+            "RunProgram=setup.exe"
+            ";!@InstallEnd@!"
+        )
+
+        Add-Content -Path "config.txt" -Value $lines
+
+    # - name: Install 7Zip SFX Package Using Chocolatey (github runners)
+    #   id: install_7zip_sfx_package
+    #   shell: pwsh
+    #   run: |
+    #     choco install 7zip  -y
+
+    #     cd artifacts
+    #     Write-Host 'Downloading and Extracting 7-Zip Development Kit'
+    #     Invoke-WebRequest -Uri "https://www.7-zip.org/a/lzma2501.7z" -OutFile "lzma.7z"
+    #     7z x "lzma.7z" -y
+    #     copy .\bin\*.sfx .
+
+    #     Write-Host 'Download and Extracting 7-Zip Extra Tools'
+    #     Invoke-WebRequest -Uri "https://www.7-zip.org/a/7z2501-x64.exe" -OutFile "7Z.7z"
+    #     7z x "7Z.7z" -y
+
+    #     echo "7ZIP_EXTRA_DOWNLOADED=$true" >> $env:GITHUB_OUTPUT
+    #     echo "SFX_PACKAGE_INSTALLED=$true" >> $env:GITHUB_OUTPUT
+
+    - name: Copy SFX Package to Signed Artifacts
+      shell: pwsh
+      run: copy ..\..\..\..\lzma\bin\*.sfx .\artifacts
+
+    - name: Create SFX Package from Signed Artifacts
+      id: create_sfx_package
+      shell: pwsh
+      run: |
+        cd artifacts
+        Write-Host 'Creating Self-Extracting Executable Package'
+        7z a Octopus.exe -sfx.\7zSD.sfx *.dll *.exe -xr!7*.* -xr!Uninstall.exe -p"${{ github.sha }}"
+        # if ('${{ inputs.ZIP_FILE_CREATE_PASSWORD }}' -eq 'Yes') {
+        #     7z a Octopus.exe -sfx.\7zSD.sfx *.dll *.exe -xr!7*.* -xr!Uninstall.exe -p"${{ github.sha }}"
+        # } else {
+        #     7z a Octopus.exe -sfx.\7zSD.sfx *.dll *.exe -xr!7*.* -xr!Uninstall.exe
+        # }
+
+    - name: Signing 'Octopus.exe' File with Certificate
+      #   if: ${{ inputs.SIGNED_FILES_WORKFLOW == true }}
+      id: find_singned_files_to_sign
+      shell: pwsh
+      run: |
+        cd artifacts
+        scsigntool /pin ${{ secrets.SCSIGNTOOL_PIN_CODE }} sign /a /sm /sha1 ${{ secrets.SCSIGNTOOL_CERTIFICATE_SHA }} /fd SHA256 /t "http://timestamp.digicert.com" /d ${{ needs.docker-image-build-push.outputs.REPOSITORY_NAME || 'OCTOPUS.Microservices' }} /du "https://www.octopus-app.com" Octopus.exe
+
+        Write-Host "Checking That File Missing Certificate Information"
+        signtool verify /pa Octopus.exe
+
+        echo "SIGNED_FILES_COUNT=$fileCount" >> $env:GITHUB_OUTPUT
+        echo "SIGNED_FILES_WORKFLOW=${{ inputs.SIGNED_FILES_WORKFLOW }}" >> $env:GITHUB_OUTPUT
+
+    - name: Upload Self-Extracting Executable Artifacts
+      id: upload_executable_artifact
+      uses: actions/upload-artifact@v4.6.2
+      with:
+        name: ${{ needs.docker-image-build-push.outputs.REPOSITORY_NAME }}-${{ needs.docker-image-build-push.outputs.MAIN_TAG }}-source-code-executable-artifact
+        path: .\artifacts\Octopus.exe
+        retention-days: 14
+
+    outputs:
+      SFX_PACKAGE_RETENTION_DAYS: "14"
+      SFX_PACKAGE_PASSWORD: ${{ inputs.ZIP_FILE_CREATE_PASSWORD == 'Yes' && github.sha || github.sha }}
+      SFX_PACKAGE_SIGNED_EXECUTABLE_URL: ${{ steps.upload_executable_artifact.outputs.artifact-url }}

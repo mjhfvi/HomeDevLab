@@ -1,0 +1,9 @@
+---
+- name: Running Ubuntu Common Playbooks
+  include_tasks:
+    file: packages.yaml
+  tags: [ubuntu_setup, packages_install, apt_install, pip_install]
+- name: Running Ubuntu Update Hostname from Inventory 'hostname' Playbooks
+  include_tasks:
+    file: hostname.yaml
+  tags: [ubuntu_setup, hostname_update]

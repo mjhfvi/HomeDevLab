@@ -1,0 +1,106 @@
+name: Reusable Docker Image Build and Push to GitHub Container Registry (GHCR)
+
+on:
+  workflow_call:
+    inputs:
+      TOKEN_GITHUB_PACKAGES_REGISTRY_USER:
+        description: "GitHub Packages Registry User"
+        required: true
+        type: string
+    # outputs:
+    #   REPOSITORY_NAME:
+    #     description: "Docker Image Repository Name"
+    #     value: ${{ jobs.build-push-docker-image.outputs.REPOSITORY_NAME }}
+
+jobs:
+  docker-image-security-testing:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout Git Repository
+      uses: actions/checkout@v4.2.2
+      with:
+        fetch-depth: "0" # Fetch all history for all tags and branches
+        fetch-tags: "0" # Fetch all tags
+        lfs: "false" # Fetch all LFS objects
+
+    - name: Login to Docker Hub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ vars.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+    - name: Login to GitHub Container Registry (GHCR) # GitHub Action source https://github.com/docker/login-action
+      uses: docker/login-action@v3.4.0
+      with:
+        registry: ghcr.io
+        username: ${{ vars.TOKEN_GITHUB_PACKAGES_REGISTRY_USER }}
+        password: ${{ secrets.TOKEN_GITHUB_PACKAGES_REGISTRY_WRITE_ACCESS }}
+
+    - name: Set Repository Data to Environment Variables
+      id: set_repository_data
+      run: |
+        # echo "GIT_SHA=$(git rev-parse --short=7 HEAD)"                          >> $GITHUB_OUTPUT
+        # echo "DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")"                            >> $GITHUB_OUTPUT
+        # echo "LAST_TAG=$(git describe --tags --abbrev=0)"                       >> $GITHUB_OUTPUT
+        echo "LAST_TAG=$(git tag --sort=committerdate | tail -1)"               >> $GITHUB_OUTPUT
+        echo "REPOSITORY_NAME=$(echo ${{ github.repository }} | cut -d'/' -f2)" >> $GITHUB_OUTPUT
+
+    # - name: Get Latest Tag for 'Production' and Increment Patch Number
+    #   id: increment_version
+    #   run: |
+    #     VERSION=${{ steps.set_repository_data.outputs.LAST_TAG }}
+
+    #     echo "Split Tag Version into major.minor.patch"
+    #     IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+
+    #     echo "Validate Tag Number"
+    #     if ! [[ "$MAJOR" =~ ^[0-9]+$ ]] || ! [[ "$MINOR" =~ ^[0-9]+$ ]] || ! [[ "$PATCH" =~ ^[0-9]+$ ]]; then
+    #       echo "Error: Invalid version format"
+    #       exit 1
+    #     fi
+
+    #     echo "Increment Patch Version to Tag"
+    #     NEW_PATCH=$((PATCH - 1))
+    #     NEW_VERSION="${MAJOR}.${MINOR}.${NEW_PATCH}"
+
+    #     echo "New version: $NEW_VERSION"
+    #     echo "MAIN_TAG=$NEW_VERSION" >> $GITHUB_OUTPUT
+
+    - name: Trivy Vulnerability Scanner
+      uses: aquasecurity/trivy-action@0.33.1
+      with:
+        image-ref: ghcr.io/octopusappdev/${{ steps.set_repository_data.outputs.REPOSITORY_NAME }}:latest
+        format: 'table'
+        ignore-unfixed: true
+        vuln-type: 'os,library'
+        severity: 'CRITICAL,HIGH'
+        exit-code: '0'
+
+    - name: Docker Scout Testing for Vulnerabilities # GitHub Action source
+      uses: docker/scout-action@f8c776824083494ab0d56b8105ba2ca85c86e4de
+      with:
+        command: cves,recommendations,sbom
+        image: ghcr.io/octopusappdev/${{ steps.set_repository_data.outputs.REPOSITORY_NAME }}:latest
+        sarif-file: sarif.output.json
+        summary: true
+        # github-token: ${{ secrets.GITHUB_TOKEN }}
+        # to-latest: true
+        # ignore-unchanged: true
+        # only-severity: critical
+
+        # - name: Upload Docker Scout SARIF Report # GitHub Action source
+        #   uses: github/codeql-action/upload-sarif@v2.3.3
+        #   with:
+        #     sarif_file: sarif.output.json
+
+        # - name: Upload Docker Scout SARIF Report as Artifact # GitHub Action source
+        #   id: upload_reports
+        #   uses: actions/upload-artifact@v4.6.2
+        #   with:
+        #     name: "docker-scout-reports"
+        #     path: "artifacts"
+        #     retention-days: 14
+
+        # outputs:
+        #   ARTIFACTS_URL: ${{ steps.upload_reports.outputs.artifact-url }}
+        #   ARTIFACTS_RETENTION_DAYS: "14"

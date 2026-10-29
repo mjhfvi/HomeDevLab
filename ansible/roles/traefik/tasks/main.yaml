@@ -1,0 +1,5 @@
+---
+- name: Running Traefik Common Playbooks
+  include_tasks:
+    file: traefik.yaml
+  tags: [traefik_setup]

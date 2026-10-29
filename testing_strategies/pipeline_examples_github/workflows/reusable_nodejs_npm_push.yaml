@@ -1,0 +1,67 @@
+name: Reusable NodeJS NPM publish package workflow
+
+# https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/control-workflow-concurrency
+# concurrency: # control how many workflow runs or jobs can run simultaneously
+#   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+#   cancel-in-progress: true
+
+on:
+  workflow_call:
+    outputs:
+      MAIN_TAG:
+        description: "Docker Image Main Tag"
+        value: ${{ jobs.build-push-docker-image.outputs.MAIN_TAG }}
+      DEV_TAG:
+        description: "Docker Image Dev Tag"
+        value: ${{ jobs.build-push-docker-image.outputs.DEV_TAG }}
+      REPOSITORY_NAME:
+        description: "Docker Image Repository Name"
+        value: ${{ jobs.build-push-docker-image.outputs.REPOSITORY_NAME }}
+
+jobs:
+  build-push-npm-package:
+    runs-on: ubuntu-latest
+    permissions:
+      # Job-level permissions configuration starts here
+      contents: write # 'write' access to repository contents
+      pull-requests: write # 'write' access to pull requests
+    timeout-minutes: 30 # Set a timeout for the job
+    steps:
+    - name: Checkout Git Repository
+      uses: actions/checkout@v4.2.2
+      with:
+        fetch-depth: "0" # Fetch all history for all tags and branches
+        fetch-tags: "0" # Fetch all tags
+        lfs: "false" # Fetch all LFS objects
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '24.x' # use LTS version of Node.js
+        registry-url: 'https://npm.pkg.github.com'
+        scope: '@octopusappdev'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Bump version
+      run: |
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+        npm version patch -m "chore: bump version to %s [skip ci]"
+        git push --follow-tags
+
+    - name: Build package
+      run: npm run build
+
+    - name: Publish to GitHub Packages
+      uses: JS-DevTools/npm-publish@v4.1.2
+      with:
+        token: ${{ secrets.TOKEN_GITHUB_PACKAGES_REGISTRY_WRITE_ACCESS }}
+        registry: "https://npm.pkg.github.com"
+
+    outputs:
+      MAIN_TAG: ${{ steps.increment_version.outputs.MAIN_TAG }}
+      DEV_TAG: ${{ steps.set_repository_data.outputs.GIT_SHA }}
+      REPOSITORY_NAME: ${{ steps.set_repository_data.outputs.REPOSITORY_NAME }}
+      LOGS_NPM: ${{ steps.docker_build.outcome == 'failure' && steps.upload_artifacts.outputs.upload-url || 'no-logs-found' }}

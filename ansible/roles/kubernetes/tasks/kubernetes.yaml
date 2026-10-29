@@ -1,0 +1,174 @@
+---
+- name: Remove swapfile from /etc/fstab (Kubeadm requirement)
+  become: true
+  mount:
+    name: "{{ item }}"
+    fstype: swap
+    state: absent
+  with_items: [swap, none]
+  tags: [kubernetes_setup]
+- name: Disable swap in /etc/fstab (Kubeadm requirement)
+  become: true
+  command: swapoff -a
+  # when: ansible_swaptotal_mb > 0
+  tags: [kubernetes_setup]
+- name: Configure 'sysctl' Params for Kubernetes (Kubeadm requirement)
+  become: true
+  lineinfile:
+    path: /etc/sysctl.d/99-kubernetes-cri.conf
+    line: "{{ item }}"
+  with_items:
+    - net.bridge.bridge-nf-call-ip6tables = 1
+    - net.bridge.bridge-nf-call-iptables  = 1
+    - net.ipv4.conf.all.route_localnet    = 1
+  tags: [kubernetes_setup]
+- name: Configure ip_forward in 'sysctl' Params for Kubernetes (Kubeadm requirement)
+  become: true
+  lineinfile:
+    path: /etc/sysctl.conf
+    line: "{{ item }}"
+  with_items:
+    - net.ipv4.ip_forward = 1
+  tags: [kubernetes_setup]
+
+- name: Applying 'overlay' & 'br_netfilter' Params
+  become: true
+  command: |
+    modprobe overlay
+    modprobe br_netfilter
+  tags: [kubernetes_setup]
+
+- name: Ensure 'overlay' & 'br_netfilter' modules load at boot
+  become: true
+  copy:
+    content: |
+      overlay
+      br_netfilter
+    dest: /etc/modules-load.d/containerd.conf
+    mode: "0644"
+
+- name: Applying 'sysctl' Params Without Reboot
+  become: true
+  command: sysctl --system
+  tags: [kubernetes_setup]
+- name: Kubernetes Pods 'needrestart' Configuration
+  become: true
+  lineinfile:
+    path: /etc/needrestart/needrestart.conf
+    line: "{{ item }}"
+  with_items:
+    - echo $nrconf{restart} = 'a'
+  tags: [kubernetes_setup]
+- name: Add Kubernetes apt-key
+  become: true
+  get_url:
+    url: https://pkgs.k8s.io/core:/stable:/v{{ kubernetes_version }}/deb/Release.key
+    dest: /usr/share/keyrings/kubernetes-apt-keyring.asc
+    mode: "0644"
+    force: true
+  tags: [kubernetes_setup, kubernetes_apt]
+- name: Adding APT Repository for Kubernetes
+  become: true
+  apt_repository:
+    repo:
+      deb [signed-by=/usr/share/keyrings/kubernetes-apt-keyring.asc] https://pkgs.k8s.io/core:/stable:/v{{ kubernetes_version }}/deb/
+      /
+    state: present
+    update_cache: true
+    filename: kubernetes
+  tags: [kubernetes_setup, kubernetes_apt]
+- name: Install APT Packages for Kubernetes
+  become: true
+  apt:
+    name: "{{ packages }}"
+    state: present
+    update_cache: true
+  vars:
+    packages: [kubelet, kubeadm, kubectl]
+  tags:
+    - kubernetes_setup
+    - kubernetes_apt
+
+- name: Ensure CNI 'tmp' Configuration Directory
+  file:
+    path: "{{ cni_tmp_directory }}"
+    state: directory
+    mode: "0755"
+    # owner: "{{ cni_owner | default('omit') }}"
+    # group: "{{ cni_group | default('omit') }}"
+  tags:
+    - kubernetes_setup
+    - cni-install
+    # - cni-conf
+- name: Ensure CNI Configuration Directory
+  become: true
+  file:
+    path: "{{ cni_bin_directory }}"
+    state: directory
+    mode: "0755"
+    # owner: "{{ cni_owner | default('omit') }}"
+    # group: "{{ cni_group | default('omit') }}"
+  tags:
+    - kubernetes_setup
+    - cni-install
+    # - cni-conf
+- name: Downloading CNI Archive
+  get_url:
+    url: "{{ cni_url }}"
+    dest: "{{ cni_tmp_directory }}/{{ cni_archive }}"
+    # mode: "0640"
+    # checksum: "sha256:{{ cni_url }}.sha256"
+  tags:
+    - kubernetes_setup
+    - cni-install
+    # - cni-download
+- name: Unarchive CNI Archive
+  become: true
+  unarchive:
+    src: "{{ cni_tmp_directory }}/{{ cni_archive }}"
+    dest: "{{ cni_tmp_directory }}"
+    mode: "0755"
+    remote_src: true
+  # notify:
+  #   - Restart kubelet
+  tags:
+    - kubernetes_setup
+    - cni-install
+    # - cni-unarchive
+    # - cni-download
+- name: Copy CNI binary to destination directory
+  become: true
+  copy:
+    src: "{{ cni_tmp_directory }}/{{ item }}"
+    dest: "{{ cni_bin_directory }}/{{ item }}"
+    mode: "0755"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    remote_src: true
+  with_items:
+    - macvlan
+    - static
+    - vlan
+    - portmap
+    - host-local
+    - vrf
+    - bridge
+    - tuning
+    - firewall
+    - host-device
+    - sbr
+    - loopback
+    - dhcp
+    - ptp
+    - ipvlan
+    - bandwidth
+    - dummy
+    - tap
+  tags: [kubernetes_setup, cni-install]
+- name: Restart kubelet Service
+  become: true
+  service:
+    name: kubelet
+    daemon_reload: true
+    state: restarted
+  tags: [kubernetes_setup]
