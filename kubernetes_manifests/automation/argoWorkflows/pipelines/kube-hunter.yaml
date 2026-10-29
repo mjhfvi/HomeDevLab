@@ -1,0 +1,17 @@
+metadata:
+  generateName: kube-hunter-
+  namespace: argo-workflows
+spec:
+  serviceAccountName: argo-workflows-server-controller
+  nodeSelector:
+    octopus.infrastructure.as.code/node-instance-purpose: general-purpose-pool
+  entrypoint: kube-hunter
+  templates:
+    - name: kube-hunter
+      container:
+        name: aquasec/kube-hunter
+        image: aquasec/kube-hunter:latest
+        args:
+          - --cidr
+          - 172.20.0.0/24
+          - --active

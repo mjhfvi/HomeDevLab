@@ -1,0 +1,21 @@
+metadata:
+  generateName: kubectl-
+  namespace: argo-workflows
+spec:
+  serviceAccountName: argo-workflows-server-controller
+  nodeSelector:
+    octopus.infrastructure.as.code/node-instance-purpose: general-purpose-pool
+  entrypoint: kubectl
+  templates:
+    - name: kubectl
+      container:
+        name: alpine/kubectl
+        image: alpine/kubectl:latest
+        command:
+          - kubectl
+        args:
+          - config
+          - current-context
+
+# kubectl get all -A
+# kubectl config current-context

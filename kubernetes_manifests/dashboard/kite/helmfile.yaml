@@ -1,0 +1,43 @@
+---
+# Commands to deploy:
+# helmfile deps  # < download dependencies
+# helmfile template  # < template stuff. You might have to be signed into vault
+# helmfile sync  # < deploy everything
+# helmfile sync -f filename.yaml  # < deploy everything from file
+# helmfile apply  # < deploy diff only
+# helmfile destroy  # < deploy diff only
+
+filepath: helmfile.yaml
+helmBinary: helm
+missingFileHandler: Warn
+
+helmDefaults:
+  cleanupOnFail: false
+  verify: false
+  wait: true
+  waitForJobs: true
+  timeout: 600
+  force: false
+  historyMax: 10
+  createNamespace: true
+  skipDeps: false
+  reuseValues: false
+  deleteWait: false
+  deleteTimeout: 300
+
+# repositories:
+#   - name: kite
+#     url: oci://ghcr.io/kite-org/charts/kite
+
+releases:
+  - name: kite
+    namespace: dashboard
+    chart: oci://ghcr.io/kite-org/charts/kite
+    # version: v0.16.0
+    # rollbackOnFailure: false
+    labels:
+      app.kubernetes.io/build-by: helmfile
+      # app.kubernetes.io/version: v0.16.0
+      app.kubernetes.io/chart: kite
+    values:
+      - anonymousUserEnabled: true

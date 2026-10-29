@@ -1,0 +1,48 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: kubectl-top-steps-
+spec:
+  serviceAccountName: argo-workflows-server-controller
+  nodeSelector:
+    octopus.infrastructure.as.code/node-instance-purpose: general-purpose-pool
+  entrypoint: kubectl-workflow # workflow entry point template
+  templates:
+    - name: kubectl-workflow
+      steps:
+        - - name: top-pods-observability
+            template: run-command
+            arguments:
+              parameters:
+                - name: command
+                  value: top pods -n observability
+          - name: top-pods-infrastructure
+            template: run-command
+            arguments:
+              parameters:
+                - name: command
+                  value: top pods -n infrastructure
+          - name: top-nodes
+            template: run-command
+            arguments:
+              parameters:
+                - name: command
+                  value: top nodes
+    - name: run-command
+      inputs:
+        parameters:
+          - name: command
+      container:
+        image: alpine/kubectl:latest
+        command:
+          - sh
+          - -c
+        args:
+          - kubectl {{inputs.parameters.command}}
+        resources:
+          limits:
+            cpu: 500m
+            memory: 128Mi
+          requests:
+            cpu: 250m
+            memory: 64Mi

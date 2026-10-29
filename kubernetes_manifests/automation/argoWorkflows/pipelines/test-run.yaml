@@ -1,0 +1,28 @@
+---
+metadata:
+  name: sparkly-whale
+  namespace: argo-workflows
+spec:
+  arguments:
+    parameters:
+      - name: message
+        value: hello argo
+  entrypoint: kubecost
+  serviceAccountName: argo-workflows-workflow-controller
+  nodeSelector:
+    octopus.infrastructure.as.code/node-instance-purpose: general-purpose-pool
+  templates:
+    - name: kubecost
+      inputs:
+        parameters:
+          - name: message
+            value: "{{workflow.parameters.message}}"
+      container:
+        name: main
+        image: public.ecr.aws/kubecost/cost-analyzer:2.9.6
+        command: [kubecost]
+        args:
+          - echo
+          - "{{inputs.parameters.message}}"
+
+# public.ecr.aws/kubecost/cost-analyzer:2.9.6

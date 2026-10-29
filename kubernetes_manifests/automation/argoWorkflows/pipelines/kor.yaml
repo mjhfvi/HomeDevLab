@@ -1,0 +1,17 @@
+metadata:
+  generateName: kor-
+  namespace: argo-workflows
+spec:
+  serviceAccountName: argo-workflows-server-controller
+  nodeSelector:
+    octopus.infrastructure.as.code/node-instance-purpose: general-purpose-pool
+  entrypoint: kor
+  templates:
+    - name: kor
+      container:
+        name: kor
+        image: yonahdissen/kor:latest
+        command:
+          - kor
+        args:
+          - all

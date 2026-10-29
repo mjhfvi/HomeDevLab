@@ -1,0 +1,37 @@
+---
+#  Source: /mnt/c/repository/HelmfileExamples/helmfile.yaml
+
+#   What is a helmfile? Read here...
+#   https://github.com/helmfile/helmfile
+#   Examples: https://github.com/helmfile/helmfile/blob/main/examples/charts/argocd-helmfile-deployment/helmfile.yaml
+
+# Before deployment, export the required env vars
+# export HELM_SECRETS_DRIVER=vault
+
+# Commands to deploy:
+# helmfile deps        # Download dependencies
+# helmfile template    # Template manifests (you might need Vault access)
+# helmfile sync        # Deploy everything
+# helmfile apply       # Deploy changes only
+# helmfile destroy     # Remove deployed resources
+
+filepath: helmfile.yaml
+helmBinary: helm
+# kustomizeBinary: kustomize
+
+helmDefaults:
+    timeout: 60
+
+repositories:
+    - name: hashicorp
+      url: https://helm.releases.hashicorp.com
+
+releases:
+    - name: vault
+      namespace: "infra"
+      # createNamespace: true
+      chart: hashicorp/vault
+      labels:
+          app.kubernetes.io/name: vault
+      cleanupOnFail: true
+    #   values:

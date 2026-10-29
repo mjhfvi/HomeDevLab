@@ -1,0 +1,18 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: prometheus
+spec:
+  destination:
+    namespace: infra
+    server: https://kubernetes.default.svc
+  source:
+    path: infrastructure/prometheus
+    repoURL: https://github.com/octopusappdev/octopus-prod-us-03.git
+    targetRevision: main
+  sources: []
+  project: default
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

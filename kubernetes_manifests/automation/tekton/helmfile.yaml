@@ -1,0 +1,43 @@
+---
+# Commands to deploy:
+# helmfile deps  # < download dependencies
+# helmfile template  # < template stuff. You might have to be signed into vault
+# helmfile sync  # < deploy everything
+# helmfile sync -f filename.yaml  # < deploy everything from file
+# helmfile apply  # < deploy diff only
+# helmfile destroy  # < deploy diff only
+
+filepath: helmfile.yaml
+helmBinary: helm
+missingFileHandler: Warn
+
+helmDefaults:
+  cleanupOnFail: false
+  verify: false
+  wait: true
+  waitForJobs: true
+  timeout: 600
+  force: false
+  historyMax: 10
+  createNamespace: true
+  skipDeps: false
+  reuseValues: false
+  deleteWait: false
+  deleteTimeout: 300
+
+repositories:
+  - name: argo
+    url: https://argoproj.github.io/argo-helm
+
+releases:
+  - name: argo-workflows
+    namespace: automation
+    chart: argo/argo-workflows
+    version: 2.0.14
+    # rollbackOnFailure: false
+    labels:
+      app.kubernetes.io/build-by: helmfile
+      app.kubernetes.io/version: 2.0.14
+      app.kubernetes.io/chart: argo-workflows
+    # values:
+    #   -

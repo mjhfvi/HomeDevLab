@@ -1,0 +1,31 @@
+{
+  "dictionaries": [],
+  "dictionaryDefinitions": [],
+  "ignorePaths": [],
+  "ignoreWords": [],
+  "import": [],
+  "version": "0.2",
+  "words": [
+    "azuredocs",
+    "chromadb",
+    "containerapp",
+    "fastapi",
+    "georeplications",
+    "helmforge",
+    "infracloud",
+    "kestra",
+    "milvus",
+    "pgadmin",
+    "promptfoo",
+    "pycache",
+    "PYTHONDONTWRITEBYTECODE",
+    "redisinsight",
+    "servicebus",
+    "setuptools",
+    "sonarqube",
+    "tfstate",
+    "tfvars",
+    "uvicorn",
+    "venv"
+  ]
+}
