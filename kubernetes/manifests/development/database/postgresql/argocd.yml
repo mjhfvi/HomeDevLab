@@ -3,24 +3,46 @@ apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   name: postgresql
-  namespace: default
   labels:
-    app: postgresql
+    argocd.argoproj.io/application: postgresql
+    argocd.argoproj.io/environment: development
+    argocd.argoproj.io/stage: testing
 spec:
-  project: default
-  source:
-    repoURL: https://github.com/mjhfvi/HomeDevLab.git
-    targetRevision: main
-    path: /kubernetes/manifests/development/database/postgresql
   destination:
     server: https://kubernetes.default.svc
     namespace: database
+  source:
+    path: ""
+    repoURL: oci://ghcr.io/helmforgedev/helm/postgresql
+    targetRevision: "2.1.1"
+    chart: postgresql
+  sources:
+    - name: postgresql
+      repoURL: oci://ghcr.io/helmforgedev/helm/postgresql
+      targetRevision: "2.1.1"
+      helm:
+        releaseName: postgresql
+        valueFiles:
+          - $values/kubernetes/manifests/development/database/postgresql/values.yaml
+      chart: postgresql
+    - name: values
+      repoURL: https://github.com/mjhfvi/HomeDevLab
+      path: manifests/development/database/postgresql
+      targetRevision: main
+      ref: values
+      directory:
+        recurse: true
+        jsonnet: {}
+        include: values.yaml
+  project: homedevlab
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
+      enabled: true
     syncOptions:
     - CreateNamespace=true
+    - PruneLast=true
     retry:
       limit: 5
       backoff:

@@ -12,6 +12,7 @@
     "fastapi",
     "georeplications",
     "helmforge",
+    "helmforgedev",
     "infracloud",
     "kestra",
     "milvus",
