@@ -3,7 +3,7 @@ apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   name: root-app-of-apps-development
-  # namespace: database
+  namespace: infrastructure
   labels:
     argocd.argoproj.io/environment: development
     argocd.argoproj.io/stage: testing

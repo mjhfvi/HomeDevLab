@@ -3,7 +3,7 @@ apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   name: development-app-of-apps-postgresql
-  namespace: database
+  namespace: infrastructure
 spec:
   project: homedevlab
   source:
