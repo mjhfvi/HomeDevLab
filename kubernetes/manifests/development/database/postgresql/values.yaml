@@ -10,7 +10,9 @@
 architecture: standalone
 
 # -- Override chart name
-nameOverride: "postgresql"
+# nameOverride: "postgresql"
+# -- Override full release name
+fullnameOverride: "postgresql"
 
 auth:
   # -- Existing secret with PostgreSQL passwords
