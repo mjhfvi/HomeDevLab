@@ -14,7 +14,7 @@ spec:
     path: kubernetes/manifests/development/database
     directory:
       recurse: true
-      include: '{argocd.yaml,argocd.yml}'
+      include: '{*/argocd.yaml,*/argocd.yml}'
       exclude: '{*.md,*.json,.helmignore}'
   destination:
     server: https://kubernetes.default.svc
