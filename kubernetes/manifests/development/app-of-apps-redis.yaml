@@ -2,7 +2,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: development-app-of-apps-redis
+  name: app-of-apps-redis
   namespace: infrastructure
 spec:
   project: homedevlab
