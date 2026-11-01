@@ -14,8 +14,9 @@ spec:
     targetRevision: HEAD
     path: kubernetes/manifests/development
     directory:
-      recurse: true
-      include: '{*.yaml,*.yml}'
+      recurse: false
+      include: '{app-of-apps-*.yaml,app-of-apps-*.yml}'
+      exclude: '{*.json,*.lock}'
   destination:
     server: https://kubernetes.default.svc
     namespace: database

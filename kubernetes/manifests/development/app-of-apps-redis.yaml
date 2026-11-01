@@ -11,8 +11,9 @@ spec:
     targetRevision: HEAD
     path: database/redis
     directory:
-      recurse: true
-      include: '{*.yaml,*.yml}'
+      recurse: false
+      include: '{argocd.yaml,argocd.yml}'
+      exclude: '{*.json,*.lock}'
   destination:
     server: https://kubernetes.default.svc
     namespace: database
