@@ -22,12 +22,12 @@ repositories:
     - name: argo
       url: https://argoproj.github.io/argo-helm
 releases:
-    - name: argo-cd
-      namespace: argocd
+    - name: argocd
+      namespace: infrastructure
       createNamespace: true
       chart: argo/argo-cd
       labels:
-          app.kubernetes.io/forward: argo-cd
+          app.kubernetes.io/forward: argocd
           #   version: 0.0.0
           #   missingFileHandler: Warn  # set to either "Error" or "Warn". "Error" instructs helmfile to fail when unable to find a values or secrets file. When "Warn", it prints the file and continues.
           #   verify: true
