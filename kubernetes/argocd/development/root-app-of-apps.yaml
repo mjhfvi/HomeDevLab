@@ -2,7 +2,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: root-app-of-apps
+  name: root-app-of-apps-development
   namespace: database
 spec:
   project: homedevlab
