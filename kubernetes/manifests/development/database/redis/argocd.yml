@@ -1,0 +1,44 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: redis
+  labels:
+    argocd.argoproj.io/environment: development
+    argocd.argoproj.io/stage: testing
+spec:
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: database
+  source:
+    path: ''
+    repoURL: ''
+    targetRevision: HEAD
+  sources:
+    - name: redis
+      repoURL: https://repo.helmforge.dev
+      chart: redis
+      targetRevision: 3.1.1
+      helm:
+        releaseName: values
+        valueFiles:
+          - $values/kubernetes/manifests/development/database/redis/credentials.yaml
+          - $values/kubernetes/manifests/development/database/redis/values.yaml
+    - name: values
+      repoURL: https://github.com/mjhfvi/HomeDevLab
+      path: kubernetes/manifests/development/database/redis
+      targetRevision: HEAD
+      ref: values
+      directory:
+        include: '{*.yaml,*.yml}'
+        exclude: '{*.md,helmfile.yaml,.helmignore,values.example.yaml}'
+  project: homedevlab
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+      enabled: true
+    syncOptions:
+      - CreateNamespace=true
+      - PruneLast=true
+      - Replace=true

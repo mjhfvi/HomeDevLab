@@ -4,7 +4,6 @@ kind: Application
 metadata:
   name: postgresql
   labels:
-    argocd.argoproj.io/application: postgresql
     argocd.argoproj.io/environment: development
     argocd.argoproj.io/stage: testing
 spec:
@@ -32,7 +31,7 @@ spec:
       ref: values
       directory:
         include: '{*.yaml,*.yml}'
-        exclude: '{*.md,*.txt}'
+        exclude: '{*.md,helmfile.yaml,.helmignore,values.example.yaml}'
   project: homedevlab
   syncPolicy:
     automated:

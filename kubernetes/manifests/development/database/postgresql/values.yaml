@@ -9,19 +9,29 @@
 # -- PostgreSQL deployment mode: standalone | replication
 architecture: standalone
 
-# -- Override chart name
-# nameOverride: "postgresql"
 # -- Override full release name
 fullnameOverride: "postgresql"
+
+# =============================================================================
+# Authentication
+# =============================================================================
 
 auth:
   # -- Existing secret with PostgreSQL passwords
   existingSecret: "postgresql-credentials"
 
+# =============================================================================
+# Standalone
+# =============================================================================
+
 standalone:
   persistence:
     # -- Enable PVC for standalone mode
     enabled: false
+
+# =============================================================================
+# Replication
+# =============================================================================
 
 replication:
   primary:
