@@ -1,3 +1,18 @@
 auth:
   # -- Existing secret with PostgreSQL passwords
   existingSecret: "postgresql-credentials"
+
+standalone:
+  persistence:
+    # -- Enable PVC for standalone mode
+    enabled: false
+
+replication:
+  primary:
+    persistence:
+      # -- Enable PVC for the primary StatefulSet
+      enabled: false
+  readReplicas:
+    persistence:
+      # -- Enable PVCs for read replicas
+      enabled: false
