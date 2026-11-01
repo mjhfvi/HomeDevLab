@@ -13,6 +13,9 @@ spec:
     repoURL: https://github.com/mjhfvi/HomeDevLab.git
     targetRevision: HEAD
     path: kubernetes/manifests/development
+    directory:
+      recurse: true
+      include: '{*.yaml,*.yml}'
   destination:
     server: https://kubernetes.default.svc
     namespace: database
