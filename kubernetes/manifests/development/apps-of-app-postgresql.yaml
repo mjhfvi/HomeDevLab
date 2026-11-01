@@ -1,0 +1,19 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: development-apps-of-app-postgresql
+  namespace: database
+spec:
+  project: homedevlab
+  source:
+    repoURL: https://github.com/mjhfvi/HomeDevLab
+    targetRevision: main
+    path: database/postgresql
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: database
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

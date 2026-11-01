@@ -9,7 +9,7 @@ spec:
   source:
     repoURL: https://github.com/mjhfvi/HomeDevLab
     targetRevision: main
-    path: database
+    path: database/postgresql
   destination:
     server: https://kubernetes.default.svc
     namespace: database

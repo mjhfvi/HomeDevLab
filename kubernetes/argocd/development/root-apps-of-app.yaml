@@ -9,7 +9,7 @@ spec:
   source:
     repoURL: https://github.com/mjhfvi/HomeDevLab
     targetRevision: main
-    path: kubernetes\manifests\development
+    path: kubernetes/manifests/development
   destination:
     server: https://kubernetes.default.svc
     namespace: database
@@ -17,3 +17,6 @@ spec:
     automated:
       prune: true
       selfHeal: true
+
+# kubectl -f root-apps-of-app.yaml apply
+# kubectl -f root-apps-of-app.yaml delete
