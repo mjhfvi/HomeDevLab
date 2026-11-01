@@ -30,6 +30,7 @@ spec:
       targetRevision: HEAD
       ref: values
       directory:
+        recurse: true
         include: '{*.yaml,*.yml}'
         exclude: '{*.md,helmfile.yaml,.helmignore,values.example.yaml}'
   project: homedevlab
