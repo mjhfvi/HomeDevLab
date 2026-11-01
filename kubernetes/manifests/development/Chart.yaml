@@ -1,0 +1,4 @@
+---
+apiVersion: v2
+name: development-app-of-apps
+version: 1.0.0
