@@ -23,7 +23,6 @@ spec:
       helm:
         releaseName: values
         valueFiles:
-          - $values/kubernetes/manifests/development/database/redis/credentials.yaml
           - $values/kubernetes/manifests/development/database/redis/values.yaml
     - name: values
       repoURL: https://github.com/mjhfvi/HomeDevLab
