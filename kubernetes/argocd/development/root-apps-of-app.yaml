@@ -1,0 +1,19 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: root-apps-of-app
+  namespace: database
+spec:
+  project: homedevlab
+  source:
+    repoURL: https://github.com/mjhfvi/HomeDevLab
+    targetRevision: main
+    path: kubernetes\manifests\development
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: database
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
