@@ -2,14 +2,14 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: root-apps-of-app
+  name: development-app-of-apps-redis
   namespace: database
 spec:
   project: homedevlab
   source:
     repoURL: https://github.com/mjhfvi/HomeDevLab
     targetRevision: main
-    path: kubernetes/manifests/development
+    path: database/redis
   destination:
     server: https://kubernetes.default.svc
     namespace: database
@@ -17,6 +17,3 @@ spec:
     automated:
       prune: true
       selfHeal: true
-
-# kubectl -f root-apps-of-app.yaml apply
-# kubectl -f root-apps-of-app.yaml delete
