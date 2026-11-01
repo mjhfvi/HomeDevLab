@@ -1,0 +1,29 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: app-of-apps-development-automation
+  namespace: infrastructure
+  labels:
+    argocd.argoproj.io/environment: development
+    argocd.argoproj.io/stage: testing
+spec:
+  source:
+    repoURL: https://github.com/mjhfvi/HomeDevLab.git
+    targetRevision: main
+    path: kubernetes/manifests/development/automation
+    directory:
+      recurse: true
+      include: '{*/argocd.yaml,*/argocd.yml}'
+      exclude: '{*.md,*.json,.helmignore}'
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: automation
+  project: homedevlab
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+
+# kubectl --namespace infrastructure -f root-apps-of-app.yaml apply
+# kubectl --namespace infrastructure -f root-apps-of-app.yaml delete
