@@ -10,7 +10,7 @@ metadata:
 spec:
   project: homedevlab
   source:
-    repoURL: https://github.com/mjhfvi/HomeDevLab
+    repoURL: https://github.com/mjhfvi/HomeDevLab.git
     targetRevision: HEAD
     path: kubernetes/manifests/development
   destination:
