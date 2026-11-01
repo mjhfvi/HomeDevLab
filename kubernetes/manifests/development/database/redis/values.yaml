@@ -36,7 +36,7 @@ standalone:
 # =============================================================================
 
 replication:
-  replicaCount: 2 # minimum: 2
+  replicaCount: 1
   primary:
     persistence:
       enabled: false
@@ -50,7 +50,7 @@ replication:
 
 node:
   # -- Number of role-neutral Redis data nodes in Sentinel mode
-  replicaCount: 1
+  replicaCount: 2 # minimum: 2
   persistence:
     # -- Enable persistent storage for Sentinel data nodes
     enabled: false
