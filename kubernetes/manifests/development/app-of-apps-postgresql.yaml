@@ -1,25 +1,70 @@
+# ---
+# apiVersion: argoproj.io/v1alpha1
+# kind: Application
+# metadata:
+#   name: app-of-apps-postgresql
+#   namespace: infrastructure
+# spec:
+#   project: homedevlab
+#   source:
+#     repoURL: https://github.com/mjhfvi/HomeDevLab.git
+#     targetRevision: main
+#     path: database/postgresql
+#     directory:
+#       recurse: true
+#       include: '{argocd.yaml,argocd.yml}'
+#       exclude: '{*.json,*.lock}'
+#   destination:
+#     server: https://kubernetes.default.svc
+#     namespace: database
+#   syncPolicy:
+#     automated:
+#       prune: true
+#       selfHeal: true
+#     syncOptions:
+#     - CreateNamespace=true
 ---
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: app-of-apps-postgresql
-  namespace: infrastructure
+  name: postgresql
+  labels:
+    argocd.argoproj.io/environment: development
+    argocd.argoproj.io/stage: testing
 spec:
-  project: homedevlab
-  source:
-    repoURL: https://github.com/mjhfvi/HomeDevLab.git
-    targetRevision: main
-    path: database/postgresql
-    directory:
-      recurse: true
-      include: '{argocd.yaml,argocd.yml}'
-      exclude: '{*.json,*.lock}'
   destination:
     server: https://kubernetes.default.svc
     namespace: database
+  source:
+    path: ''
+    repoURL: ''
+    targetRevision: main
+  sources:
+    - name: postgresql
+      repoURL: https://repo.helmforge.dev
+      chart: postgresql
+      targetRevision: 2.1.1
+      helm:
+        releaseName: values
+        valueFiles:
+          - $values/kubernetes/manifests/development/database/postgresql/credentials.yaml
+          - $values/kubernetes/manifests/development/database/postgresql/values.yaml
+    - name: values
+      repoURL: https://github.com/mjhfvi/HomeDevLab
+      path: kubernetes/manifests/development/database/postgresql
+      targetRevision: main
+      ref: values
+      directory:
+        recurse: true
+        include: '{*.yaml,*.yml}'
+        exclude: '{*.md,helmfile.yaml,.helmignore,values.example.yaml}'
+  project: homedevlab
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
+      enabled: true
     syncOptions:
-    - CreateNamespace=true
+      - CreateNamespace=true
+      - PruneLast=true
+      - Replace=true
