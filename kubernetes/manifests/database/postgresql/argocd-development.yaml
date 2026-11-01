@@ -23,11 +23,11 @@ spec:
       helm:
         releaseName: values
         valueFiles:
-          - $values/kubernetes/manifests/development/database/postgresql/credentials.yaml
-          - $values/kubernetes/manifests/development/database/postgresql/values.yaml
+          - $values/kubernetes/manifests/database/postgresql/credentials.yaml
+          - $values/kubernetes/manifests/database/postgresql/values.yaml
     - name: values
       repoURL: https://github.com/mjhfvi/HomeDevLab
-      path: kubernetes/manifests/development/database/postgresql
+      path: kubernetes/manifests/database/postgresql
       targetRevision: main
       ref: values
       directory:
