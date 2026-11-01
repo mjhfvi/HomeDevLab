@@ -23,10 +23,10 @@ spec:
       helm:
         releaseName: values
         valueFiles:
-          - $values/kubernetes/manifests/development/database/redis/values.yaml
+          - $values/kubernetes/manifests/database/redis/values.yaml
     - name: values
       repoURL: https://github.com/mjhfvi/HomeDevLab
-      path: kubernetes/manifests/development/database/redis
+      path: kubernetes/manifests/database/redis
       targetRevision: main
       ref: values
       directory:

@@ -11,10 +11,10 @@ spec:
   source:
     repoURL: https://github.com/mjhfvi/HomeDevLab.git
     targetRevision: main
-    path: kubernetes/manifests/development/automation
+    path: kubernetes/manifests/automation
     directory:
       recurse: true
-      include: '{*/argocd.yaml,*/argocd.yml}'
+      include: '{*/argocd-development.yaml,*/argocd-development.yml}'
       exclude: '{*.md,*.json,.helmignore}'
   destination:
     server: https://kubernetes.default.svc
