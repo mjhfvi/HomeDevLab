@@ -13,7 +13,7 @@ spec:
   source:
     path: ''
     repoURL: ''
-    targetRevision: HEAD
+    targetRevision: main
   sources:
     - name: redis
       repoURL: https://repo.helmforge.dev
@@ -27,7 +27,7 @@ spec:
     - name: values
       repoURL: https://github.com/mjhfvi/HomeDevLab
       path: kubernetes/manifests/development/database/redis
-      targetRevision: HEAD
+      targetRevision: main
       ref: values
       directory:
         recurse: true

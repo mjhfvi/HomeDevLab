@@ -3,12 +3,12 @@ apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   name: app-of-apps-postgresql
-  namespace: infrastructure
+  # namespace: infrastructure
 spec:
   project: homedevlab
   source:
     repoURL: https://github.com/mjhfvi/HomeDevLab.git
-    targetRevision: HEAD
+    targetRevision: main
     path: database/postgresql
     directory:
       recurse: true

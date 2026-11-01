@@ -3,7 +3,7 @@ apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   name: app-of-apps-development
-  namespace: infrastructure
+  # namespace: infrastructure
   labels:
     argocd.argoproj.io/environment: development
     argocd.argoproj.io/stage: testing
@@ -11,7 +11,7 @@ spec:
   project: homedevlab
   source:
     repoURL: https://github.com/mjhfvi/HomeDevLab.git
-    targetRevision: HEAD
+    targetRevision: main
     path: kubernetes/manifests/development
     directory:
       recurse: false
