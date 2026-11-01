@@ -8,7 +8,7 @@ spec:
   project: homedevlab
   source:
     repoURL: https://github.com/mjhfvi/HomeDevLab.git
-    targetRevision: HEAD
+    targetRevision: main
     path: database/redis
     directory:
       recurse: false
