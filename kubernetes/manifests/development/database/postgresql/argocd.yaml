@@ -31,7 +31,7 @@ spec:
       ref: values
       directory:
         recurse: true
-        include: '{*/argocd.yaml,*/argocd.yml,*/credentials.yaml,*/credentials.yaml,*/values.yaml,*/values.yml}'
+        include: '{*.yaml,*.yml}'
         exclude: '{*.md,.helmignore,Chart.yaml,helmfile.yaml,values.example.yaml}'
   project: homedevlab
   syncPolicy:
