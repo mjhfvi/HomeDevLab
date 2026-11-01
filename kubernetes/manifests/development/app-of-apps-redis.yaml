@@ -8,10 +8,10 @@ spec:
   project: homedevlab
   source:
     repoURL: https://github.com/mjhfvi/HomeDevLab.git
-    targetRevision: main
+    targetRevision: HEAD
     path: database/redis
     directory:
-      recurse: false
+      recurse: true
       include: '{argocd.yaml,argocd.yml}'
       exclude: '{*.json,*.lock}'
   destination:
