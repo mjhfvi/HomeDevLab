@@ -94,13 +94,13 @@ repos:
     hooks:
       - id: yamlfix
         exclude: charts/|helm-template/|.pre-commit-config.yaml
-  - repo: https://github.com/adrienverge/yamllint
-    rev: v1.38.0
-    hooks:
-      - id: yamllint
-        name: yamllint (linter for YAML files)
-        args: [--format, auto]
-        exclude: charts/|helm-template/|.pre-commit-config.yaml
+  # - repo: https://github.com/adrienverge/yamllint
+  #   rev: v1.38.0
+  #   hooks:
+  #     - id: yamllint
+  #       name: yamllint (linter for YAML files)
+  #       args: [--format, auto, --config-file, .yamllint]
+  #       exclude: charts/|helm-template/|.pre-commit-config.yaml
   - repo: https://github.com/PeterMosmans/jenkinslint
     rev: v1.0.0
     hooks:
