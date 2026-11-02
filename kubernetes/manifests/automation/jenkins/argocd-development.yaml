@@ -10,7 +10,7 @@ metadata:
 spec:
   destination:
     server: https://kubernetes.default.svc
-    namespace: automation
+    namespace: database
   source:
     path: ''
     repoURL: ''
