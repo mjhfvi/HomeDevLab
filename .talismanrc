@@ -6,4 +6,10 @@ fileignoreconfig:
   checksum: 19c915d0dd476b1f99813f50bdd877e4fce81cdfae4d2abe64ead490f63f3ad5
 - filename: kubernetes/manifests/tools/redisinsight/values.example.yaml
   checksum: e5ba0f19ad1200463c1bd876c54253aae213cb74f488f99375714681a792c233
+- filename: kubernetes/manifests/media/jellyfin/helmfile.yaml
+  checksum: 393cf44be4d96da7849f5adc9164ad5d006ef2471e8c81dd0f89f254911d82dd
+- filename: kubernetes/manifests/media/jellyfin/Chart.yaml
+  checksum: 7ace8cf2c61846d6a0bdae538a884be75aa615d558b11d0840e0ba2334da2a51
+- filename: kubernetes/manifests/media/jellyfin/values.example.yaml
+  checksum: f64b88a5cebf1d61912d55dae2d9b5e34f59f171d700250fa6544875bd69b93e
 version: "1.0"

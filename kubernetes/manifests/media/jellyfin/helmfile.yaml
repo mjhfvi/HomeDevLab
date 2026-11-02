@@ -1,0 +1,37 @@
+---
+# Commands to deploy:
+# helmfile deps  # < download dependencies
+# helmfile template  # < template stuff. You might have to be signed into vault
+# helmfile sync  # < deploy everything
+# helmfile apply  # < deploy diff only
+# helmfile destroy  # < deploy diff only
+filepath: helmfile.yaml
+helmBinary: helm
+# kustomizeBinary: kustomize
+helmDefaults:
+  # verify: false
+  # enableDNS: false
+  # waitForJobs: false
+  timeout: 60
+  # skipDeps: false
+  # reuseValues: false
+  # deleteWait: false
+  # deleteTimeout: 0
+repositories:
+  - name: jellyfin
+    url: https://jellyfin.github.io/jellyfin-helm
+releases:
+  - name: jellyfin
+    namespace: media
+    createNamespace: true
+    chart: jellyfin/jellyfin
+    labels:
+    app.kubernetes.io/name: jellyfin
+    version: 3.7.0
+  #   missingFileHandler: Warn  # set to either "Error" or "Warn". "Error" instructs helmfile to fail when unable to find a values or secrets file. When "Warn", it prints the file and continues.
+  #   verify: true
+  #   timeout: 60
+  #   cleanupOnFail: true
+    values:
+      - values.yaml
+# kubectl -f helmfile.yaml apply
