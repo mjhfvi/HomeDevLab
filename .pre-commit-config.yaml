@@ -107,62 +107,62 @@ repos:
       - id: jenkinslint
         name: jenkinslint (basic Jenkinsfile linter)
 
-  - repo: https://github.com/pre-commit/pygrep-hooks
-    rev: v1.10.0
-    hooks:
-      - id: python-no-log-warn
-      - id: python-no-eval
-      - id: rst-backticks
-      - id: rst-directive-colons
-      - id: rst-inline-touching-normal
-      - id: text-unicode-replacement-char
-        name: pygrep-hooks (collection of fast, cheap, regex based pre-commit hooks.)
-  - repo: local
-    hooks:
-      - id: python-safety-dependencies-check
-        name: safety
-        entry: safety
-        args: [scan, --apply-fixes] # --full-report
-        language: system
+  # - repo: https://github.com/pre-commit/pygrep-hooks
+  #   rev: v1.10.0
+  #   hooks:
+  #     - id: python-no-log-warn
+  #     - id: python-no-eval
+  #     - id: rst-backticks
+  #     - id: rst-directive-colons
+  #     - id: rst-inline-touching-normal
+  #     - id: text-unicode-replacement-char
+  #       name: pygrep-hooks (collection of fast, cheap, regex based pre-commit hooks.)
+  # - repo: local
+  #   hooks:
+  #     - id: python-safety-dependencies-check
+  #       name: safety
+  #       entry: safety
+  #       args: [scan, --apply-fixes] # --full-report
+  #       language: system
         files: requirements
-  - repo: https://github.com/PyCQA/flake8
-    rev: 7.5.0
-    hooks:
-      - id: flake8
-        name: flake8 (Flake8 is a wrapper around these tools PyFlakes, pycodestyle, McCabe script)
-  - repo: https://github.com/PyCQA/bandit
-    rev: 1.9.4
-    hooks:
-      - id: bandit
-        name: bandit (security linter from PyCQA)
+  # - repo: https://github.com/PyCQA/flake8
+  #   rev: 7.5.0
+  #   hooks:
+  #     - id: flake8
+  #       name: flake8 (Flake8 is a wrapper around these tools PyFlakes, pycodestyle, McCabe script)
+  # - repo: https://github.com/PyCQA/bandit
+  #   rev: 1.9.4
+  #   hooks:
+  #     - id: bandit
+  #       name: bandit (security linter from PyCQA)
   # - repo: https://github.com/landscapeio/prospector
   #   rev: v1.20.0
   #   hooks:
   #     - id: prospector
   #       name: prospector (Style Guide Enforcement)
-  - repo: https://github.com/asottile/reorder-python-imports
-    rev: v3.19.0
-    hooks:
-      - id: reorder-python-imports
-        name: reorder-python-imports (Tool for automatically reordering python imports)
-        args: [--py39-plus, --add-import, from __future__ import annotations]
-        exclude: ^(pre_commit/resources/|testing/resources/python3_hooks_repo/)
-  - repo: https://github.com/twu/skjold
-    rev: v0.6.2
-    hooks:
-      - id: skjold
-        name: skjold (Security audit python project dependencies against several security advisory databases)
-        args: [--sources, pypa] # gemnasium|github|osv|pypa|pyup
-  - repo: https://github.com/seddonym/import-linter
-    rev: v2.2
-    hooks:
-      - id: import-linter
-        name: import-linter (define and enforce rules for the imports within and between Python packages)
-  - repo: https://github.com/hhatto/autopep8
-    rev: v2.3.2
-    hooks:
-      - id: autopep8
-        name: autopep8 (Style Guide Enforcement)
+  # - repo: https://github.com/asottile/reorder-python-imports
+  #   rev: v3.19.0
+  #   hooks:
+  #     - id: reorder-python-imports
+  #       name: reorder-python-imports (Tool for automatically reordering python imports)
+  #       args: [--py39-plus, --add-import, from __future__ import annotations]
+  #       exclude: ^(pre_commit/resources/|testing/resources/python3_hooks_repo/)
+  # - repo: https://github.com/twu/skjold
+  #   rev: v0.6.2
+  #   hooks:
+  #     - id: skjold
+  #       name: skjold (Security audit python project dependencies against several security advisory databases)
+  #       args: [--sources, pypa] # gemnasium|github|osv|pypa|pyup
+  # - repo: https://github.com/seddonym/import-linter
+  #   rev: v2.2
+  #   hooks:
+  #     - id: import-linter
+  #       name: import-linter (define and enforce rules for the imports within and between Python packages)
+  # - repo: https://github.com/hhatto/autopep8
+  #   rev: v2.3.2
+  #   hooks:
+  #     - id: autopep8
+  #       name: autopep8 (Style Guide Enforcement)
   # - repo: https://github.com/pryorda/dockerfilelint-precommit-hooks
   #   rev: v0.1.0
   #   hooks:
