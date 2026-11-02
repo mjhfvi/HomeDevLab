@@ -98,4 +98,24 @@ fileignoreconfig:
   checksum: 3a0e80ad22fad4c3c739da8e5c49c9c08abfb0736d9de48a1efb7911a023169f
 - filename: pipeline_testing_strategies/ci_cd_white_box_testing/zap_dast_scanning/zap-api-scan.py
   checksum: cc9de8c822f0b779cb8a509b470536927007cdeedefb9e3ad949bd055e1b4065
+- filename: pipeline_testing_strategies/ci_cd_black_box_testing/load_testing/k6_load_testing/script.js
+  checksum: fe90862d7ac5555c844580e0ba082a7bb4f1dc3b24ed8bb35c3b2305fb267eb2
+- filename: pipeline_testing_strategies/ci_cd_black_box_testing/load_testing/json.js
+  checksum: ee0e5ad4833e2b073fa4cbfbedd36b73b7e673003dbc0e7c50de4a8599bb30e0
+- filename: pipeline_testing_strategies/ci_cd_black_box_testing/load_testing/k6_load_testing/json.js
+  checksum: b47ba38d4e23ea9b9a8753691b7c7f616dbdb5490a80d97f2f6f927a6d7d9efe
+- filename: pipeline_testing_strategies/ci_cd_black_box_testing/load_testing/script.js
+  checksum: a315ee80c47ea63441893110448269e21ea496bec0c2354c214b3fe6cc3a9275
+- filename: pipeline_testing_strategies/ci_cd_black_box_testing/zap_dast_scanning/zap-full-scan.py
+  checksum: 1f589d84707056046e78b1bccceee82faf953df21ec79330885fc74a1d8d1e2f
+- filename: pipeline_testing_strategies/ci_cd_black_box_testing/zap-full-scan.py
+  checksum: 1d1814580affe156dc38bfa5c4e47b17ac0117f2a5bbaa4fd417eecadc739a7f
+- filename: pipeline_testing_strategies/ci_cd_black_box_testing/zap-api-scan.py
+  checksum: b364bb5498dc63924087a9918040136febfe3594c95ee875fb319cdf2995137e
+- filename: pipeline_testing_strategies/ci_cd_black_box_testing/zap_dast_scanning/zap-baseline.py
+  checksum: aa311852cbb0dffb0a03228e2118bbcafe0257ee4b4ac7758f7a6c51be19d1f0
+- filename: pipeline_testing_strategies/ci_cd_black_box_testing/zap-baseline.py
+  checksum: 1d9656aae2106f83cdb90a792d12ff5a4b76fac2d2ad24a97f6ca2c1634687f7
+- filename: pipeline_testing_strategies/ci_cd_black_box_testing/zap_dast_scanning/zap-api-scan.py
+  checksum: 0fa81947ebf2e5e7650f1c8ad2c3bd0e9cd1db0669f32eedbead7f889bc1b366
 version: "1.0"
