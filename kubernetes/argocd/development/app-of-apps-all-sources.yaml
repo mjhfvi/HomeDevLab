@@ -46,5 +46,7 @@ spec:
     automated:
       prune: true
       selfHeal: true
+# argocd app create app-of-apps-development-all-sources --file app-of-apps-all-sources.yaml
+# argocd app delete app-of-apps-development-all-sources --cascade
 # kubectl --namespace infrastructure -f root-apps-of-app.yaml apply
 # kubectl --namespace infrastructure -f root-apps-of-app.yaml delete

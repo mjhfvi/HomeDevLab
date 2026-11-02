@@ -30,14 +30,6 @@ spec:
         recurse: true
         include: '**/argocd-development.{yaml,yml}'
         exclude: '{*.md,*.json,.helmignore}'
-        jsonnet:
-          extVars:
-            - name: environment
-              value: development
-              code: false
-            - name: test
-              value: test1
-              code: true
   destination:
     server: https://kubernetes.default.svc
     # namespace: database
@@ -50,5 +42,7 @@ spec:
   info:
     - name: ManagedBy
       value: Devops Team
+# argocd app create app-of-apps-development-database --file app-of-apps-database.yaml
+# argocd app delete app-of-apps-development-database --cascade
 # kubectl --namespace infrastructure -f root-apps-of-app.yaml apply
 # kubectl --namespace infrastructure -f root-apps-of-app.yaml delete
