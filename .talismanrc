@@ -118,4 +118,6 @@ fileignoreconfig:
   checksum: 1d9656aae2106f83cdb90a792d12ff5a4b76fac2d2ad24a97f6ca2c1634687f7
 - filename: pipeline_testing_strategies/ci_cd_black_box_testing/zap_dast_scanning/zap-api-scan.py
   checksum: 0fa81947ebf2e5e7650f1c8ad2c3bd0e9cd1db0669f32eedbead7f889bc1b366
+- filename: .github/workflows/github_action_super_linter.yaml
+  checksum: 574ca7d69a9291efc873673d7adc8a4bd992d171a0268636cf5ab28fad87bfea
 version: "1.0"
