@@ -29,6 +29,14 @@ spec:
         recurse: true
         include: '**/argocd-development.{yaml,yml}'
         exclude: '{*.md,*.json,.helmignore}'
+    - name: tools
+      repoURL: https://github.com/mjhfvi/HomeDevLab.git
+      path: kubernetes/manifests/tools
+      targetRevision: main
+      directory:
+        recurse: true
+        include: '**/argocd-development.{yaml,yml}'
+        exclude: '{*.md,*.json,.helmignore}'
   destination:
     server: https://kubernetes.default.svc
     # namespace: database
