@@ -12,4 +12,14 @@ fileignoreconfig:
   checksum: 7ace8cf2c61846d6a0bdae538a884be75aa615d558b11d0840e0ba2334da2a51
 - filename: kubernetes/manifests/media/jellyfin/values.example.yaml
   checksum: f64b88a5cebf1d61912d55dae2d9b5e34f59f171d700250fa6544875bd69b93e
+- filename: pipeline_testing_strategies/jenkins_pipelines/GlobalSharedLibraries/vars/GitSecretsReport.groovy
+  checksum: 47f81d2718bcd7529bfe4aeb507ff5f85870ae672167f357f79bfb828676361e
+- filename: pipeline_testing_strategies/jenkins_pipelines/Templates_Pipeline_Git_Stage.groovy
+  checksum: 1c03326c28b858dac5601a752e9ce9bc1d9909d55230e9d91569e68a848a02a0
+- filename: pipeline_testing_strategies/jenkins_pipelines/Templates_Pipeline_Git_Secret_Leaks.groovy
+  checksum: 7e1258330caac5d05ac89214d9e25a28944d88c68237a72669f93a14e8d9e217
+- filename: pipeline_testing_strategies/jenkins_pipelines/Templates_Pipeline_Docker_CVE.groovy
+  checksum: 6c770ef12704f7367e4972ae2131b2cd5898ac31f3bf7de6714e5712e54f1819
+- filename: pipeline_testing_strategies/jenkins_pipelines/Templates_Pipeline_Git_Code_Validation.groovy
+  checksum: bfa6e56fa7a40a4eae56c015ebb6e1cbc69378cfd69cb4061580a2534268e64f
 version: "1.0"
