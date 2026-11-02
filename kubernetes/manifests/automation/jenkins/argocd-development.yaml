@@ -31,7 +31,7 @@ spec:
       targetRevision: main
       ref: values
       directory:
-        recurse: true
+        recurse: false
         include: '*.{yaml,yml}'
         exclude: '{*.md,.helmignore,Chart.{yaml,yml},helmfile.{yaml,yml},values.example.{yaml,yml},argocd-production.{yaml,yml}}'
   project: homedevlab
