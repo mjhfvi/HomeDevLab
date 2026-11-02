@@ -17,9 +17,9 @@ spec:
     targetRevision: main
   sources:
     - name: redisinsight
-      repoURL: https://helm.runix.net/
+      repoURL: https://mrnim94.github.io/redisinsight
       chart: redisinsight
-      targetRevision: 1.3.5
+      targetRevision: 1.70.4
       helm:
         releaseName: values
         valueFiles: [$values/kubernetes/manifests/tools/redisinsight/values.yaml]
