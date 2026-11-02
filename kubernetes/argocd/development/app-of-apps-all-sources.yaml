@@ -21,7 +21,7 @@ spec:
         recurse: true
         include: '**/argocd-development.{yaml,yml}'
         exclude: '{*.md,*.json,.helmignore}'
-    - name: jenkins
+    - name: automation
       repoURL: https://github.com/mjhfvi/HomeDevLab.git
       path: kubernetes/manifests/automation
       targetRevision: main
