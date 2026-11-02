@@ -7,6 +7,7 @@ metadata:
   labels:
     argocd.argoproj.io/environment: development
     argocd.argoproj.io/stage: testing
+  finalizers: [resources-finalizer.argocd.argoproj.io]
 spec:
   destination:
     server: https://kubernetes.default.svc
@@ -40,7 +41,4 @@ spec:
       prune: true
       selfHeal: true
       enabled: true
-    syncOptions:
-      - CreateNamespace=true
-      - PruneLast=true
-      - Replace=true
+    syncOptions: [CreateNamespace=true, PruneLast=true, Replace=true]

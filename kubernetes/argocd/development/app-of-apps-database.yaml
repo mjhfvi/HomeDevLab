@@ -7,6 +7,7 @@ metadata:
   labels:
     argocd.argoproj.io/environment: development
     argocd.argoproj.io/stage: testing
+  finalizers: [resources-finalizer.argocd.argoproj.io]
 spec:
   source:
     path: ''
@@ -29,13 +30,25 @@ spec:
         recurse: true
         include: '**/argocd-development.{yaml,yml}'
         exclude: '{*.md,*.json,.helmignore}'
+        jsonnet:
+          extVars:
+            - name: environment
+              value: development
+              code: false
+            - name: test
+              value: test1
+              code: true
   destination:
     server: https://kubernetes.default.svc
     # namespace: database
   project: homedevlab
+  revisionHistoryLimit: 10
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
+  info:
+    - name: ManagedBy
+      value: Devops Team
 # kubectl --namespace infrastructure -f root-apps-of-app.yaml apply
 # kubectl --namespace infrastructure -f root-apps-of-app.yaml delete

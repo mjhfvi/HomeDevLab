@@ -7,6 +7,7 @@ metadata:
   labels:
     argocd.argoproj.io/environment: development
     argocd.argoproj.io/stage: testing
+  finalizers: [resources-finalizer.argocd.argoproj.io]
 spec:
   destination:
     server: https://kubernetes.default.svc
@@ -22,8 +23,7 @@ spec:
       targetRevision: 3.1.1
       helm:
         releaseName: values
-        valueFiles:
-          - $values/kubernetes/manifests/database/redis/values.yaml
+        valueFiles: [$values/kubernetes/manifests/database/redis/values.yaml]
     - name: values
       repoURL: https://github.com/mjhfvi/HomeDevLab
       path: kubernetes/manifests/database/redis
@@ -39,7 +39,4 @@ spec:
       prune: true
       selfHeal: true
       enabled: true
-    syncOptions:
-      - CreateNamespace=true
-      - PruneLast=true
-      - Replace=true
+    syncOptions: [CreateNamespace=true, PruneLast=true, Replace=true]
