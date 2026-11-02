@@ -1,0 +1,32 @@
+---
+name: Github Action Typos
+on:  # yamllint disable-line rule:truthy
+  push:
+  pull_request:
+  workflow_call:
+permissions: {}
+jobs:
+  build:
+    name: typos
+    runs-on: ubuntu-latest
+    permissions:
+      # contents permission to clone the repository
+      contents: read
+      packages: read
+      # issues and pull-requests permissions to write results as pull
+      # request comments. Omit them if you don't need summary comments
+      issues: write
+      pull-requests: write
+      # To report GitHub Actions status checks. Omit if you don't need
+      # to update commit status
+      statuses: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Check for CRLF line endings
+        uses: gi-org-pl/check-crlf-action@464995c09f1659cd4b0f7e2bf7234994f0fd705e
+        with:
+          base-ref: ${{ github.base_ref }}
