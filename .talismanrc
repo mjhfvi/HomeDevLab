@@ -2,4 +2,8 @@
 fileignoreconfig:
 - filename: kubernetes/manifests/tools/pgadmin/values.yaml
   checksum: 27776114bfcb0ab19d0a339f8cb828bd94f02a5341d0215f347603143e6237b3
+- filename: kubernetes/manifests/tools/redisinsight/Chart.yaml
+  checksum: 19c915d0dd476b1f99813f50bdd877e4fce81cdfae4d2abe64ead490f63f3ad5
+- filename: kubernetes/manifests/tools/redisinsight/values.example.yaml
+  checksum: e5ba0f19ad1200463c1bd876c54253aae213cb74f488f99375714681a792c233
 version: "1.0"

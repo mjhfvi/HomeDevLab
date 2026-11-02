@@ -20,7 +20,7 @@ helmDefaults:
   # deleteTimeout: 0
 repositories:
   - name: redisinsight
-    url: https://logic3579.github.io/helm-charts
+    url: https://mrnim94.github.io/redisinsight
 releases:
   - name: redisinsight
     namespace: tools
@@ -28,14 +28,13 @@ releases:
     chart: redisinsight/redisinsight
     labels:
       app.kubernetes.io/name: redisinsight
-    #   version: 0.0.0
+      version: 1.3.5
     #   missingFileHandler: Warn  # set to either "Error" or "Warn". "Error" instructs helmfile to fail when unable to find a values or secrets file. When "Warn", it prints the file and continues.
     #   verify: true
     #   timeout: 60
     #   cleanupOnFail: true
     values:
       - values.yaml
-
 # helm install redisinsight redisinsight/redisinsight
 # helm uninstall redisinsight
 # kubectl -f redisinsight-secret.yaml apply

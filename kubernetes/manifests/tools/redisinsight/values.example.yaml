@@ -1,185 +1,99 @@
-# -- Number of pod replicas.
-# Note: RedisInsight is stateful (writes to /data — SQLite). Multi-replica
-# only works with a ReadWriteMany PVC; otherwise keep this at 1.
+---
+# Default values for redisinsight.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
 replicaCount: 1
-
-# -- Container image configuration
 image:
-  # -- Image repository
   repository: redis/redisinsight
-  # -- Image pull policy
   pullPolicy: IfNotPresent
-  # -- Overrides the image tag (defaults to .Chart.AppVersion = "3.4", a
-  # floating tag that tracks the latest 3.4.x patch on Docker Hub).
-  tag: ""
-
-# -- Image pull secrets for private registries
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: ''
 imagePullSecrets: []
-
-# -- Override the chart name
-nameOverride: ""
-# -- Override the full release name
-fullnameOverride: ""
-
-# -- RedisInsight settings. RI_APP_HOST and RI_APP_PORT are derived from the
-# service block; use `extraConfig` for any other RI_* env var override.
-redisinsight:
-  # -- Free-form extra RI_* env vars, rendered as RI_<UPPER_KEY>.
-  # Example: { EXTERNAL_URL: "https://ri.example.com" } → RI_EXTERNAL_URL
-  extraConfig: {}
-
-# -- Persistent volume for /data (SQLite, saved connections, logs).
-# When disabled an emptyDir is used — data is lost on pod restart.
-persistence:
-  # -- Enable a PVC mounted at /data
-  enabled: false
-  # -- StorageClass (empty string uses cluster default)
-  storageClass: ""
-  # -- Access mode — single-pod RWO is the only safe option without an
-  # explicit RWX storage class
-  accessMode: ReadWriteOnce
-  # -- Volume size
-  size: 1Gi
-  # -- Use an existing PVC instead of creating one
-  existingClaim: ""
-  # -- Annotations on the PVC
-  annotations: {}
-
-# -- Service account configuration
+nameOverride: ''
+fullnameOverride: ''
 serviceAccount:
-  # -- Whether to create a service account
+  # Specifies whether a service account should be created
   create: true
-  # -- Annotations to add to the service account
+  # Automatically mount a ServiceAccount's API credentials?
+  automount: true
+  # Annotations to add to the service account
   annotations: {}
-  # -- The name of the service account (generated if not set)
-  name: ""
-  # -- Mount the service account token into pods
-  automountServiceAccountToken: false
-
-# -- Annotations to add to pods
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ''
 podAnnotations: {}
-
-# -- Labels to add to pods
 podLabels: {}
-
-# -- Pod-level security context
-podSecurityContext:
-  runAsNonRoot: true
-  runAsUser: 1000
-  runAsGroup: 1000
-  fsGroup: 1000
-
-# -- Container-level security context
-securityContext:
-  allowPrivilegeEscalation: false
-  readOnlyRootFilesystem: false
-  capabilities:
-    drop:
-      - ALL
-
-# -- Service configuration
+podSecurityContext: {}
+  # fsGroup: 2000
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
 service:
-  # -- Service type
   type: ClusterIP
-  # -- Service port. Also injected as RI_APP_PORT into the container so the
-  # app binds to the same port regardless of what you set here.
   port: 5540
-
-# -- Resource requests and limits
-resources:
-  requests:
-    cpu: 100m
-    memory: 256Mi
-  limits:
-    cpu: 500m
-    memory: 512Mi
-
-# -- Liveness probe (TCP — RedisInsight has no documented HTTP health endpoint)
+ingress:
+  enabled: false
+  className: ''
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  hosts:
+    - host: chart-example.local
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
 livenessProbe:
-  tcpSocket:
+  httpGet:
+    path: /
     port: http
-  initialDelaySeconds: 20
-  periodSeconds: 30
-  timeoutSeconds: 5
-  failureThreshold: 3
-
-# -- Readiness probe (TCP)
 readinessProbe:
-  tcpSocket:
+  httpGet:
+    path: /
     port: http
-  initialDelaySeconds: 5
-  periodSeconds: 10
-  timeoutSeconds: 5
-  failureThreshold: 3
-
-# -- Horizontal Pod Autoscaler configuration
-# Note: only safe with a RWX PVC; otherwise replicas can't share /data.
 autoscaling:
-  # -- Enable HPA
   enabled: false
-  # -- Minimum number of replicas
   minReplicas: 1
-  # -- Maximum number of replicas
-  maxReplicas: 3
-  # -- Target CPU utilization percentage
+  maxReplicas: 100
   targetCPUUtilizationPercentage: 80
-
-# -- Additional volumes to add to the pod (in addition to the /data PVC/emptyDir)
+  # targetMemoryUtilizationPercentage: 80
+# Persistence for RedisInsight data
+persistence:
+  enabled: true
+  accessMode: ReadWriteOnce
+  size: 1Gi
+  storageClassName: ''
+  selector: {}
+# Additional volumes on the output Deployment definition.
 volumes: []
+# - name: foo
+#   secret:
+#     secretName: mysecret
+#     optional: false
 
-# -- Additional volume mounts for the container (in addition to /data)
+# Additional volumeMounts on the output Deployment definition.
 volumeMounts: []
-
-# -- Extra environment variables (list of name/value pairs).
-# Use this for arbitrary overrides not covered by the redisinsight.* block.
-env: []
-
-# -- Extra environment variable sources (configMapRef / secretRef)
-envFrom: []
-
-# -- ConfigMap configuration
-configMap:
-  # -- Create a ConfigMap
-  enabled: false
-  # -- ConfigMap key-value data
-  data: {}
-
-# -- Secret configuration
-# WARNING: values are stored as plaintext and base64-encoded at render time.
-# For production secrets, use External Secrets Operator (ESO) or Sealed Secrets instead.
-secret:
-  # -- Create a Secret
-  enabled: false
-  # -- Secret key-value data (values will be base64-encoded)
-  data: {}
-
-# -- Node selector for pod scheduling
+# - name: foo
+#   mountPath: "/etc/foo"
+#   readOnly: true
 nodeSelector: {}
-
-# -- Tolerations for pod scheduling
 tolerations: []
-
-# -- Affinity rules for pod scheduling
 affinity: {}
-
-# -- Istio VirtualService configuration
-virtualservice:
-  # -- Enable VirtualService
-  enabled: false
-  # -- Istio gateway references
-  gateways: []
-    # - istio-ingress/internal-gateway
-  # -- VirtualService hostnames
-  hosts: []
-    # - redisinsight.example.com
-  # -- Destination port (defaults to service.port)
-  port: ""
-
-# -- PodDisruptionBudget configuration
-podDisruptionBudget:
-  # -- Enable PDB
-  enabled: false
-  # -- Minimum number of available pods
-  minAvailable: 1
-  # -- Maximum number of unavailable pods (mutually exclusive with minAvailable)
-  # maxUnavailable: 1
