@@ -84,4 +84,18 @@ fileignoreconfig:
   checksum: e583d8ee290ed1609fd6aabb8a25085f3de623ea0c33e6ff4ab7c3de2d280579
 - filename: pipeline_testing_strategies/in_cluster_testing/zap_dast_scanning/zap-baseline.py
   checksum: f7d0feb302e02d82d22ec4e64f438b410e96642cfadb148ea29772fffad9f6b4
+- filename: pipeline_testing_strategies/ci_cd_white_box_testing/load_testing/k6_load_testing/script.js
+  checksum: 461453fd58ce60bf08c2967dc2fe1edf316b112931c4793a9b8a3efb81c7a9f3
+- filename: pipeline_testing_strategies/ci_cd_white_box_testing/load_testing/script.js
+  checksum: a829edfb2bbabe5587d395d4e1f12e64b3701ff10e19dad41abe2c7ebfcaafdf
+- filename: pipeline_testing_strategies/ci_cd_white_box_testing/load_testing/json.js
+  checksum: e307868160392a9101d2c680b8d72195d2129d6b92300a93b99a91bcba4c9c1e
+- filename: pipeline_testing_strategies/ci_cd_white_box_testing/load_testing/k6_load_testing/json.js
+  checksum: 2cd3fbdd4e7b54ac9d2e05f3ddc4b9b69dcf5c0abaa802e157883780e5434632
+- filename: pipeline_testing_strategies/ci_cd_white_box_testing/zap_dast_scanning/zap-full-scan.py
+  checksum: 2c70439b03591209103ceecdcc085d9bdc250a64102a0a78ea565becacec9e07
+- filename: pipeline_testing_strategies/ci_cd_white_box_testing/zap_dast_scanning/zap-baseline.py
+  checksum: 3a0e80ad22fad4c3c739da8e5c49c9c08abfb0736d9de48a1efb7911a023169f
+- filename: pipeline_testing_strategies/ci_cd_white_box_testing/zap_dast_scanning/zap-api-scan.py
+  checksum: cc9de8c822f0b779cb8a509b470536927007cdeedefb9e3ad949bd055e1b4065
 version: "1.0"
