@@ -120,4 +120,6 @@ fileignoreconfig:
   checksum: 0fa81947ebf2e5e7650f1c8ad2c3bd0e9cd1db0669f32eedbead7f889bc1b366
 - filename: .github/workflows/github_action_super_linter.yaml
   checksum: 574ca7d69a9291efc873673d7adc8a4bd992d171a0268636cf5ab28fad87bfea
+- filename: .github/workflows/github_action_typos.yaml
+  checksum: 35340697fcf3e735d2633986c0d64dfb1a14adf818e6fcff12dd1b30b60c38dd
 version: "1.0"
