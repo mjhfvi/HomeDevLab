@@ -124,4 +124,6 @@ fileignoreconfig:
   checksum: 35340697fcf3e735d2633986c0d64dfb1a14adf818e6fcff12dd1b30b60c38dd
 - filename: .github/workflows/github_action_crlf.yaml
   checksum: 0fdcc6da7a76ec449c2ec8115cfaa91201ca9235b3261dc5efd6ba63b2b69318
+- filename: .github/workflows/github_action_gitleaks.yaml
+  checksum: bf3d79a0fe42d77be5d9a4d99274cec828b6886871fe897331f781cfe6ce3f73
 version: "1.0"
