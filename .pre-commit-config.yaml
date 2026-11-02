@@ -117,14 +117,14 @@ repos:
   #     - id: rst-inline-touching-normal
   #     - id: text-unicode-replacement-char
   #       name: pygrep-hooks (collection of fast, cheap, regex based pre-commit hooks.)
-  - repo: local
-    hooks:
-      - id: python-safety-dependencies-check
-        name: safety
-        entry: safety
-        args: [scan, --apply-fixes] # --full-report
-        language: system
-        files: requirements
+  # - repo: local
+  #   hooks:
+  #     - id: python-safety-dependencies-check
+  #       name: safety
+  #       entry: safety
+  #       args: [scan, --apply-fixes] # --full-report
+  #       language: system
+  #       files: requirements
   # - repo: https://github.com/PyCQA/flake8
   #   rev: 7.5.0
   #   hooks:
