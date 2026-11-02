@@ -16,6 +16,7 @@
     "helmignore",
     "homedevlab",
     "infracloud",
+    "jcasc",
     "kestra",
     "milvus",
     "pgadmin",
@@ -28,6 +29,7 @@
     "sonarqube",
     "tfstate",
     "tfvars",
+    "tzahi",
     "uvicorn",
     "venv"
   ]

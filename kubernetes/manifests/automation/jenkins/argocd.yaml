@@ -2,7 +2,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: postgresql
+  name: jenkins
   namespace: infrastructure
   labels:
     argocd.argoproj.io/environment: development
@@ -16,18 +16,18 @@ spec:
     repoURL: ''
     targetRevision: main
   sources:
-    - name: postgresql
+    - name: jenkins
       repoURL: https://charts.jenkins.io/
-      chart: postgresql
-      targetRevision: 2.1.1
+      chart: jenkins
+      targetRevision: 5.10.9
       helm:
         releaseName: values
         valueFiles:
-          - $values/kubernetes/manifests/development/database/postgresql/credentials.yaml
-          - $values/kubernetes/manifests/development/database/postgresql/values.yaml
+          - $values/kubernetes/manifests/automation/jenkins/credentials.yaml
+          - $values/kubernetes/manifests/automation/jenkins/values.yaml
     - name: values
       repoURL: https://github.com/mjhfvi/HomeDevLab
-      path: kubernetes/manifests/development/database/postgresql
+      path: kubernetes/manifests/automation/jenkins
       targetRevision: main
       ref: values
       directory:
