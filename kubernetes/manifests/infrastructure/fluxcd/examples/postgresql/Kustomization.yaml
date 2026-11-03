@@ -10,3 +10,4 @@ resources:
   - HelmRelease.yaml
   - credentials.yaml
   - GitRepository.yaml
+  - monitoring.yaml
