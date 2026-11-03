@@ -134,4 +134,12 @@ fileignoreconfig:
   checksum: 804da70fbaea1827df8b7b83e9d0fef6a956454a375a459cc5c079526aaf2669
 - filename: kubernetes/manifests/tools/mongo-compass/helmfile.yaml
   checksum: e726f0669c29b0e4eacbd6431fb99077c8a13f0c989cfe1f63f650bafe138725
+- filename: kubernetes/manifests/database/mongodb/Chart.yaml
+  checksum: c276c31683a7b6b063e3f1acdae45158622604f59dfb2a11d8dfb5cfc0a230bd
+- filename: kubernetes/manifests/database/mongodb/credentials.yaml
+  checksum: dc74a4961e78c1ccf64042930fb209f55c6f678a776d0c2fd950240bfe1b2951
+- filename: kubernetes/manifests/database/mongodb/values.yaml
+  checksum: 3c2d52f945c430a2e0594cad97995478d0a4ccd913789918554f5fbcbcda8bb4
+- filename: kubernetes/manifests/database/mongodb/values.example.yaml
+  checksum: c0a0808162e56575e053f3d1350ff2f0fa354f7c53ae6452da560079ddc804fe
 version: "1.0"
