@@ -1,0 +1,39 @@
+---
+# SPDX-License-Identifier: Apache-2.0
+# =============================================================================
+# PostgreSQL Helm Chart - Default Values
+# =============================================================================
+# Supported architectures:
+# - standalone
+# - replication
+
+# -- PostgreSQL deployment mode: standalone | replication
+architecture: standalone
+
+# -- Override full release name
+fullnameOverride: postgresql
+# =============================================================================
+# Authentication
+# =============================================================================
+auth:
+  # -- Existing secret with PostgreSQL passwords
+  existingSecret: postgresql-credentials
+# =============================================================================
+# Standalone
+# =============================================================================
+standalone:
+  persistence:
+    # -- Enable PVC for standalone mode
+    enabled: false
+# =============================================================================
+# Replication
+# =============================================================================
+replication:
+  primary:
+    persistence:
+      # -- Enable PVC for the primary StatefulSet
+      enabled: false
+  readReplicas:
+    persistence:
+      # -- Enable PVCs for read replicas
+      enabled: false

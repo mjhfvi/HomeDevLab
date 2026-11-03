@@ -12,13 +12,13 @@ spec:
       sourceRef:
         kind: HelmRepository
         name: helm-repository
+      valuesFiles: [values.yaml]
   install:
     createNamespace: true
   interval: 1m0s
   targetNamespace: database
-  # releaseName: postgresql
-  values:
-    architecture: standalone
-    fullnameOverride: postgresql
-    auth:
-      existingSecret: postgresql-credentials
+  # values:
+  #   architecture: standalone
+  #   fullnameOverride: postgresql
+  #   auth:
+  #     existingSecret: postgresql-credentials
