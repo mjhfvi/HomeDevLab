@@ -6,6 +6,10 @@ metadata:
   namespace: postgresql
 spec:
   interval: 10m0s
-  url: https://repo.helmforge.dev
+  url: OCIRepository
   type: default
   provider: generic
+  values:
+    image:
+      repository: my-registry.io/my-java-app1
+      tag: 1.0.0

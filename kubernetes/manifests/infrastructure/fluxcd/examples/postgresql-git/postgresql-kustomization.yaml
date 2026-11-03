@@ -9,7 +9,7 @@ spec:
   timeout: 20m
   prune: true
   wait: true
-  path: kubernetes/manifests/infrastructure/fluxcd/examples/postgresql
+  path: kubernetes/manifests/infrastructure/fluxcd/examples/postgresql-git
   sourceRef:
     kind: GitRepository
     name: git-repository

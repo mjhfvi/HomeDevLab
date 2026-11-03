@@ -1,8 +1,15 @@
 ---
 fileignoreconfig:
 
+- filename: kubernetes/manifests/infrastructure/fluxcd/examples/postgresql-git/postgresql-kustomization.yaml
+  checksum: d8d8a580d9ecb3aa8c6c8ddda0cf109cc00dee3e3c36bc567524d98658f3f6c9
+- filename: kubernetes/manifests/infrastructure/fluxcd/examples/postgresql-oci/Credentials.yaml
+  checksum: 98f27a66d65d3b6d4622c20daadf9536ecc1101a87ee36f90b5b652453da4e96
+- filename: kubernetes/manifests/infrastructure/fluxcd/examples/postgresql-oci/values.yaml
+  checksum: e43bca39d103bb84d8dac4802ca7f08143d47f69b500abe5ec19998c0511979f
+
 - filename: kubernetes/manifests/infrastructure/fluxcd/examples/postgresql-helm/HelmRelease.yaml
-  checksum: 646532964d5dd9f9efffc79ad16ce9bd4fee82e0fbdb6045e94d6bf2354c7112
-- filename: kubernetes/manifests/infrastructure/fluxcd/examples/postgresql-helm/values.yaml
-  checksum: 48bb2517e50b4aba75da7b8ef8731bc45d49d2c1421319887fa3bc436ce4192f
+  checksum: ead75d0b352edced20abe5f824b46bdabb841fdf47bab39be992750cfb85ef5d
+- filename: kubernetes/manifests/infrastructure/fluxcd/examples/postgresql-oci/HelmRelease.yaml
+  checksum: d8bf519a11870a45d450281562aed7282a152c9643acd1a606f7c37eed5611f0
 version: "1.0"

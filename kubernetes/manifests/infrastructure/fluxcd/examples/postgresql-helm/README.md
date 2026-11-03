@@ -2,6 +2,8 @@
 
 ```bash
 kubectl apply -f namespace.yaml
-kubectl apply -f GitRepository.yaml
-kubectl apply -f redis-kustomization.yaml
+kubectl apply -f Credentials.yaml
+kubectl apply -f Kustomization.yaml
+kubectl apply -f HelmRepository.yaml
+kubectl apply -f HelmRelease.yaml
 ```
