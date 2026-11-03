@@ -1,0 +1,26 @@
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: GitRepository
+metadata:
+  name: podinfo
+  namespace: postgresql
+spec:
+  interval: 5m
+  url: https://cloudnative-pg.github.io/charts
+  ref:
+    branch: main
+# ---
+# apiVersion: kustomize.toolkit.fluxcd.io/v1
+# kind: Kustomization
+# metadata:
+#   name: podinfo
+#   namespace: default
+# spec:
+#   interval: 10m
+#   targetNamespace: default
+#   sourceRef:
+#     kind: GitRepository
+#     name: podinfo
+#   path: "./kustomize"
+#   prune: true
+#   timeout: 1m

@@ -1,0 +1,11 @@
+---
+# clusters/my-cluster/databases/postgresql/helmrepository.yaml
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: cloudnative-pg
+  namespace: postgresql
+spec:
+  interval: 1h
+  # Official CloudNativePG Helm chart repository
+  url: https://cloudnative-pg.github.io/charts

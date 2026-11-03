@@ -1,0 +1,106 @@
+---
+# clusters/my-cluster/databases/postgresql/cluster.yaml
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: pg-cluster
+  namespace: postgresql
+spec:
+  # Number of instances (1 primary + 2 standby replicas)
+  instances: 3
+  # PostgreSQL version
+  imageName: ghcr.io/cloudnative-pg/postgresql:16.2
+
+  # PostgreSQL configuration
+  postgresql:
+    parameters:
+      # Memory configuration
+      shared_buffers: 256MB
+      effective_cache_size: 768MB
+      work_mem: 16MB
+      maintenance_work_mem: 128MB
+      # WAL configuration
+      wal_buffers: 16MB
+      max_wal_size: 1GB
+      min_wal_size: 512MB
+      # Connection settings
+      max_connections: '200'
+      # Required for pg_stat_statements
+      shared_preload_libraries: pg_stat_statements
+      # Logging
+      log_statement: ddl
+      log_min_duration_statement: '1000'
+    # Enable pg_stat_statements extension
+    pg_hba:
+      - host all all 10.0.0.0/8 md5
+      - host all all 172.16.0.0/12 md5
+
+  # Bootstrap configuration for initial setup
+  bootstrap:
+    initdb:
+      database: appdb
+      owner: app_user
+      secret:
+        name: pg-app-credentials
+      # Post-initialization SQL
+      postInitSQL:
+        - CREATE EXTENSION IF NOT EXISTS pg_stat_statements
+        - CREATE EXTENSION IF NOT EXISTS pgcrypto
+
+  # Superuser credentials
+  enableSuperuserAccess: true
+  superuserSecret:
+    name: pg-superuser-credentials
+
+  # Storage configuration
+  storage:
+    size: 20Gi
+    storageClass: standard
+    # PVC resize policy
+    pvcTemplate:
+      accessModes:
+        - ReadWriteOnce
+
+  # WAL storage on a separate volume for performance
+  walStorage:
+    size: 5Gi
+    storageClass: standard
+
+  # Resource limits for PostgreSQL pods
+  resources:
+    requests:
+      cpu: 500m
+      memory: 1Gi
+    limits:
+      cpu: '2'
+      memory: 2Gi
+
+  # Affinity rules to spread replicas across nodes
+  affinity:
+    topologyKey: kubernetes.io/hostname
+    podAntiAffinityType: required
+
+  # Monitoring configuration
+  monitoring:
+    customQueriesConfigMap:
+      - name: pg-custom-queries
+        key: queries
+
+  # Backup configuration using object storage
+  backup:
+    barmanObjectStore:
+      destinationPath: s3://pg-backups/pg-cluster/
+      endpointURL: https://s3.amazonaws.com
+      s3Credentials:
+        accessKeyId:
+          name: pg-s3-credentials
+          key: ACCESS_KEY_ID
+        secretAccessKey:
+          name: pg-s3-credentials
+          key: ACCESS_SECRET_KEY
+      wal:
+        compression: gzip
+        maxParallel: 2
+      data:
+        compression: gzip
+    retentionPolicy: 30d

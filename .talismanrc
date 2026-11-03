@@ -154,4 +154,10 @@ fileignoreconfig:
   checksum: feb63b184b819a017ac60daccf39de028668f352b1f8e72aab6ae68d557769da
 - filename: kubernetes/manifests/infrastructure/flux-operator/values.yaml
   checksum: c1bf0c87df28dfea628723149981ff466aaceb667bd6f4e28f5f7ec087e5ddc2
+- filename: kubernetes/manifests/infrastructure/fluxcd/examples/postgresql/postgresql-kustomization.yaml
+  checksum: 80955aab794efe872849b0d6507b4230fff044a268f2625652b52f3e2e504dd4
+- filename: kubernetes/manifests/infrastructure/fluxcd/examples/postgresql/credentials.yaml
+  checksum: 64697bd7238c3591e3160a11a48c696f6a68f50371b64df9ffecf426e5357aa6
+- filename: kubernetes/manifests/infrastructure/fluxcd/examples/postgresql/Cluster.yaml
+  checksum: 29a476448d9ba4cd2d990069d1128362cd47167db45ee5c46727ca1c628fb4d0
 version: "1.0"
