@@ -8,6 +8,6 @@ resources:
   - Namespace.yaml
   - HelmRepository.yaml
   - HelmRelease.yaml
-  - credentials.yaml
+  - Credentials.yaml
   - GitRepository.yaml
   - monitoring.yaml

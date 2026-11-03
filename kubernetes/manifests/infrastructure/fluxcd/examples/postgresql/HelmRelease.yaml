@@ -3,7 +3,7 @@ apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
   name: postgresql
-  namespace: postgresql
+  # namespace: postgresql
 spec:
   chart:
     spec:
@@ -16,7 +16,6 @@ spec:
     createNamespace: true
   interval: 1m0s
   targetNamespace: database
-  # releaseName: postgresql
   values:
     architecture: standalone
     fullnameOverride: postgresql
