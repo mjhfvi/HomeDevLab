@@ -7,11 +7,11 @@ metadata:
   namespace: infrastructure
 spec:
   interval: 10m
-  path: ./clusters/my-cluster/databases/postgresql
+  path: kubernetes/manifests/infrastructure/fluxcd/examples/postgresql
   prune: true
   sourceRef:
     kind: GitRepository
-    name: flux-system
+    name: infrastructure
   healthChecks:
     - apiVersion: helm.toolkit.fluxcd.io/v2
       kind: HelmRelease

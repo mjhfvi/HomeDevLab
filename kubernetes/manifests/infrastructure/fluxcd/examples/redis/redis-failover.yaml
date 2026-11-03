@@ -1,0 +1,98 @@
+---
+apiVersion: databases.spotahome.com/v1
+kind: RedisFailover
+metadata:
+  name: redis-cluster
+  namespace: redis
+spec:
+  # Sentinel configuration for automatic failover
+  sentinel:
+    # Number of Sentinel instances (minimum 3 for quorum)
+    replicas: 3
+    # Resource limits for Sentinel pods
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 200m
+        memory: 256Mi
+    # Custom Sentinel configuration
+    customConfig:
+      # Time in milliseconds before marking a master as down
+      - down-after-milliseconds 5000
+      # Failover timeout in milliseconds
+      - failover-timeout 10000
+      # Number of replicas to reconfigure simultaneously during failover
+      - parallel-syncs 1
+    # Affinity to spread Sentinels across nodes
+    affinity:
+      podAntiAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchLabels:
+                  app.kubernetes.io/component: sentinel
+                  app.kubernetes.io/name: redis-cluster
+              topologyKey: kubernetes.io/hostname
+
+  # Redis server configuration
+  redis:
+    # Number of Redis instances (1 master + N-1 replicas)
+    replicas: 3
+    # Resource limits for Redis pods
+    resources:
+      requests:
+        cpu: 200m
+        memory: 512Mi
+      limits:
+        cpu: '1'
+        memory: 2Gi
+    # Custom Redis configuration
+    customConfig:
+      # Maximum memory limit
+      - maxmemory 1gb
+      # Eviction policy when maxmemory is reached
+      - maxmemory-policy allkeys-lru
+      # Enable AOF persistence
+      - appendonly yes
+      # AOF fsync policy
+      - appendfsync everysec
+      # RDB snapshot configuration
+      - save 900 1
+      - save 300 10
+      - save 60 10000
+      # TCP keepalive
+      - tcp-keepalive 300
+      # Slow log configuration
+      - slowlog-log-slower-than 10000
+      - slowlog-max-len 128
+      # Maximum number of connected clients
+      - maxclients 10000
+    # Persistent storage for Redis data
+    storage:
+      persistentVolumeClaim:
+        metadata:
+          name: redis-data
+        spec:
+          accessModes: [ReadWriteOnce]
+          resources:
+            requests:
+              storage: 10Gi
+          storageClassName: standard
+    # Affinity to spread Redis pods across nodes
+    affinity:
+      podAntiAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchLabels:
+                  app.kubernetes.io/component: redis
+                  app.kubernetes.io/name: redis-cluster
+              topologyKey: kubernetes.io/hostname
+
+  # Authentication configuration
+  auth:
+    secretPath: redis-auth

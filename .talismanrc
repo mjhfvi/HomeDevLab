@@ -154,10 +154,16 @@ fileignoreconfig:
   checksum: feb63b184b819a017ac60daccf39de028668f352b1f8e72aab6ae68d557769da
 - filename: kubernetes/manifests/infrastructure/flux-operator/values.yaml
   checksum: c1bf0c87df28dfea628723149981ff466aaceb667bd6f4e28f5f7ec087e5ddc2
-- filename: kubernetes/manifests/infrastructure/fluxcd/examples/postgresql/postgresql-kustomization.yaml
-  checksum: 80955aab794efe872849b0d6507b4230fff044a268f2625652b52f3e2e504dd4
 - filename: kubernetes/manifests/infrastructure/fluxcd/examples/postgresql/credentials.yaml
   checksum: 64697bd7238c3591e3160a11a48c696f6a68f50371b64df9ffecf426e5357aa6
 - filename: kubernetes/manifests/infrastructure/fluxcd/examples/postgresql/Cluster.yaml
   checksum: 29a476448d9ba4cd2d990069d1128362cd47167db45ee5c46727ca1c628fb4d0
+- filename: kubernetes/manifests/infrastructure/fluxcd/examples/postgresql/postgresql-kustomization.yaml
+  checksum: 051f7d95fd6cf9311b7801b4c505dd998ac6d0a0da15048044c57740109db582
+- filename: kubernetes/manifests/infrastructure/fluxcd/examples/redis/auth-secret.yaml
+  checksum: b8b9540b75f26ef9711f62b48b09b75bc4b65a93a415b6a4b26a9c457db7a5a6
+- filename: kubernetes/manifests/infrastructure/fluxcd/examples/redis/monitoring.yaml
+  checksum: 6d29e078767e0211ecb7c83b3678d538276567daa48e958388f1a10222c19b0b
+- filename: kubernetes/manifests/infrastructure/fluxcd/examples/redis/redis-failover.yaml
+  checksum: a0f1900d91ad9a28903c5206a527c03f80e5977080f1dd9c3af0b4573955ee04
 version: "1.0"
