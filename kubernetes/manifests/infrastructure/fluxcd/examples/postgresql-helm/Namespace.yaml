@@ -1,0 +1,9 @@
+---
+# clusters/my-cluster/databases/postgresql/namespace.yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: postgresql
+  labels:
+    app.kubernetes.io/name: cloudnative-pg
+    app.kubernetes.io/part-of: database

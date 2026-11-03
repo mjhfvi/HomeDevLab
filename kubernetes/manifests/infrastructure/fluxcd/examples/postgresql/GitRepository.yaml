@@ -2,25 +2,10 @@
 apiVersion: source.toolkit.fluxcd.io/v1
 kind: GitRepository
 metadata:
-  name: podinfo
-  namespace: postgresql
+  name: git-repository
+  # namespace: infrastructure
 spec:
-  interval: 5m
-  url: https://cloudnative-pg.github.io/charts
+  interval: 1m0s
   ref:
     branch: main
-# ---
-# apiVersion: kustomize.toolkit.fluxcd.io/v1
-# kind: Kustomization
-# metadata:
-#   name: podinfo
-#   namespace: default
-# spec:
-#   interval: 10m
-#   targetNamespace: default
-#   sourceRef:
-#     kind: GitRepository
-#     name: podinfo
-#   path: "./kustomize"
-#   prune: true
-#   timeout: 1m
+  url: https://github.com/mjhfvi/HomeDevLab.git

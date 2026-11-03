@@ -1,9 +1,0 @@
----
-apiVersion: source.toolkit.fluxcd.io/v1
-kind: HelmRepository
-metadata:
-  name: redis-operator
-  namespace: redis
-spec:
-  interval: 1h
-  url: https://spotahome.github.io/redis-operator
