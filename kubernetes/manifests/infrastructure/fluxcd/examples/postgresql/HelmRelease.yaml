@@ -15,7 +15,7 @@ spec:
   install:
     createNamespace: true
   interval: 1m0s
-  targetNamespace: database
+  targetNamespace: postgresql
   values:
     architecture: standalone
     fullnameOverride: postgresql
