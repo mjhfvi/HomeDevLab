@@ -4,12 +4,11 @@ kind: Kustomization
 metadata:
   name: postgresql-values
   namespace: postgresql
-# namespace: postgresql-values
-resources: [../base]
+resources: [.]
 configMapGenerator:
   - name: configmap-values
     files:
-      - values.yaml=configmap-values
+      - configmap-values.yaml=values.yaml
 # secretGenerator:
 #   - name: secret-values
 #     files:
