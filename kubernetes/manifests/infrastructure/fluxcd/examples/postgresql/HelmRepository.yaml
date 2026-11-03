@@ -3,7 +3,7 @@ apiVersion: source.toolkit.fluxcd.io/v1
 kind: HelmRepository
 metadata:
   name: helm-repository
-  # namespace: infrastructure
+  namespace: postgresql
 spec:
   interval: 10m0s
   url: https://repo.helmforge.dev
