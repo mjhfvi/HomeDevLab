@@ -75,6 +75,16 @@ cp ~/.minikube/ ./<local home folder>/.minikube/
 minikube addons enable metrics-server
 ```
 
+### Docker Desktop
+
+```bash
+kubectl create ns monitor
+helm repo add metrics-server https://kubernetes-sigs.github.io/metrics-server/
+helm --namespace monitor upgrade --install metrics-server metrics-server/metrics-server --set args[0]='--kubelet-insecure-tls'
+
+helm uninstall metrics-server
+```
+
 ---
 
 ### Troubleshooting

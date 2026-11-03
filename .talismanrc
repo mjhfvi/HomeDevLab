@@ -142,4 +142,6 @@ fileignoreconfig:
   checksum: 3c2d52f945c430a2e0594cad97995478d0a4ccd913789918554f5fbcbcda8bb4
 - filename: kubernetes/manifests/database/mongodb/values.example.yaml
   checksum: c0a0808162e56575e053f3d1350ff2f0fa354f7c53ae6452da560079ddc804fe
+- filename: kubernetes/manifests/database/postgresql/helmfile.yaml
+  checksum: 890a23f76ff417030d90098a5578b61aea5ab98877036701e91357bc679fbf87
 version: "1.0"
