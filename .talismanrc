@@ -144,4 +144,14 @@ fileignoreconfig:
   checksum: c0a0808162e56575e053f3d1350ff2f0fa354f7c53ae6452da560079ddc804fe
 - filename: kubernetes/manifests/database/postgresql/helmfile.yaml
   checksum: 890a23f76ff417030d90098a5578b61aea5ab98877036701e91357bc679fbf87
+- filename: kubernetes/manifests/infrastructure/fluxcd/helmfile.yaml
+  checksum: f0ab1ec5cb3c0bc82ae403dd8b634f06c077a4791d5154a8d711546b64a44564
+- filename: kubernetes/manifests/infrastructure/flux-operator/helmfile.yaml
+  checksum: 6f708cc6535546083c493af38e3df673c81c7f44f1af83a64911d06b146b90f2
+- filename: kubernetes/manifests/infrastructure/flux-operator/Chart.yaml
+  checksum: 433d4ed0f13d496c4a5675a559c16129c2e93c2ae9237fdf8bd489c41750fb4f
+- filename: kubernetes/manifests/infrastructure/flux-operator/values.example.yaml
+  checksum: feb63b184b819a017ac60daccf39de028668f352b1f8e72aab6ae68d557769da
+- filename: kubernetes/manifests/infrastructure/flux-operator/values.yaml
+  checksum: c1bf0c87df28dfea628723149981ff466aaceb667bd6f4e28f5f7ec087e5ddc2
 version: "1.0"

@@ -13,34 +13,24 @@ helmDefaults:
     # verify: false
     # enableDNS: false
     # waitForJobs: false
-    timeout: 240
+  timeout: 240
     # skipDeps: false
     # reuseValues: false
     # deleteWait: false
     # deleteTimeout: 0
 repositories:
-    - name: argo
-      url: https://argoproj.github.io/argo-helm
+  - name: fluxcd
+    url: https://fluxcd-community.github.io/helm-charts
 releases:
-    - name: argocd
-      namespace: argocd
-      createNamespace: true
-      chart: argo/argo-cd
-      labels:
-          app.kubernetes.io/forward: argocd
-          #   version: 0.0.0
-          #   missingFileHandler: Warn  # set to either "Error" or "Warn". "Error" instructs helmfile to fail when unable to find a values or secrets file. When "Warn", it prints the file and continues.
-          #   verify: true
-          #   timeout: 60
-          #   cleanupOnFail: true
-      # values:
-      #   - redis-ha:
-      #       enabled: true
-      #   - controller:
-      #       replicas: 1
-      #   - server:
-      #     replicas: 2
-      #   - repoServer:
-      #       replicas: 2
-      #   - applicationSet:
-      #       replicas: 2
+  - name: fluxcd
+    namespace: infrastructure
+    createNamespace: true
+    chart: fluxcd/flux2
+    labels:
+      app.kubernetes.io/forward: fluxcd
+      version: 2.19.1
+        #   missingFileHandler: Warn  # set to either "Error" or "Warn". "Error" instructs helmfile to fail when unable to find a values or secrets file. When "Warn", it prints the file and continues.
+        #   verify: true
+        #   timeout: 60
+        #   cleanupOnFail: true
+    values: [values.yaml]
