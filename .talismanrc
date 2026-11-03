@@ -6,9 +6,8 @@ fileignoreconfig:
   checksum: fd6574497ae5d1c5afd66c18144a9ab88b358b448dcde5d6a429849a182d286c
 - filename: kubernetes/manifests/infrastructure/fluxcd/examples/postgresql/credentials.yaml
   checksum: 9e9ab9ac8325fe21d7cf6c77a68aa1fec87510ea1fc000db9fff3113bf107e57
-
 - filename: kubernetes/manifests/infrastructure/fluxcd/examples/postgresql/postgresql-kustomization.yaml
-  checksum: 465795b1615aa9ef358b133f218b44385fe9e53a9d834c6a2048afb286ecd695
+  checksum: f83e03a02aae2a9a9cd111a748def650543a5dc2116e8fa3732c90e140573191
 - filename: kubernetes/manifests/infrastructure/fluxcd/examples/postgresql/HelmRelease.yaml
   checksum: 01d3f10dcb74a5b7fce8da17bcd7b6cf13d0c051d9816c5be1d9fb9fb85f5f61
 version: "1.0"
