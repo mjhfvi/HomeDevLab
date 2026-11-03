@@ -5,9 +5,7 @@ metadata:
   name: postgresql
   namespace: postgresql
 resources:
-  - Namespace.yaml
-  - HelmRepository.yaml
-  - HelmRelease.yaml
   - Credentials.yaml
   - GitRepository.yaml
-  - monitoring.yaml
+  - HelmRelease.yaml
+  - HelmRepository.yaml
