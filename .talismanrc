@@ -126,4 +126,12 @@ fileignoreconfig:
   checksum: 0fdcc6da7a76ec449c2ec8115cfaa91201ca9235b3261dc5efd6ba63b2b69318
 - filename: .github/workflows/github_action_gitleaks.yaml
   checksum: bf3d79a0fe42d77be5d9a4d99274cec828b6886871fe897331f781cfe6ce3f73
+- filename: kubernetes/manifests/tools/mongo-compass/Chart.yaml
+  checksum: b380559af6bc64f4f813ea9915c35c4b725747887e6b6d6b916a03b60573ec76
+- filename: kubernetes/manifests/tools/mongo-compass/values.yaml
+  checksum: ba0c7b858e136edda7de1156901f5c2485850c339206eeff5710384037f4ea4a
+- filename: kubernetes/manifests/tools/mongo-compass/values.example.yaml
+  checksum: 804da70fbaea1827df8b7b83e9d0fef6a956454a375a459cc5c079526aaf2669
+- filename: kubernetes/manifests/tools/mongo-compass/helmfile.yaml
+  checksum: e726f0669c29b0e4eacbd6431fb99077c8a13f0c989cfe1f63f650bafe138725
 version: "1.0"
