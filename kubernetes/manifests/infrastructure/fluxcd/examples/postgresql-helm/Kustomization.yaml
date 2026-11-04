@@ -4,13 +4,52 @@ kind: Kustomization
 metadata:
   name: postgresql-values
   namespace: postgresql
-resources: [.]
+# Reference the resources (e.g., deployments, configmap) that will consume these ConfigMaps
+# resources:
+#   - Credentials.yaml
+# Configuration for generating ConfigMaps
 configMapGenerator:
-  - name: configmap-values
+  # - name: postgresql-configmap  # Generating a ConfigMap from local files
+  #   files:
+  #     # - configs/app.properties  # Key will be 'app.properties', value is file content
+  #     - postgresql-values=values.yaml  # Key will be 'custom-key', value is file content
+    # literals:
+    # - LOG_LEVEL=info
+    # - MAX_CONNECTIONS=100
+
+  #  # Generating a ConfigMap from an environment (.env) file
+  # - name: app-env-config
+  #   envs:
+  #     - .env.production  # Parses KEY=value lines into individual data keys
+
+  #  # Generating a ConfigMap directly from literal key-value pairs
+  # - name: app-literal-config
+  #   literals:
+  #     - LOG_LEVEL=info
+  #     - DB_HOST=postgres.production.svc
+secretGenerator:  # Configuration for generating Secrets
+  - name: postgresql-secret
     files:
-      - configmap-values.yaml=values.yaml
-# secretGenerator:
-#   - name: secret-values
-#     files:
-#       - values.yaml=values.yaml
-configurations: [kustomizeconfig.yaml]
+      # - configs/app.properties  # Key will be 'app.properties', value is file content
+      - postgresql-values=values.yaml  # Key will be 'custom-key', value is file content
+    # literals:
+    #   - username=admin
+    #   - password=securepassword
+
+  #  # Generating a Secrets from an environment (.env) file
+  # - name: app-env-config
+  #   envs:
+  #     - .env.production  # Parses KEY=value lines into individual data keys
+
+  #  # Generating a Secrets directly from literal key-value pairs
+  # - name: app-literal-config
+  #   literals:
+  #     - LOG_LEVEL=info
+  #     - DB_HOST=postgres.production.svc
+# Optional: Global generator options behavior
+generatorOptions:
+  disableNameSuffixHash: true  # Set to true to stop Kustomize from appending a unique hash to the name
+  labels:
+    managed-by: kustomize
+  annotations:
+    dashboard/type: configuration

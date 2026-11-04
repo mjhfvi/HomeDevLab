@@ -1,0 +1,23 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: postgresql
+  namespace: postgresql
+spec:
+  chart:
+    spec:
+      chart: postgresql
+      version: 2.1.1
+      sourceRef:
+        kind: HelmRepository
+        name: helm-repository
+  install:
+    createNamespace: true
+  interval: 1m0s
+  targetNamespace: postgresql
+  values:
+    architecture: standalone
+    fullnameOverride: postgresql
+    auth:
+      existingSecret: postgresql-credentials
