@@ -1,8 +1,6 @@
 
-import pendulum
 from airflow import DAG
 from datetime import datetime
-from airflow.providers.cncf.kubernetes.operators.kubernetes_pod import KubernetesPodOperator
 from airflow.providers.cncf.kubernetes.operators.pod_exec import KubernetesPodExecOperator
 
 with DAG(
@@ -15,8 +13,11 @@ with DAG(
 
     k8s_hello_world = KubernetesPodExecOperator(
         task_id='airflow_k8s_exec_hello_world',
+        namespace='automation',
         image='hello-world:latest',
         pod_name='airflow_k8s_exec_operator',
         pod_namespace='automation',
-        command=['echo', 'Hello World from KubernetesPodExecOperator!'],
+        cmds=['echo', 'Hello World from KubernetesPodExecOperator!'],
+        wait_until_job_complete=True,
+        deferrable=True,
     )
