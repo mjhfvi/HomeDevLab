@@ -1,0 +1,56 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+metadata:
+  name: airflow-values
+  namespace: automation
+# Reference the resources (e.g., deployments, configmap) that will consume these ConfigMaps
+# resources:
+#   - values.yaml
+# Configuration for generating ConfigMaps
+configMapGenerator:
+  - name: airflow-configmap  # Generating a ConfigMap from local files
+    files:
+      # - configs/app.properties  # Key will be 'app.properties', value is file content
+      - airflow-values=values.yaml  # Key will be 'custom-key', value is file content
+    # literals:
+    # - LOG_LEVEL=info
+    # - MAX_CONNECTIONS=100
+
+  #  # Generating a ConfigMap from an environment (.env) file
+  # - name: app-env-config
+  #   envs:
+  #     - .env.production  # Parses KEY=value lines into individual data keys
+
+  #  # Generating a ConfigMap directly from literal key-value pairs
+  # - name: app-literal-config
+  #   literals:
+  #     - LOG_LEVEL=info
+  #     - DB_HOST=postgres.production.svc
+# secretGenerator:  # Configuration for generating Secrets
+#   - name: airflow-credentials
+#     files:
+#     #   - configs/app.properties  # Key will be 'app.properties', value is file content
+#     #   - airflow-credentials=credentials.yaml  # Key will be 'custom-key', value is file content
+#       - airflow-credentials=credentials.yaml
+#     literals:
+#       - user-password=user
+#       - postgres-password=pass
+
+  #  # Generating a Secrets from an environment (.env) file
+  # - name: app-env-config
+  #   envs:
+  #     - .env.production  # Parses KEY=value lines into individual data keys
+
+  #  # Generating a Secrets directly from literal key-value pairs
+  # - name: app-literal-config
+  #   literals:
+  #     - LOG_LEVEL=info
+  #     - DB_HOST=postgres.production.svc
+# Optional: Global generator options behavior
+generatorOptions:
+  disableNameSuffixHash: true  # Set to true to stop Kustomize from appending a unique hash to the name
+  labels:
+    managed-by: kustomize
+  annotations:
+    dashboard/type: configuration

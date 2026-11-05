@@ -6,11 +6,9 @@
 # helmfile sync -f filename.yaml  # < deploy everything from file
 # helmfile apply  # < deploy diff only
 # helmfile destroy  # < deploy diff only
-
 filepath: helmfile.yaml
 helmBinary: helm
 missingFileHandler: Warn
-
 helmDefaults:
   cleanupOnFail: false
   verify: false
@@ -24,33 +22,18 @@ helmDefaults:
   reuseValues: false
   deleteWait: false
   deleteTimeout: 300
-
 repositories:
   - name: airflow
     url: https://airflow.apache.org/
-
 releases:
   - name: airflow
-    namespace: automation
+    # namespace: automation
     chart: airflow/airflow
-    version: 1.22.0
+    # version: 1.22.0
     # rollbackOnFailure: false
     labels:
       app.kubernetes.io/build-by: helmfile
-      app.kubernetes.io/version: 1.22.0
       app.kubernetes.io/chart: airflow
-    values:
-      - workers:
-          persistence:
-            enabled: false
-      - triggerer:
-          enabled: true
-          persistence:
-            enabled: false
-      - redis:
-          enabled: true
-          persistence:
-            enabled: false
-      - ingress:
-          web:
-            enabled: false
+      # app.kubernetes.io/chart-version: 1.22.0
+    # values:
+    #   - values.yaml
