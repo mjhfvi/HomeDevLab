@@ -1,0 +1,31 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: redis
+  namespace: database
+spec:
+  chart:
+    spec:
+      chart: redis
+      version: 3.1.0
+      sourceRef:
+        kind: HelmRepository
+        name: helm-repository
+  install:
+    createNamespace: true
+  interval: 1m0s
+  targetNamespace: database
+  valuesFrom:
+    - kind: ConfigMap
+      name: redis-configmap
+      valuesKey: redis-values
+    # - kind: Secret
+    #   name: redis-credentials
+    #   valuesKey: user-password
+    #   targetPath: user-password
+    # - kind: Secret
+    #   name: redis-credentials
+    #   valuesKey: redis-password
+    #   targetPath: redis-password
+    #   optional: true
