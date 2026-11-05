@@ -2,6 +2,9 @@ from datetime import datetime
 from airflow import DAG
 from airflow.operators.python import PythonOperator
 
+def print_hello():
+    print('Hello World!')
+
 with DAG(
     dag_id='python_hello_world_example',
     start_date=datetime(2026, 11, 5),
@@ -14,6 +17,3 @@ with DAG(
         task_id='hello_world_task',
         python_callable=print_hello,
     )
-
-def print_hello():
-    print('Hello World!')
