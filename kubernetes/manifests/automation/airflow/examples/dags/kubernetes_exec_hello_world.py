@@ -17,7 +17,6 @@ with DAG(
         image='hello-world:latest',
         cmds=['bash', '-cx'],
         arguments=['echo Hello World from KubernetesPodOperator!'],
-        wait_until_job_complete=True,
         deferrable=True,
         in_cluster=False,
     )
