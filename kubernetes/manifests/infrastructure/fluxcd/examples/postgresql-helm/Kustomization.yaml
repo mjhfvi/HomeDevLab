@@ -3,16 +3,15 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 metadata:
   name: postgresql-values
-  namespace: postgresql
 # Reference the resources (e.g., deployments, configmap) that will consume these ConfigMaps
 # resources:
-#   - Credentials.yaml
+#   - https://github.com/helmforgedev/charts.git//charts/postgresql
 # Configuration for generating ConfigMaps
 configMapGenerator:
-  # - name: postgresql-configmap  # Generating a ConfigMap from local files
-  #   files:
-  #     # - configs/app.properties  # Key will be 'app.properties', value is file content
-  #     - postgresql-values=values.yaml  # Key will be 'custom-key', value is file content
+  - name: postgresql-configmap  # Generating a ConfigMap from local files
+    files:
+      # - configs/app.properties  # Key will be 'app.properties', value is file content
+      - postgresql-values=values.yaml  # Key will be 'custom-key', value is file content
     # literals:
     # - LOG_LEVEL=info
     # - MAX_CONNECTIONS=100
@@ -27,11 +26,11 @@ configMapGenerator:
   #   literals:
   #     - LOG_LEVEL=info
   #     - DB_HOST=postgres.production.svc
-secretGenerator:  # Configuration for generating Secrets
-  - name: postgresql-secret
-    files:
-      # - configs/app.properties  # Key will be 'app.properties', value is file content
-      - postgresql-values=values.yaml  # Key will be 'custom-key', value is file content
+# secretGenerator:  # Configuration for generating Secrets
+#   - name: postgresql-secret
+#     files:
+#       # - configs/app.properties  # Key will be 'app.properties', value is file content
+#       - postgresql-values=values.yaml  # Key will be 'custom-key', value is file content
     # literals:
     #   - username=admin
     #   - password=securepassword

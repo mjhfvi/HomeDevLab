@@ -1,5 +1,12 @@
 ---
 fileignoreconfig:
-- filename: kubernetes/fluxcd/development/redis/HelmRelease.yaml
-  checksum: 0969551dfbe1b9577b999538120d6558e7a66006c791a2d155f96d8adce9a884
+- filename: kubernetes/manifests/automation/jenkins/Kustomization.yaml
+  checksum: 82b9872f905ede990ae0d2b9b9d7cb18bc41fa0fd40085a9f25b47dc2d59eac8
+- filename: kubernetes/manifests/infrastructure/fluxcd/examples/postgresql-helm/Kustomization.yaml
+  checksum: e2d16d76a592a056d3625d882eabf5569ed5ecb69d919a2a3b14474f46145c08
+- filename: kubernetes/manifests/database/redis/Kustomization.yaml
+  checksum: fb5402dca5831954075630a78160e2a46623bda0d9a105099c43170334588e17
+- filename: kubernetes/manifests/infrastructure/fluxcd/examples/postgresql-helm/Kustomization-file.yaml
+  checksum: ce8df575252222e39c9bf54d693c6983315eb56751d695c6ffa1b73509f2423b
+version: "1.0"
 version: "1.0"
