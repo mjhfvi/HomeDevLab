@@ -1,4 +1,4 @@
-# this script will only work on local hots with docker demon, not kubernetes executor
+# https://airflow.apache.org/docs/apache-airflow-providers-standard/stable/_modules/index.html
 from datetime import datetime
 from airflow import DAG
 from airflow.providers.standard.operators.bash import BashOperator

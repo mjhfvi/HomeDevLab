@@ -1,4 +1,4 @@
-# https://airflow.apache.org/docs/apache-airflow/stable/public-airflow-interface.html
+# https://airflow.apache.org/docs/apache-airflow-providers-standard/stable/_modules/index.html
 from datetime import datetime
 from airflow import DAG
 from airflow.operators.python import PythonOperator
