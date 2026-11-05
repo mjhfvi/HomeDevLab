@@ -1,5 +1,5 @@
 ---
 fileignoreconfig:
-- filename: kubernetes/fluxcd/development/jenkins/HelmRelease.yaml
-  checksum: 5b85d45a90ed4f06a55ca378e343f733725c418f7f0032eaca6b4758769b8176
+- filename: kubernetes/fluxcd/development/postgresql/HelmRelease.yaml
+  checksum: 72e2cf7f7ea9da76b1201b06597067fd9cf98efce0e49e3eaedb2b2b94b7d82a
 version: "1.0"
