@@ -1,23 +1,23 @@
 
 from airflow import DAG
 from datetime import datetime
-from airflow.providers.cncf.kubernetes.operators.pod_exec import KubernetesPodExecOperator
+from airflow.providers.cncf.kubernetes.operators.pod import KubernetesPodOperator
 
 with DAG(
     dag_id='k8s_pod_exec_hello_world',
     start_date=datetime(2026, 11, 5),
     schedule=None,
     catchup=False,
-    tags=['example', 'KubernetesPodExecOperator'],
+    tags=['example', 'KubernetesPodOperator'],
 ) as dag:
 
-    k8s_hello_world = KubernetesPodExecOperator(
+    k8s_hello_world = KubernetesPodOperator(
         task_id='airflow_k8s_exec_hello_world',
         namespace='automation',
         image='hello-world:latest',
         pod_name='airflow_k8s_exec_operator',
         pod_namespace='automation',
-        cmds=['echo', 'Hello World from KubernetesPodExecOperator!'],
+        cmds=['echo', 'Hello World from KubernetesPodOperator!'],
         wait_until_job_complete=True,
         deferrable=True,
     )
