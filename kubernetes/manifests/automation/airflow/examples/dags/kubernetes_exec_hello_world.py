@@ -17,7 +17,9 @@ with DAG(
         image='hello-world:latest',
         pod_name='airflow_k8s_exec_operator',
         pod_namespace='automation',
-        cmds=['echo', 'Hello World from KubernetesPodOperator!'],
+        cmds=['bash', '-cx'],
+        arguments=['echo Hello World from KubernetesPodOperator!'],
         wait_until_job_complete=True,
         deferrable=True,
+        in_cluster=False,
     )
