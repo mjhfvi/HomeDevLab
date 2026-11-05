@@ -1,7 +1,7 @@
 # this script will only work on local hots with docker demon, not kubernetes executor
 from datetime import datetime
 from airflow import DAG
-from airflow.operators.bash_operators import BashOperator
+from airflow.providers.standard.operators.bash import BashOperator
 
 with DAG(
     dag_id='bash_hello_world_example',
