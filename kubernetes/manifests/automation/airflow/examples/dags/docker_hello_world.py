@@ -1,3 +1,4 @@
+# this script will only work on local hots with docker demon, not kubernetes executor
 from datetime import datetime
 from airflow import DAG
 from airflow.providers.docker.operators.docker import DockerOperator
