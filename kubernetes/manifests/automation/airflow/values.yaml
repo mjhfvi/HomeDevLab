@@ -24,7 +24,7 @@ dags:
     # Volume size for dags
     size: 1Gi
   gitSync:
-    enabled: false
+    enabled: true
 
     # Git repo clone url
     repo: https://github.com/mjhfvi/HomeDevLab.gits

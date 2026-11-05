@@ -1,7 +1,7 @@
-# [user]
-#   name =
-#   email =
-#   username =
+[user]
+    name = "Tzahi Cohen"
+    email = "tzahi.cohen@example.com"
+    username = "mjhfvi"
 [init]
     defaultBranch = main
 [core]
