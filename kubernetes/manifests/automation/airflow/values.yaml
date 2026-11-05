@@ -27,7 +27,7 @@ dags:
     enabled: true
 
     # Git repo clone url
-    repo: https://github.com/mjhfvi/HomeDevLab.gits
+    repo: https://github.com/mjhfvi/HomeDevLab.git
     # SSH example: git@github.com:apache/airflow.git
     # HTTPS example: https://github.com/apache/airflow.git
     branch: main
