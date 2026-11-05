@@ -3,14 +3,15 @@ from airflow import DAG
 from airflow.providers.docker.operators.docker import DockerOperator
 
 with DAG(
-    dag_id='docker_hello_world_dag',
-    start_date=datetime(2026, 1, 1),
+    dag_id='docker_hello_world_example',
+    start_date=datetime(2026, 11, 5),
     schedule=None,
     catchup=False,
+    tags=['example', 'docker'],
 ) as dag:
 
     hello_world_task = DockerOperator(
-        task_id='docker_hello_world',
+        task_id='hello_world_task',
         image='hello-world:latest',
         api_version='auto',
         auto_remove='success',

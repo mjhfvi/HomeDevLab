@@ -2,18 +2,18 @@ from datetime import datetime
 from airflow import DAG
 from airflow.operators.python import PythonOperator
 
-def print_hello():
-    print('Hello World!')
-
 with DAG(
-    dag_id='hello_world_traditional',
-    start_date=datetime(2024, 1, 1),
-    schedule='@daily',
+    dag_id='python_hello_world_example',
+    start_date=datetime(2026, 11, 5),
+    schedule=None,
     catchup=False,
-    tags=['example', 'traditional'],
+    tags=['example', 'python'],
 ) as dag:
 
-    hello_task = PythonOperator(
-        task_id='hello_task',
+    hello_world_task = PythonOperator(
+        task_id='hello_world_task',
         python_callable=print_hello,
     )
+
+def print_hello():
+    print('Hello World!')
