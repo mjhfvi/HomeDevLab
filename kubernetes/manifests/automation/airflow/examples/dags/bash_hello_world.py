@@ -1,5 +1,5 @@
-@task.bash
-def run_after_loop() -> str:
-    return 'echo Hello World!'
-
-run_this = run_after_loop()
+task = BashOperator(
+    task_id='dynamic_hello',
+    bash_command='echo Hello world, today is {{ ds }}!',
+    dag=dag
+)
