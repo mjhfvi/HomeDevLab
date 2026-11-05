@@ -14,9 +14,8 @@ with DAG(
     k8s_hello_world = KubernetesPodOperator(
         task_id='airflow_k8s_exec_hello_world',
         namespace='automation',
-        image='alpine:latest',
-        cmds=['echo Hello World from KubernetesPodOperator!'],
-        # arguments=['echo Hello World from KubernetesPodOperator!'],
-        # deferrable=True,
+        image='ubuntu:24.04',
+        cmds=['bash', '-cx'],
+        arguments=['echo hello_world'],
         in_cluster=True,
     )
