@@ -43,6 +43,14 @@ dags:
     # Subpath within the repo where dags are located.
     # Should be "" if dags are at repo root
     subPath: kubernetes/manifests/automation/airflow/examples/dags
+
+    # Interval between git sync attempts in seconds.
+    # High values are more likely to cause Dags to become out of sync between different components.
+    # Low values cause more traffic to the remote git repository.
+    # Go-style duration string (e.g. "100ms" or "0.1s" = 100ms).
+    # For backwards compatibility, wait will be used if it is specified.
+    period: 5s
+    wait:
 config:
   core:
     dags_folder: '{{ include "airflow_dags" . }}'
