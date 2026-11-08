@@ -1,0 +1,49 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: argocd-workflows
+  labels:
+    app.kubernetes.io/name: argocd-workflows
+    app.kubernetes.io/instance: argocd-workflows
+    app.kubernetes.io/component: frontend
+    app.kubernetes.io/part-of: infrastructure
+spec:
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: infrastructure
+  source:
+    path: ''
+    repoURL: https://argoproj.github.io/argo-helm
+    targetRevision: 1.0.6
+    chart: argo-workflows
+  sources:
+    - name: argo-workflows
+      repoURL: https://argoproj.github.io/argo-helm
+      targetRevision: 1.0.6
+      helm:
+        releaseName: argo-workflows-values
+        valueFiles: [$values/infrastructure/argocd-workflows/values-dev.yaml]
+      chart: argo-workflows
+    - name: argo-workflows-values
+      repoURL: https://github.com/octopusappdev/devops-kubernetes-clusters-manifests
+      path: infrastructure/argocd-workflows
+      targetRevision: main
+      ref: values
+      directory:
+        recurse: true
+        jsonnet: {}
+        include: values-dev.yaml
+  project: octopus
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+      enabled: true
+    syncOptions: [PruneLast=true]
+    retry:
+      limit: 2
+      backoff:
+        duration: 5s
+        maxDuration: 3m0s
+        factor: 2

@@ -1,0 +1,49 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: terminal
+  labels:
+    app.kubernetes.io/name: terminal
+    app.kubernetes.io/instance: terminal
+    app.kubernetes.io/component: frontend
+    app.kubernetes.io/part-of: management
+spec:
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: management
+  source:
+    path: ''
+    repoURL: https://zxh326.github.io/terminal
+    targetRevision: 0.8.1
+    chart: terminal
+  sources:
+    - name: terminal
+      repoURL: https://zxh326.github.io/terminal
+      targetRevision: 0.8.1
+      helm:
+        releaseName: terminal-values
+        valueFiles: [$values/management/terminal/values-dev.yaml]
+      chart: terminal
+    - name: terminal-values
+      repoURL: https://github.com/octopusappdev/devops-kubernetes-clusters-manifests
+      path: management/terminal
+      targetRevision: main
+      ref: values
+      directory:
+        recurse: true
+        jsonnet: {}
+        include: values-dev.yaml
+  project: octopus
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+      enabled: true
+    syncOptions: [PruneLast=true]
+    retry:
+      limit: 2
+      backoff:
+        duration: 5s
+        maxDuration: 3m0s
+        factor: 2

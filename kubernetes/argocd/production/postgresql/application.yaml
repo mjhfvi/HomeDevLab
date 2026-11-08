@@ -1,0 +1,44 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: postgresql
+  namespace: infrastructure
+  labels:
+    argocd.argoproj.io/environment: development
+    argocd.argoproj.io/stage: testing
+  finalizers: [resources-finalizer.argocd.argoproj.io]
+spec:
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: database
+  source:
+    path: ''
+    repoURL: ''
+    targetRevision: main
+  sources:
+    - name: postgresql
+      repoURL: https://repo.helmforge.dev
+      chart: postgresql
+      targetRevision: 2.1.1
+      helm:
+        releaseName: values
+        valueFiles:
+          - $values/kubernetes/manifests/database/postgresql/credentials.yaml
+          - $values/kubernetes/manifests/database/postgresql/values.yaml
+    - name: values
+      repoURL: https://github.com/mjhfvi/HomeDevLab
+      path: kubernetes/manifests/database/postgresql
+      targetRevision: main
+      ref: values
+      directory:
+        recurse: true
+        include: '{*.yaml,*.yml}'
+        exclude: '{*.md,.helmignore,Chart.yaml,helmfile.yaml,values.example.yaml}'
+  project: homedevlab
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+      enabled: true
+    syncOptions: [CreateNamespace=true, PruneLast=true, Replace=true]

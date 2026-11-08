@@ -1,0 +1,49 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: homepage
+  labels:
+    app.kubernetes.io/name: homepage
+    app.kubernetes.io/instance: homepage
+    app.kubernetes.io/component: frontend
+    app.kubernetes.io/part-of: management
+spec:
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: management
+  source:
+    path: ''
+    repoURL: https://unknowniq.github.io/helm-charts/
+    targetRevision: 1.8.2
+    chart: homepage
+  sources:
+    - name: homepage
+      repoURL: https://unknowniq.github.io/helm-charts/
+      targetRevision: 1.8.2
+      helm:
+        releaseName: homepage-values
+        valueFiles: [$values/management/homepage/values-dev.yaml]
+      chart: homepage
+    - name: homepage-values
+      repoURL: https://github.com/octopusappdev/devops-kubernetes-clusters-manifests
+      path: management/homepage
+      targetRevision: main
+      ref: values
+      directory:
+        recurse: true
+        jsonnet: {}
+        include: values-dev.yaml
+  project: octopus
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+      enabled: true
+    syncOptions: [PruneLast=true]
+    retry:
+      limit: 2
+      backoff:
+        duration: 5s
+        maxDuration: 3m0s
+        factor: 2
