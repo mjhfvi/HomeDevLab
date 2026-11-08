@@ -1,8 +1,5 @@
 ---
 fileignoreconfig:
-
-- filename: certificates/SSH/OpenSSH_Server_Certificate.txt
-  checksum: dfd2105159fb0780ac7876a064f700e678bdaa62dea13655042a8d08c4397783
-- filename: certificates/GitHub/Build_Certificate.md
-  checksum: 226975e1447b526213474cfc01e5983ee9de6c3748538a6382f99a576855ff26
+- filename: .github/workflows/workflow_detect_secrets.yaml
+  checksum: f3949fe1b107864858a29bfb50a67d192abb680498a3cf969c6a2249dfab51b6
 version: "1.0"
