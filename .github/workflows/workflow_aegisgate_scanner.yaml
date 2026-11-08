@@ -1,5 +1,5 @@
 ---
-name: Workflow Detect-Secrets
+name: Workflow Aegisgate-Scanner
 on:  # yamllint disable-line rule:truthy
   push:  # Triggers on any push event
     branches: [main]
@@ -13,7 +13,7 @@ on:  # yamllint disable-line rule:truthy
 permissions: {}
 jobs:
   build:
-    name: detect-secrets
+    name: aegisgate-scanner
     runs-on: ubuntu-latest
     permissions:
       # contents permission to clone the repository
@@ -32,7 +32,6 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
-      - name: detect-secrets
-        uses: reviewdog/action-detect-secrets@1939918bdb67fa18bf7cb6e73af72e995f606f92
+      - uses: github/codeql-action/upload-sarif@b657b96c8c6fbdc6ae1ce0c7b4476f2b52e10dd0
         with:
-          reporter: github-pr-review
+          sarif_file: aegisgate-scanner-report.sarif
