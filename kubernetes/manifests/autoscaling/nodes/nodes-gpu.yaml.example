@@ -1,0 +1,279 @@
+---
+apiVersion: v1
+kind: Node
+metadata:
+  name: i-06637f2245ea79b3a
+  uid: 1ee1c87c-15ab-4d26-8e37-23e9c31a786c
+  resourceVersion: '31946646'
+  creationTimestamp: '2026-01-07T23:22:36Z'
+  labels:
+    app.kubernetes.io/managed-by: eks
+    beta.kubernetes.io/arch: amd64
+    beta.kubernetes.io/instance-type: g4dn.xlarge
+    beta.kubernetes.io/os: linux
+    eks.amazonaws.com/compute-type: auto
+    eks.amazonaws.com/instance-capability-flex: 'false'
+    eks.amazonaws.com/instance-category: g
+    eks.amazonaws.com/instance-cpu: '4'
+    eks.amazonaws.com/instance-cpu-manufacturer: intel
+    eks.amazonaws.com/instance-cpu-sustained-clock-speed-mhz: '2500'
+    eks.amazonaws.com/instance-ebs-bandwidth: '3500'
+    eks.amazonaws.com/instance-encryption-in-transit-supported: 'true'
+    eks.amazonaws.com/instance-family: g4dn
+    eks.amazonaws.com/instance-generation: '4'
+    eks.amazonaws.com/instance-gpu-count: '1'
+    eks.amazonaws.com/instance-gpu-manufacturer: nvidia
+    eks.amazonaws.com/instance-gpu-memory: '16384'
+    eks.amazonaws.com/instance-gpu-name: t4
+    eks.amazonaws.com/instance-hypervisor: nitro
+    eks.amazonaws.com/instance-local-nvme: '125'
+    eks.amazonaws.com/instance-memory: '16384'
+    eks.amazonaws.com/instance-network-bandwidth: '5000'
+    eks.amazonaws.com/instance-size: xlarge
+    eks.amazonaws.com/nodeclass: default
+    failure-domain.beta.kubernetes.io/region: us-east-1
+    failure-domain.beta.kubernetes.io/zone: us-east-1b
+    k8s.io/cloud-provider-aws: 6873f6a452674ea243d16307fa77b70c
+    karpenter.sh/capacity-type: spot
+    karpenter.sh/do-not-sync-taints: 'true'
+    karpenter.sh/initialized: 'true'
+    karpenter.sh/nodepool: gpu-pool
+    karpenter.sh/registered: 'true'
+    kubernetes.io/arch: amd64
+    kubernetes.io/hostname: i-06637f2245ea79b3a
+    kubernetes.io/os: linux
+    node.kubernetes.io/instance-type: g4dn.xlarge
+    topology.ebs.csi.eks.amazonaws.com/zone: us-east-1b
+    topology.k8s.aws/zone-id: use1-az6
+    topology.kubernetes.io/region: us-east-1
+    topology.kubernetes.io/zone: us-east-1b
+  annotations:
+    alpha.kubernetes.io/provided-node-ip: 10.0.2.197
+    csi.volume.kubernetes.io/nodeid: '{"ebs.csi.eks.amazonaws.com":"i-06637f2245ea79b3a"}'
+    eks.amazonaws.com/nodeclass-hash: '16433743895688863484'
+    eks.amazonaws.com/nodeclass-hash-version: v2
+    karpenter.sh/nodeclaim-min-values-relaxed: 'false'
+    karpenter.sh/nodepool-hash: '4012513481623584108'
+    karpenter.sh/nodepool-hash-version: v3
+    node.alpha.kubernetes.io/ttl: '0'
+    volumes.kubernetes.io/controller-managed-attach-detach: 'true'
+  ownerReferences:
+    - apiVersion: karpenter.sh/v1
+      kind: NodeClaim
+      name: gpu-pool-jzk77
+      uid: 4df2d40d-3174-474e-a2b8-793f9cbe461f
+      blockOwnerDeletion: true
+  finalizers:
+    - karpenter.sh/termination
+  selfLink: /api/v1/nodes/i-06637f2245ea79b3a
+status:
+  capacity:
+    cpu: '4'
+    ephemeral-storage: 122004768Ki
+    hugepages-1Gi: '0'
+    hugepages-2Mi: '0'
+    memory: 16162432Ki
+    nvidia.com/gpu: '1'
+    pods: '27'
+  allocatable:
+    cpu: 3770m
+    ephemeral-storage: '111365852179'
+    hugepages-1Gi: '0'
+    hugepages-2Mi: '0'
+    memory: 15417984Ki
+    nvidia.com/gpu: '1'
+    pods: '27'
+  conditions:
+    - type: MemoryPressure
+      status: 'False'
+      lastHeartbeatTime: '2026-01-08T10:48:50Z'
+      lastTransitionTime: '2026-01-07T23:22:34Z'
+      reason: KubeletHasSufficientMemory
+      message: kubelet has sufficient memory available
+    - type: DiskPressure
+      status: 'False'
+      lastHeartbeatTime: '2026-01-08T10:48:50Z'
+      lastTransitionTime: '2026-01-07T23:22:34Z'
+      reason: KubeletHasNoDiskPressure
+      message: kubelet has no disk pressure
+    - type: PIDPressure
+      status: 'False'
+      lastHeartbeatTime: '2026-01-08T10:48:50Z'
+      lastTransitionTime: '2026-01-07T23:22:34Z'
+      reason: KubeletHasSufficientPID
+      message: kubelet has sufficient PID available
+    - type: Ready
+      status: 'True'
+      lastHeartbeatTime: '2026-01-08T10:48:50Z'
+      lastTransitionTime: '2026-01-07T23:22:36Z'
+      reason: KubeletReady
+      message: kubelet is posting ready status
+    - type: ContainerRuntimeReady
+      status: 'True'
+      lastHeartbeatTime: '2026-01-07T23:22:35Z'
+      lastTransitionTime: '2026-01-07T23:22:35Z'
+      reason: ContainerRuntimeIsReady
+      message: Monitoring for the ContainerRuntime system is active
+    - type: StorageReady
+      status: 'True'
+      lastHeartbeatTime: '2026-01-07T23:22:35Z'
+      lastTransitionTime: '2026-01-07T23:22:35Z'
+      reason: DiskIsReady
+      message: Monitoring for the Disk system is active
+    - type: NetworkingReady
+      status: 'True'
+      lastHeartbeatTime: '2026-01-07T23:22:35Z'
+      lastTransitionTime: '2026-01-07T23:22:35Z'
+      reason: NetworkingIsReady
+      message: Monitoring for the Networking system is active
+    - type: KernelReady
+      status: 'True'
+      lastHeartbeatTime: '2026-01-07T23:22:35Z'
+      lastTransitionTime: '2026-01-07T23:22:35Z'
+      reason: KernelIsReady
+      message: Monitoring for the Kernel system is active
+    - type: AcceleratedHardwareReady
+      status: 'True'
+      lastHeartbeatTime: '2026-01-07T23:22:35Z'
+      lastTransitionTime: '2026-01-07T23:22:35Z'
+      reason: NvidiaAcceleratedHardwareIsReady
+      message: Monitoring for the Nvidia AcceleratedHardware system is active
+  addresses:
+    - type: InternalIP
+      address: 10.0.2.197
+    - type: InternalDNS
+      address: ip-10-0-2-197.ec2.internal
+    - type: Hostname
+      address: ip-10-0-2-197.ec2.internal
+  daemonEndpoints:
+    kubeletEndpoint:
+      Port: 10250
+  nodeInfo:
+    machineID: ec23a47814b82f464445dd858aacd184
+    systemUUID: ec23a478-14b8-2f46-4445-dd858aacd184
+    bootID: fb2e8fd8-981a-4c4e-89ca-838315c05df4
+    kernelVersion: 6.12.58
+    osImage: Bottlerocket (EKS Auto, Nvidia) 2025.12.18 (aws-k8s-1.34-nvidia)
+    containerRuntimeVersion: containerd://2.1.5+bottlerocket
+    kubeletVersion: v1.34.2-eks-b3126f4
+    kubeProxyVersion: ''
+    operatingSystem: linux
+    architecture: amd64
+    swap:
+      capacity: 1073737728
+  images:
+    - names:
+        - >-
+          ghcr.io/octopusappdev/octopus-ai-forecast@sha256:b767b8ff360fa4dba380fbfd57689b5e8ff4c3e491e4fe4e7c7f8cde36acc8b6
+        - ghcr.io/octopusappdev/octopus-ai-forecast:d4ae1f4
+      sizeBytes: 3774153985
+    - names:
+        - >-
+          ghcr.io/octopusappdev/octopus-ai-forecast@sha256:352df99d65d639ad093afa006a67f15a8c67ebfbd78819a489e0c4bf9a27d638
+        - ghcr.io/octopusappdev/octopus-ai-forecast:df09a08
+      sizeBytes: 3774149843
+    - names:
+        - >-
+          ghcr.io/octopusappdev/octopus-ai-forecast@sha256:fb985e3defffa149637acd2f46e7ed63a19fede3c764075fbe4c939772ab18a6
+        - ghcr.io/octopusappdev/octopus-ai-forecast:99d35f2
+      sizeBytes: 3767186971
+    - names:
+        - >-
+          ghcr.io/octopusappdev/octopus-ai-forecast@sha256:c1336b710421bde64fca04383ec3bd86341a9099bb81dc6853fae9dc13d460b8
+        - ghcr.io/octopusappdev/octopus-ai-forecast:b28d78e
+      sizeBytes: 3767180659
+    - names:
+        - >-
+          ghcr.io/octopusappdev/octopus-ai-forecast@sha256:bafef7dce15d2350082dcc086969c886554305ea93eaa4583755301c047364c0
+        - ghcr.io/octopusappdev/octopus-ai-forecast:39304e1
+      sizeBytes: 3767179828
+    - names:
+        - >-
+          602401143452.dkr.ecr.us-east-1.amazonaws.com/eks/observability/aws-for-fluent-bit@sha256:ed270666d86247f265abd2e9208b3d93abb3ac0e299168008f07a287b816c21c
+        - >-
+          602401143452.dkr.ecr.us-east-1.amazonaws.com/eks/observability/aws-for-fluent-bit:3.0.1
+      sizeBytes: 195287456
+    - names:
+        - >-
+          602401143452.dkr.ecr.us-east-1.amazonaws.com/eks/observability/dcgm-exporter@sha256:21780fdfdedb12dbd4785a789d58f9dcdb5b5af21d8101eeb8b5f73068620af3
+        - >-
+          602401143452.dkr.ecr.us-east-1.amazonaws.com/eks/observability/dcgm-exporter:4.4.0-4.5.0-ubuntu22.04
+      sizeBytes: 189954536
+    - names:
+        - >-
+          ghcr.io/octopusappdev/octopus-design-system@sha256:babc7e4bea5f9900634b82ba1e97e52fca82da026675af3137b60ee740b32f0f
+        - ghcr.io/octopusappdev/octopus-design-system:0.0.1
+      sizeBytes: 160092718
+    - names:
+        - >-
+          602401143452.dkr.ecr.us-east-1.amazonaws.com/eks/observability/cloudwatch-agent@sha256:d5faaa7edb208f8a964b1e53d09205204aac07bea28ee65d427f0b12f96f77d5
+        - >-
+          602401143452.dkr.ecr.us-east-1.amazonaws.com/eks/observability/cloudwatch-agent:1.300062.0b1304
+      sizeBytes: 51028331
+    - names:
+        - >-
+          public.ecr.aws/eks/aws-load-balancer-controller@sha256:3fee4fe40060486ad5666b9503b74962892722e5d701ae8426858ffb7731ba9f
+        - public.ecr.aws/eks/aws-load-balancer-controller:v2.17.0
+      sizeBytes: 27896444
+    - names:
+        - >-
+          ecr-public.aws.com/docker/library/redis@sha256:59b6e694653476de2c992937ebe1c64182af4728e54bb49e9b7a6c26614d8933
+        - >-
+          public.ecr.aws/docker/library/redis@sha256:59b6e694653476de2c992937ebe1c64182af4728e54bb49e9b7a6c26614d8933
+        - ecr-public.aws.com/docker/library/redis:8.2.2-alpine
+        - public.ecr.aws/docker/library/redis:8.2.2-alpine
+      sizeBytes: 27504168
+    - names:
+        - >-
+          docker.io/l7mp/stunnerd@sha256:2d6b76dee00e36e7c956cd703a41fa50cc77451be70f42f982eecf2ba6a22dd7
+        - docker.io/l7mp/stunnerd:1.1.0
+      sizeBytes: 13862425
+    - names:
+        - >-
+          ecr-public.aws.com/docker/library/haproxy@sha256:e11f034e651603f10a365e5ad5a0321825e18eded9620e40c4f4d6ae58419bfe
+        - ecr-public.aws.com/docker/library/haproxy:3.0.8-alpine
+      sizeBytes: 13448415
+    - names:
+        - >-
+          602401143452.dkr.ecr.us-east-1.amazonaws.com/eks/prometheus-node-exporter@sha256:85cd317baa317e0bd5067d227adce1727b195f2ef17e04f7789199a20e6d5b74
+        - >-
+          602401143452.dkr.ecr.us-east-1.amazonaws.com/eks/prometheus-node-exporter:v1.10.2-eksbuild.2
+      sizeBytes: 13053308
+    - names:
+        - >-
+          docker.io/crossplane/crossplane@sha256:83e28d547cfb80233fccbc14f018299e60bccc606b6c21aab4f3d75f556a4403
+        - docker.io/crossplane/crossplane:v1.2.1
+      sizeBytes: 12393349
+    - names:
+        - localhost/kubernetes/pause:0.1.0
+      sizeBytes: 185112
+  volumesInUse:
+    - kubernetes.io/csi/ebs.csi.eks.amazonaws.com^vol-0cd5fd060ce9f4e80
+  volumesAttached:
+    - name: kubernetes.io/csi/ebs.csi.eks.amazonaws.com^vol-0cd5fd060ce9f4e80
+      devicePath: ''
+  runtimeHandlers:
+    - name: ''
+      features:
+        recursiveReadOnlyMounts: true
+        userNamespaces: true
+    - name: nvidia
+      features:
+        recursiveReadOnlyMounts: true
+        userNamespaces: true
+    - name: nvidia-cdi
+      features:
+        recursiveReadOnlyMounts: true
+        userNamespaces: true
+    - name: nvidia-legacy
+      features:
+        recursiveReadOnlyMounts: true
+        userNamespaces: true
+    - name: runc
+      features:
+        recursiveReadOnlyMounts: true
+        userNamespaces: true
+  features:
+    supplementalGroupsPolicy: true
+spec:
+  providerID: aws:///us-east-1b/i-06637f2245ea79b3a

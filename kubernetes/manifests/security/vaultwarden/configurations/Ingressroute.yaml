@@ -1,0 +1,57 @@
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: vaultwarden
+  namespace: infra
+spec:
+  entryPoints: [websecure]
+  routes:
+    - kind: Rule
+      match: Host(`wallet.aws-op-01.cloud.com`)
+      services:
+        - name: vaultwarden
+          port: 80
+          namespace: infra
+  tls: {}
+# ---
+# apiVersion: networking.k8s.io/v1
+# kind: Ingress
+# metadata:
+#   name: vaultwarden
+#   namespace: infra
+#   labels:
+#     app.kubernetes.io/component: vaultwarden
+#     helm.sh/chart: vaultwarden-0.34.5
+#     app.kubernetes.io/name: vaultwarden
+#     app.kubernetes.io/instance: vaultwarden
+#     app.kubernetes.io/version: "1.35.2"
+#     app.kubernetes.io/managed-by: Helm
+#   annotations:
+#     nginx.ingress.kubernetes.io/enable-cors: "true"
+#     nginx.ingress.kubernetes.io/ssl-redirect: "true"
+#     nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+#     nginx.ingress.kubernetes.io/limit-connections: "25"
+#     nginx.ingress.kubernetes.io/limit-rps: "15"
+#     nginx.ingress.kubernetes.io/proxy-body-size: 1024m
+#     nginx.ingress.kubernetes.io/proxy-connect-timeout: "10"
+#     nginx.ingress.kubernetes.io/proxy-send-timeout: "1800"
+#     nginx.ingress.kubernetes.io/proxy-read-timeout: "1800"
+# spec:
+#   ingressClassName: "traefik"
+#   tls:
+#   - hosts:
+#     - "wallet.aws-op-01.cloud.com"
+#     secretName: "vaultwarden-tls"
+#   rules:
+#   - host: "wallet.aws-op-01.cloud.com"
+#     http:
+#       paths:
+#       - path: /
+#         pathType: Prefix
+#         backend:
+#           service:
+#             name: vaultwarden
+#             port:
+#               number: 80
+#               # name: "http"

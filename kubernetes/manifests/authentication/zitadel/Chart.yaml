@@ -1,0 +1,29 @@
+apiVersion: v2
+name: zitadel
+description: A Helm chart for ZITADEL
+type: application
+appVersion: v4.19.2
+version: 10.5.0
+kubeVersion: '>= 1.30.0-0'
+home: https://zitadel.com
+sources:
+  - https://github.com/zitadel/zitadel
+icon: https://zitadel.com/zitadel-logo-dark.svg
+keywords:
+  - identity
+  - oidc
+  - oauth
+  - auth
+  - saml
+  - iam
+  - sso
+  - idp
+maintainers:
+  - name: zitadel
+    email: support@zitadel.com
+    url: https://zitadel.com
+dependencies:
+  - name: postgresql
+    version: ">=16.0.0"
+    repository: "https://charts.bitnami.com/bitnami"
+    condition: postgresql.enabled

@@ -1,0 +1,16 @@
+---
+server:
+  nodeSelector:
+    octopus.infrastructure.as.code/node-instance-purpose: general-purpose-pool
+  authModes: [server, client]
+  ingress:
+    enabled: true
+    hosts: [workflows.eks-dev-il.octopus-cloud.com]
+controller:
+  nodeSelector:
+    octopus.infrastructure.as.code/node-instance-purpose: general-purpose-pool
+  serviceAccount:
+    create: true
+    name: argo-workflows-values-workflow-controller
+  workflowNamespaces: [argo-workflows]  # Only valid when singleNamespace is false.
+singleNamespace: false

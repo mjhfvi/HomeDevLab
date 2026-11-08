@@ -1,0 +1,97 @@
+---
+image: ''
+repository: ghcr.io/cronitorio/cronitor-kubernetes
+imageTag: ''
+imagePullPolicy: Always
+imagePullSecrets: []
+nameOverride: ''
+fullnameOverride: ''
+credentials:
+  createSecret:
+    # API key to use when createSecret is true
+    apiKey: ''
+  # Name and key of an existing Secret (used when createSecret is false)
+  secretName:
+  secretKey:
+config:
+
+  # Setting to include or exclude non-annotated CronJobs by default.
+  # Permitted values are "include" or "exclude".
+  default: include
+
+  # The default Cronitor environment name for CronJobs picked up by the Cronitor agent.
+  # Default is none (empty string). Can be overridden by CronJob annotations.
+  defaultEnvironment: ''
+
+  # Cronitor tags to include on every CronJob submitted to Cronitor by the Cronitor agent.
+  # Additional, per-CronJob tags can be added using CronJob annotations.
+  tags: ''
+
+  # The Cronitor agent can automatically fetch and archive the logs of each job run after
+  # completion or failure for later display or retrieval within the Cronitor web UI. Set this
+  # to false if you do not want to send your logs to Cronitor.
+  shipLogs: true
+
+  # Enable Sentry telemetry to help the Cronitor team catch and debug issues with the agent
+  sentryEnabled: true
+
+  # If Sentry is enabled, optionally provide your email address for improved support from the
+  # Cronitor team. If you don't provide this, we will not know who you are and will not be able
+  # to reach out proactively with help.
+  yourEmail: ''
+
+  # The log level at which the agent will print its own logs.
+  # Available levels: DEBUG, INFO, WARN, ERROR
+  logLevel: ''
+
+  # The log output format for the agent.
+  # Available formats: text, json
+  logFormat: ''
+
+  # Optional regular expression (on pod.name) to limit which pods are monitored.
+  # If provided, a valid regex is required, and pod names that do not match the regex are ignored.
+  # Tip: Use negation to create a blacklist.
+  podFilter: ''
+
+  # Override the Cronitor API hostname (for e2e testing only).
+  # When set, both monitor sync and telemetry requests will use this hostname
+  # instead of the default cronitor.io/cronitor.link endpoints.
+  hostnameOverride: ''
+rbac:
+  # Specifies whether RBAC resources should be created
+  create: true
+
+  # Specifies the scope within the cluster of the RBAC access. For cluster-wide access, use
+  # "cluster" (the default). If you want the Cronitor agent to only have access to objects within
+  # the namespace in which it is deployed, use "namespace". This will change the RBAC permissions
+  # from ClusterRole to Role and cause all Kubernetes API requests to be namespace-scoped.
+  clusterScope: cluster
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ''
+podSecurityContext: {}
+  # fsGroup: 2000
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+nodeSelector: {}
+tolerations: []
+affinity: {}

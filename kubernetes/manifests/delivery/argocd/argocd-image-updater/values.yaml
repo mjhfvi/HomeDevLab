@@ -1,0 +1,45 @@
+config:
+  name: argocd-image-updater-configuration
+  git.user: "gitops-user_octopus"
+  git.email: "gitops-user@octopus-app.com"
+  log.level: "info" # trace, debug, info, warn, error (default "info")
+  argocd.namespace: "infrastructure"
+  interval: "2m0s"
+  registries:
+    - name: GitHub Container Registry
+      prefix: ghcr.io
+      api_url: https://ghcr.io # https://docker.pkg.github.com | https://ghcr.io
+      credentials: pullsecret:infrastructure/ghcr-registry-secret
+      default: true
+    - name: GitHub Container Registry Internal
+      prefix: ghcr.io
+      api_url: https://ghcr.io # https://docker.pkg.github.com | https://ghcr.io
+      credentials: pullsecret:infrastructure/ghcr-registry-secret-internal
+      default: false
+
+metrics:
+  enabled: true
+  # service:
+  #   annotations: {}
+  #   labels: {}
+  #   servicePort: 8083
+  serviceMonitor:
+    enabled: true
+    # interval: 30s
+    # relabelings: []
+    # metricRelabelings: []
+    # selector: {}
+    namespace: "observability"
+    # additionalLabels: {}
+
+containerPorts:
+  webhook: 8082
+  health: 8081
+  metrics: 8083
+
+# extraArgs:
+#   - "--health-probe-bind-address=:8081"
+#   - "--interval=2m"
+#   - "--metrics-bind-address=:8083"
+#   - "--metrics-secure=false"
+#   - run

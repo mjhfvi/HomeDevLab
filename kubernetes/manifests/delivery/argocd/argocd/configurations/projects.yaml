@@ -1,0 +1,50 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: homedevlab
+spec:
+  description: HomeDevLab Project
+  sourceRepos:
+    - '*' # Allows any source repository
+  destinations:
+    - namespace: '*' # Allows any namespace
+      server: https://kubernetes.default.svc
+      name: in-cluster
+  clusterResourceWhitelist:
+    - group: '*'
+      kind: '*' # Allows any cluster-scoped resource
+  namespaceResourceWhitelist:
+    - group: '*'
+      kind: '*' # Disallows Secrets in any namespace
+  orphanedResources:
+    warn: true
+  namespaceResourceBlacklist:
+    - group: ''
+      kind: kube-system
+    - group: ''
+      kind: ai
+    - group: ''
+      kind: audit
+    - group: ''
+      kind: automation
+    - group: ''
+      kind: dashboard
+    - group: ''
+      kind: database
+    - group: ''
+      kind: infrastructure
+    - group: ''
+      kind: monitor
+    - group: ''
+      kind: network
+    - group: ''
+      kind: security
+    - group: ''
+      kind: system
+  # argocd proj create --file projects.yaml --grpc-web
+  # namespaceResourceWhitelist:
+  # - group: 'apps'
+  #   kind: Deployment
+  # - group: 'apps'
+  #   kind: StatefulSet

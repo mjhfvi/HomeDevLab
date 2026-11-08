@@ -1,0 +1,54 @@
+---
+apiVersion: rds.aws.m.upbound.io/v1beta1
+kind: Instance
+metadata:
+  annotations:
+    meta.upbound.io/example-id: rds/v1beta1/instanceroleassociation
+  #   crossplane.io/external-name: op-01-postgresql
+  # labels:
+  #   crossplane.io/external-name: op-01-postgresql
+  #   testing.upbound.io/example-name: op-01-postgresql
+  name: op-01-postgresql
+  namespace: crossplane-system
+spec:
+  forProvider:
+    identifier: op-01-postgresql
+    allocatedStorage: 20
+    deletionProtection: true
+    autoGeneratePassword: true
+    autoMinorVersionUpgrade: true
+    backupRetentionPeriod: 14
+    backupWindow: 03:00-04:00
+    dbName: postgres
+    engine: postgres
+    engineVersion: '17.4'
+    instanceClass: db.t3.micro
+    kmsKeyId: arn:aws:kms:us-east-1:111111111:key/b72c358c-b294-474e-aced-64a789599de5
+    # kmsKeyIdSelector:
+    #   matchLabels:
+    #     testing.upbound.io/example-name: sample-key-ira
+    maintenanceWindow: Mon:00:00-Mon:03:00
+    passwordSecretRef:
+      key: password
+      name: postgres-credentials
+    publiclyAccessible: true  # test security group access from outside VPC
+    region: us-east-1
+    skipFinalSnapshot: true
+    storageEncrypted: true
+    storageType: gp2
+    username: adminuser
+    dbSubnetGroupName: op-01-subnet-group  # add db subnet group for vpc eks in RDS 'Subnet groups
+    vpcSecurityGroupIds:
+    # add RDS security groups to allow eks access to port 543
+      - sg-058d4291942341bba
+      - sg-0c47af0f1587bd970
+    # vpcSecurityGroupIdRefs:
+    # - name: default
+    vpcSecurityGroupIdSelector:
+      matchLabels:
+        Name: sg-058d4291942341bba
+      matchControllerRef: true
+  writeConnectionSecretToRef:
+    name: crossplane-database-connection
+# kubectl describe instance.rds.aws op-01-postgres -n crossplane-system
+# in RDS, Create DB subnet group for this work 'dbSubnetGroupName'

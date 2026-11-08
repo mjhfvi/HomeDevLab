@@ -1,0 +1,35 @@
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: homepage-ingressroute
+  # namespace: management
+spec:
+  entryPoints:
+    - web
+    # - websecure
+  routes:
+    - match: Host(`urls.eks-dev-il.octopus-cloud.com`)
+      kind: Rule
+      services:
+        - kind: Service
+          name: homepage
+          port: 3000
+          namespace: management
+      observability:
+        accessLogs: true
+      # middlewares:
+      #   - name: traefik-middleware-allowlist
+      # namespace: default
+      # - name: traefik-middleware-geoblock
+      #   namespace: management
+
+  # routes:
+  #   - match: Host(`example.com`)  # <- Howto apply to all ingress?
+  #     kind: Rule
+  #     middlewares:
+  #       - name: cloudflare-whitelist
+  #   - match: Host(`stuff.example.com`)
+  #     kind: Rule
+  #     middlewares:
+  #       - name: cloudflare-whitelist

@@ -1,0 +1,23 @@
+storageClasses:
+- name: ebs-sc
+  volumeBindingMode: WaitForFirstConsumer # Immediate, WaitForFirstConsumer
+  reclaimPolicy: Retain
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "true"
+  allowVolumeExpansion: true
+  provisioner: "ebs.csi.aws.com" # for automode ebs.csi.eks.amazonaws.com, for manual mode ebs.csi.aws.com
+  parameters:
+    encrypted: "false"
+    type: gp3
+    csi.storage.k8s.io/fstype: ext4
+    tagSpecification_1: Name=ebs-sc
+    tagSpecification_2: Type=ext4
+  # allowedTopologies:
+  # - matchLabelExpressions:
+  #   - key: node.kubernetes.io/instance-type
+  #     values:
+  #     - m6i.xlarge
+controller:
+  serviceAccount:
+    annotations:
+      eks.amazonaws.com/role-arn: arn:aws:iam::1111111111:role/AmazonEKS_EBS_CSI_DriverRole

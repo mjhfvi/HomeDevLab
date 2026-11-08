@@ -1,0 +1,749 @@
+---
+## Harness GitOps Agent configuration
+## Ref: https://github.com/harness/gitops-helm
+## Documentation: https://developer.harness.io/docs/category/gitops
+## Variable Overrides for Argo CD configuration.
+argo-cd:
+  # -- Disable this for BYOA flows, when Argo CD is already installed
+  enabled: true
+
+  # -- Provide a name in place of `argocd`
+  nameOverride: argocd
+  # -- String to fully override `"argo-cd.fullname"`
+  fullnameOverride: argocd
+
+  # -- These are added as custom templates in each component
+  createClusterRoles: false
+
+  ## Argo Configs
+  configs:
+    # General Argo CD configuration
+    ## Ref: https://github.com/argoproj/argo-cd/blob/master/docs/operator-manual/argocd-cm.yaml
+    cm:
+      # Comma delimited list of additional custom remote values file schemes (http are https are allowed by default).
+      # Change to empty value if you want to disable remote values files altogether.
+      helm.valuesFileSchemes: >-
+        secrets+gpg-import, secrets+gpg-import-kubernetes,
+        secrets+age-import, secrets+age-import-kubernetes,
+        secrets,secrets+literal,
+        https
+
+      # This allows for a cluster entity to be created for the cluster that your agent is installed in
+      # It should be false for Namespaced Agent installations
+      cluster.inClusterEnabled: 'true'
+      # Since argocd 3.0 the default resource tracking method is 'annotation'
+      # Explicitly setting to label for backward compatibility with argo v2.x (this can be overriden in override.yaml)
+      application.resourceTrackingMethod: label
+      # Since argocd 3.0 default compare options to ignore the status field has been changed from crd to all resources
+      # Explicitly setting to crd for backward compatibility with argocd v2.x (this can be overriden in override.yaml)
+      resource.compareoptions: |
+        ignoreResourceStatusField: crd
+
+  ## Custom resource configuration
+  crds:
+    # -- Keep CRDs on chart uninstall
+    keep: true
+
+  ## Argo CD Application controller
+  controller:
+    # -- Resource limits and requests for the Application controller pods
+    resources:
+      limits:
+        cpu: '1'
+        memory: 2Gi
+      requests:
+        cpu: '1'
+        memory: 2Gi
+
+    ## Metrics service configuration
+    metrics:
+      # -- Deploy metrics service
+      enabled: true
+
+  ## Argo CD ApplicationSet controller
+  applicationSet:
+
+    ## Metrics service configuration
+    metrics:
+      # -- Deploy metrics service
+      enabled: true
+
+    # -- Resource limits and requests for the ApplicationSet controller pods.
+    resources:
+      requests:
+        memory: 512Mi
+        cpu: '1'
+      limits:
+        memory: 512Mi
+        cpu: '1'
+
+    ## Webhook for the Git Generator
+    ## Ref: https://argocd-applicationset.readthedocs.io/en/master/Generators-Git/#webhook-configuration)
+    webhook:
+      ingress:
+        # -- Enable an ingress resource for Webhooks
+        enabled: true
+
+  ## Argo CD Repo Server
+  repoServer:
+    # -- Init containers to add to the repo server pods
+    initContainers:
+      - name: sops-helm-secrets-tool
+        image: harness/gitops-agent-installer-helper:v0.3.0
+        imagePullPolicy: IfNotPresent
+        command: [sh, -ec]
+        args:
+          - |
+            cp -r /custom-tools/. /helm-sops-tools
+            cp /helm-sops-tools/helm-plugins/helm-secrets/scripts/wrapper/helm.sh /helm-sops-tools/helm
+            mkdir -p /helm-sops-tools/helm-secrets && cp /helm-sops-tools/helm-plugins/helm-secrets/scripts/wrapper/helm.sh /helm-sops-tools/helm-secrets/helm
+            chmod +x /helm-sops-tools/helm-secrets/*
+            chmod +x /helm-sops-tools/*
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop: [ALL]
+          runAsNonRoot: true
+          runAsUser: 65534
+          seccompProfile:
+            type: RuntimeDefault
+        volumeMounts:
+          - mountPath: /helm-sops-tools
+            name: helm-sops-tools
+    extraContainers:
+      - command: [/var/run/argocd/argocd-cmp-server]
+        image: harness/gitops-agent-installer-helper:v0.3.0
+        imagePullPolicy: IfNotPresent
+        name: argocd-harness-plugin
+        resources:
+          limits:
+            cpu: 1
+            memory: 1Gi
+          requests:
+            cpu: 1
+            memory: 1Gi
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop: [ALL]
+          runAsNonRoot: true
+          runAsGroup: 999
+          runAsUser: 999
+          seccompProfile:
+            type: RuntimeDefault
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+          - mountPath: /var/run/argocd
+            name: var-files
+          - mountPath: /home/argocd/cmp-server/plugins
+            name: plugins
+          - mountPath: /tmp
+            name: tmp
+          - mountPath: /home/argocd/cmp-server/config/plugin.yaml
+            name: argocd-harness-plugin
+            subPath: harness.yaml
+
+    # -- Additional volumeMounts to the repo server main container
+    volumeMounts:
+      - mountPath: /helm-sops-tools
+        name: helm-sops-tools
+
+    # -- Additional volumes to the repo server pod
+    volumes:
+      - name: helm-sops-tools
+        emptyDir: {}
+      - name: argocd-harness-plugin
+        configMap:
+          name: argocd-harness-plugin
+
+    # -- Resource limits and requests for the repo server pods
+    resources:
+      limits:
+        cpu: '1'
+        memory: 1Gi
+      requests:
+        cpu: '1'
+        memory: 1Gi
+
+    ## Repo server metrics service configuration
+    metrics:
+      # -- Deploy metrics service
+      enabled: true
+
+  ## Redis
+  redis:
+    # -- Resource limits and requests for redis
+    resources:
+      limits:
+        cpu: '1'
+        memory: 512Mi
+      requests:
+        cpu: '1'
+        memory: 512Mi
+    containerSecurityContext:
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop: [ALL]
+      readOnlyRootFilesystem: false
+      runAsNonRoot: true
+      seccompProfile:
+        type: RuntimeDefault
+    serviceAccount:
+      create: true
+    image:
+      repository: harness/redis
+      tag: 7.4.8
+
+  ## ArgoCD Server, Dex and Notifications Controller are not required for Harness GitOps Agent
+  server:
+    replicas: 0
+    clusterAdminAccess:
+      enabled: false
+    serviceAccount:
+      create: false
+  dex:
+    # -- Enable dex
+    enabled: false
+  notifications:
+    # -- Enable notifications controller
+    enabled: false
+# <---Harness specific overrides--->
+## Variable Overrides for Harness configuration
+harness:
+  nameOverride: harness
+  ## Harness specific identity data
+  identity:
+    # -- Account Identifier
+    accountIdentifier: ''
+
+    # -- Organization Identifier
+    orgIdentifier: ''
+
+    # -- Project Identifier
+    projectIdentifier: ''
+
+    # -- Agent Identifier
+    agentIdentifier: ''
+  configMap:
+    # -- Legacy config: GitOps Agent communication protocol
+    agentProtocol: HTTP1
+    http:
+      # -- Enable TLS for GitOps agent
+      tlsEnabled: false
+      certPath: /tmp/ca.bundle
+      # -- DoNotEdit - GitOps Agent HTTP Target
+      agentHttpTarget: ''
+      # -- Enable mTLS for GitOps agent
+      mtls: false
+    ## Reconciliation Config - Reconcile GitOps entities from Agent's Cluster
+    reconcile:
+      enabled: true
+      # -- Interval for periodic reconcile
+      interval: 100
+      # -- Interval to discover Pods for Instance Sync
+      podsDiscovery: 120
+      # -- Enable ApplicationSet Reconcile
+      appsetReconcile: false
+    # -- Log Level set to Debug
+    logLevel: debug
+    # -- Legacy config: GitOps Agent Fetch Tasks by Polling
+    agentFetchType: POLLER
+
+    # -- non-default Argo CD name overrides for Harness GitOps Agent
+    # -- this is matched against app.kubernetes.io/name label
+    argocd:
+      repoServer: argocd-repo-server
+      redis: argocd-redis
+      redisHa: redis-ha
+      redisHaProxy: redis-ha-haproxy
+      controller: argocd-application-controller
+      applicationSet: argocd-applicationset-controller
+      repoServerSvc: ''
+      redisSvc: ''
+      redisHaProxySvc: ''
+
+      # -- Override full host:port for metrics scrapes; empty uses release-prefixed Service DNS from argocd.serviceName
+      repoServerMetricsAddr: ''
+      appControllerMetricsAddr: ''
+      appSetControllerMetricsAddr: ''
+  secrets:
+    # -- DoNotEdit - GitOps Agent Secret uniquely identifies a GitOps Agent in the Service
+    agentSecret: ''
+
+    # -- Self-signed Certificate config (Certificate field under "Advanced" section of UI while creating GitOps Agent)
+    caData:
+      enabled: false
+      secret: ''
+    # -- Client Certificate and Key for mTLS
+    mtlsClientCert: ''
+    mtlsClientKey: ''
+
+  # -- Create cluster role for Argo CD and GitOps agent, required for in-cluster
+  createClusterRoles: true
+
+  # Default Harness network policy rules used by all components
+  networkPolicy:
+    # -- Create NetworkPolicy objects for all components
+    create: true
+
+  # -- GitOps Service Host Address
+  gitopsServerHost: ''
+
+  ## -- Legacy config: Disaster Recovery
+  disasterRecovery:
+    # -- Enable Disaster Recovery Agent
+    enabled: false
+
+    # -- DR Agent Identifier
+    identifier: ''
+  flux:
+    enabled: false
+  argocdHarnessPlugin:
+    # -- ConfigManagementPlugin spec.allowConcurrency
+    allowConcurrency: true
+
+    # -- ConfigManagementPlugin spec.lockRepo
+    lockRepo: false
+    discover:
+      find:
+        # -- ConfigManagementPlugin spec.discover.find.command. Scoped
+        # narrowly to .harness.yaml presence so this plugin only auto-claims
+        # apps that opted in via that file — apps that don't set
+        # spec.source.plugin.name or drop a .harness.yaml are left alone.
+        command:
+          - /bin/sh
+          - -c
+          - |
+            if [ -f ".harness.yaml" ]; then
+              echo "Harness Plugin discovered .harness.yaml marker. Proceeding to generate manifests."
+            else
+              exit 1
+            fi
+    init:
+      # -- ConfigManagementPlugin spec.init.command. Runs helm dependency build
+      # unconditionally before generate, so Helm subchart dependencies declared
+      # in Chart.yaml get resolved even if charts/ isn't vendored in the repo.
+      command:
+        - /bin/sh
+        - -c
+        - |
+          set -o pipefail
+          if [ -f "Chart.yaml" ]; then
+            helm dependency build > /dev/null 2>&1 || true
+          fi
+    generate:
+      # -- ConfigManagementPlugin spec.generate.command. Detects Helm vs
+      # Kustomize vs plain manifests, with an optional .harness.yaml
+      # override (tool: helm|kustomize|native) for ambiguous repos.
+      command:
+        - /bin/sh
+        - -c
+        - |
+          set -o pipefail
+          if [ -f ".harness.yaml" ] && grep -q '^tool:' ".harness.yaml"; then
+            TOOL=$(grep '^tool:' ".harness.yaml" | head -1 | cut -d: -f2 | tr -d ' "')
+            echo "argocd-harness-plugin: tool selection overridden by .harness.yaml: $TOOL" >&2
+          else
+            TOOL=""
+          fi
+          if [ "$TOOL" = "kustomize" ] || { [ -z "$TOOL" ] && { [ -f "kustomization.yaml" ] || [ -f "kustomization.yml" ] || [ -f "Kustomization" ]; }; }; then
+            echo "argocd-harness-plugin: detected Kustomize" >&2
+            kustomize build . | argocd-harness-plugin generate -
+          elif [ "$TOOL" = "helm" ] || { [ -z "$TOOL" ] && { [ -f "Chart.yaml" ] || [ -f "values.yaml" ]; }; }; then
+            echo "argocd-harness-plugin: detected Helm chart" >&2
+            helm template $ARGOCD_APP_NAME -n $ARGOCD_APP_NAMESPACE ${ARGOCD_ENV_HELM_ARGS} --include-crds . \
+              | argocd-harness-plugin generate -
+          else
+            echo "argocd-harness-plugin: no Chart.yaml/kustomization file found, treating as plain manifests" >&2
+            argocd-harness-plugin generate .
+          fi
+## Harness GitOps Agent
+agent:
+  # -- GitOps Agent entity name
+  name: gitops-agent
+
+  # -- GitOps Agent identifier name
+  harnessName: gitops-agent
+
+  # -- The number of agent pods to run
+  replicas: 1
+
+  # -- Configuration for using existing secrets instead of creating new ones
+  existingSecrets:
+    # -- Existing secret for agent token. When specified, the main agent secret will not be created
+    # Secret must contain GITOPS_AGENT_TOKEN key
+    agentToken:
+
+    # -- Existing secret for CA bundle. When specified, the agent-ca secret will not be created
+    # Secret must contain ca.bundle key
+    caBundle:
+
+    # -- Existing secret for mTLS client certificate and key. When specified, the agent-mtls secret will not be created
+    # Secret must contain client.crt and client.key keys
+    mtls: ''
+
+  # -- Enable High Availability for the GitOps Agent
+  highAvailability: false
+
+  # -- Enable FIPS mode
+  fipsEnabled: false
+
+  # -- GitOps Agent image
+  image:
+    # -- Repository to use for GitOps Agent
+    # @default -- `""` (defaults to global.image.repository)
+    repository: harness/gitops-agent
+    # -- Tag to use for the GitOps Agent
+    # @default -- `""` (defaults to global.image.tag)
+    tag: v0.128.0
+    # -- Image pull policy for GitOps Agent
+    # @default -- `""` (defaults to global.image.imagePullPolicy)
+    imagePullPolicy: Always
+
+  ## Proxy config for GitOps Agent
+  proxy:
+    # -- Enable Proxy
+    enabled: false
+
+    # -- Add HTTP proxy
+    httpProxy: ''
+
+    # -- Add HTTPS proxy
+    httpsProxy: ''
+
+  ## Create an OpenShift agent
+  openshift:
+    enabled: false
+  service:
+    enabled: true
+    type: ClusterIP
+    port: 7910
+    targetPort: 7910
+    # clusterIP: None  # (optional, only if you want a headless service)
+    labels: {}
+    annotations: {}
+  serviceAccount:
+    # -- Create agent service account
+    create: true
+    # -- Agent service account name
+    name: gitops-agent
+    # -- Annotations applied to created service account
+    annotations: {}
+    # -- Labels applied to created service account
+    labels: {}
+    # -- Automount API credentials for the Service Account
+    automountServiceAccountToken: true
+
+  ## GitOps Agent Horizontal Pod Autoscaler
+  autoscaling:
+    # -- Enable Horizontal Pod Autoscaler ([HPA]) for the GitOps Agent
+    enabled: false
+    # -- Minimum number of replicas for the GitOps Agent [HPA]
+    minReplicas: 2
+    # -- Maximum number of replicas for the GitOps Agent [HPA]
+    maxReplicas: 5
+    # -- Average CPU utilization percentage for the GitOps Agent [HPA]
+    targetCPUUtilizationPercentage: 50
+    # -- Average memory utilization percentage for the GitOps Agent [HPA]
+    targetMemoryUtilizationPercentage: 50
+    # -- Configures the scaling behavior of the target in both Up and Down directions.
+    behavior: {}
+      # scaleDown:
+      #  stabilizationWindowSeconds: 300
+      #  policies:
+      #   - type: Pods
+      #     value: 1
+      #     periodSeconds: 180
+      # scaleUp:
+      #   stabilizationWindowSeconds: 300
+      #   policies:
+      #   - type: Pods
+      #     value: 2
+    #     periodSeconds: 60
+    # -- Configures custom HPA metrics for the Argo CD server
+    # Ref: https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/
+    metrics: []
+
+  ## GitOps Agent Pod Disruption Budget
+  ## Ref: https://kubernetes.io/docs/tasks/run-application/configure-pdb/
+  pdb:
+    # -- Deploy a [PodDisruptionBudget] for the GitOps Agent
+    enabled: false
+    # -- Labels to be added to GitOps Agent pdb
+    labels: {}
+    # -- Annotations to be added to GitOps Agent pdb
+    annotations: {}
+    # -- Number of pods that are available after eviction as number or percentage (eg.: 50%)
+    # @default -- `""` (defaults to 0 if not specified)
+    minAvailable: ''
+    # -- Number of pods that are unavailable after eviction as number or percentage (eg.: 50%).
+    ## Has higher precedence over `server.pdb.minAvailable`
+    maxUnavailable: ''
+
+  ## Agent metrics service configuration
+  addPrometheusAnnotations: false
+  metrics:
+    # -- Deploy metrics service
+    enabled: true
+    service:
+      # -- Metrics service type
+      type: ClusterIP
+      # -- Metrics service clusterIP. `None` makes a "headless service" (no virtual IP)
+      clusterIP: ''
+      # -- Metrics service annotations
+      annotations: {}
+      # -- Metrics service labels
+      labels: {}
+      # -- Metrics service port
+      servicePort: 2112
+      # -- Metrics service port name
+      portName: http-metrics
+    serviceMonitor:
+      # -- Enable a prometheus ServiceMonitor
+      enabled: false
+      # -- Prometheus ServiceMonitor interval
+      interval: 30s
+      # -- Prometheus [RelabelConfigs] to apply to samples before scraping
+      relabelings: []
+      # -- Prometheus [MetricRelabelConfigs] to apply to samples before ingestion
+      metricRelabelings: []
+      # -- Prometheus ServiceMonitor selector
+      selector: {}
+      # prometheus: kube-prometheus
+
+      # -- Prometheus ServiceMonitor scheme
+      scheme: ''
+      # -- Prometheus ServiceMonitor tlsConfig
+      tlsConfig: {}
+      # -- Prometheus ServiceMonitor namespace
+      namespace: ''  # monitoring
+      # -- Prometheus ServiceMonitor labels
+      additionalLabels: {}
+      # -- Prometheus ServiceMonitor annotations
+      annotations: {}
+
+  # -- Host Network for Server pods
+  hostNetwork: false
+
+  # -- [DNS configuration]
+  dnsConfig: {}
+  # -- Alternative DNS policy for Server pods
+  dnsPolicy: ClusterFirst
+
+  # -- Annotations to be added to agent Deployment
+  deploymentAnnotations: {}
+
+  # -- Annotations to be added to agent pods
+  podAnnotations: {}
+
+  # -- Labels to be added to agentƒ pods
+  podLabels: {}
+
+  # -- Secrets with credentials to pull images from a private registry
+  # @default -- `[]` (defaults to global.imagePullSecrets)
+  imagePullSecrets: []
+
+  # -- Priority class for the repo server pods
+  # @default -- `""` (defaults to global.priorityClassName)
+  priorityClassName: ''
+
+  ## Readiness and liveness probes for default backend
+  ## Ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/
+  readinessProbe:
+    # -- Minimum consecutive failures for the [probe] to be considered failed after having succeeded
+    failureThreshold: 3
+    # -- Number of seconds after the container has started before [probe] is initiated
+    initialDelaySeconds: 10
+    # -- How often (in seconds) to perform the [probe]
+    periodSeconds: 10
+    # -- Minimum consecutive successes for the [probe] to be considered successful after having failed
+    successThreshold: 1
+    # -- Number of seconds after which the [probe] times out
+    timeoutSeconds: 1
+  livenessProbe:
+    # -- Minimum consecutive failures for the [probe] to be considered failed after having succeeded
+    failureThreshold: 3
+    # -- Number of seconds after the container has started before [probe] is initiated
+    initialDelaySeconds: 10
+    # -- How often (in seconds) to perform the [probe]
+    periodSeconds: 10
+    # -- Minimum consecutive successes for the [probe] to be considered successful after having failed
+    successThreshold: 1
+    # -- Number of seconds after which the [probe] times out
+    timeoutSeconds: 1
+  startupProbe:
+    # -- Minimum consecutive failures for the [probe] to be considered failed after having succeeded
+    failureThreshold: 32
+    # -- Number of seconds after the container has started before [probe] is initiated
+    initialDelaySeconds: 10
+    # -- How often (in seconds) to perform the [probe]
+    periodSeconds: 5
+
+  # -- terminationGracePeriodSeconds for container lifecycle hook
+  terminationGracePeriodSeconds: 30
+
+  # -- [Node selector]
+  # @default -- `{}` (defaults to global.nodeSelector)
+  nodeSelector: {}
+
+  # -- [Tolerations] for use with node taints
+  # @default -- `[]` (defaults to global.tolerations)
+  tolerations: []
+
+  # -- Assign custom [TopologySpreadConstraints] rules to the agent
+  # @default -- `[]` (defaults to global.topologySpreadConstraints)
+  ## Ref: https://kubernetes.io/docs/concepts/workloads/pods/pod-topology-spread-constraints/
+  ## If labelSelector is left out, it will default to the labelSelector configuration of the deployment
+  topologySpreadConstraints: []
+    # - maxSkew: 1
+  #   topologyKey: topology.kubernetes.io/zone
+  #   whenUnsatisfiable: DoNotSchedule
+
+  # -- Additional command line arguments to pass to GitOps Agent
+  extraArgs: []
+
+  # -- Resource limits and requests for the GitOps Agent pods
+  resources:
+    requests:
+      memory: 512Mi
+      cpu: '1'
+    limits:
+      memory: 512Mi
+      cpu: '1'
+
+  # -- Agent container-level security context
+  # @default -- See [values.yaml]
+  containerSecurityContext:
+    runAsNonRoot: true
+    allowPrivilegeEscalation: false
+    seccompProfile:
+      type: RuntimeDefault
+    capabilities:
+      drop:
+        - ALL
+
+  # -- Additional containers to be added to the agent pod
+
+  # -- Init containers to add to the agent pods
+  initContainers: []
+
+  # -- Additional volumes to the agent pod
+  volumes: []
+
+  # -- Additional volumeMounts to the agent main container
+  volumeMounts: []
+  #  - mountPath: /usr/local/bin/kubelogin
+  #    name: custom-tools
+  #    subPath: kubelogin
+
+  # -- It is recommended to set the following 3 values to the same.
+
+  # -- Number of task fetchers running concurrently for the gitops agent
+  numFetchers: 1
+
+  # -- Number of task processors running concurrently for the gitops agent
+  numProcessors: 1
+
+  # -- Number of task responders running concurrently for the gitops agent
+  numResponders: 1
+
+  # -- Zero Trust Service configuration for task verification
+  zts:
+    # -- ZTS server URL (empty = disabled). Include /api/ suffix, e.g. http://zts:4210/api/
+    url: ''
+    # -- ZTS mode: "shadow" (log only), "enforce" (block denied tasks), or "disabled"
+    mode: shadow
+    # -- Timeout in seconds for ZTS verify/output requests
+    timeoutSeconds: 5
+    # -- Number of retries for failed ZTS requests
+    retryCount: 2
+
+  # -- Any additional env variables to be used by the gitops agent can be configured here
+  additionalConfig:
+    GITOPS_AGENT_MAPPING_TIMEOUT_SECONDS: '60'
+    GITOPS_AGENT_ENABLE_RECONCILE_MEMORY_OPTIMIZATION: 'true'
+    GITOPS_AGENT_SELF_HEAL_SYNC_FILTER_OUT: 'true'
+## Harness GitOps Agent upgrader
+upgrader:
+  # -- Agent upgrader name
+  name: gitops-agent-upgrader
+
+  # -- Enable Harness GitOps agent upgrader
+  enabled: true
+
+  # -- Frequency of upgrader cron job
+  cron: 0 */4 * * *
+
+  # -- Starting deadline for cron job
+  startDeadline: 20
+
+  # -- Docker image for upgrader
+  image: harness/upgrader:latest
+  config:
+    # -- Upgrade all related images in GitOps Agent including Argo CD, Redis etc.
+    upgradeAll: false
+    registryMirror: ''
+    # -- Proxy configuration for upgrader
+    # HTTPS_PROXY=proxyScheme://proxyUser:proxyPassword@proxyHost:proxyPort
+    proxyHost: ''
+    proxyPort: ''
+    proxyScheme: ''
+    noProxy: ''
+    proxyUser: ''
+    proxyPassword: ''
+
+    # -- Cert Paths for mTLS in upgrader
+    clientCertificateFilePath: /etc/mtls/client.crt
+    clientCertificateKeyFilePath: /etc/mtls/client.key
+# <---Duplicated Argo CD overrides for overridden templates--->
+fullnameOverride: argocd
+nameOverride: argocd
+global:
+  image:
+    repository: docker.io/harness/argocd
+    tag: v3.5.3
+    imagePullPolicy: Always
+  logging:
+    format: text
+repoServer:
+  name: repo-server
+  serviceAccount:
+    create: true
+applicationSet:
+  name: applicationset-controller
+controller:
+  name: application-controller
+  serviceAccount:
+    create: true
+redis:
+  name: redis
+# External Redis parameters
+externalRedis:
+  # -- External Redis server host
+  host: ''
+  # -- External Redis username
+  username: ''
+  # -- External Redis password
+  password: ''
+  # -- External Redis server port
+  port: 6379
+  # -- The name of an existing secret with Redis (must contain key `redis-password`) and Sentinel credentials.
+  # When it's set, the `externalRedis.password` parameter is ignored
+  existingSecret: ''
+  # -- External Redis Secret annotations
+  secretAnnotations: {}
+  tls:
+    # -- Enable TLS when connecting to external Redis
+    enabled: false
+    # -- Skip Redis server certificate validation
+    insecureSkipVerify: false
+    # -- K8s secret containing ca.crt (and optionally client.crt + client.key for mTLS)
+    existingSecret: ''
+    # -- Enable Redis client certificate authentication (mTLS).
+    # Requires `existingSecret` to also contain `client.crt` and `client.key`
+    # alongside `ca.crt`. Without `existingSecret` the volume is not mounted
+    # and the agent will fail at Redis connection time.
+    clientCertEnabled: false
+    # -- Mount path for Redis TLS certificates inside the container
+    mountPath: /etc/redis-tls

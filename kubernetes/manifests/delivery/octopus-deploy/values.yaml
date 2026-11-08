@@ -1,0 +1,297 @@
+octopus:
+  # Must be set to "Y" or true to accept the EULA at https://octopus.com/legal/customer-agreement
+  acceptEula: "N"
+
+  ## Allows the secrets to be managed via an external secrets provider
+  createSecrets: true
+
+  # The below 5 options are not required if createSecrets is false
+  # The master key is used to encrypt secrets. Generate a key with: openssl rand 16 | base64
+  masterKey: ""
+  databaseConnectionString: ""
+  # The Octopus admin username
+  username:
+  # The Octopus admin password
+  password:
+  # the octopus license key in base 64 format
+  licenseKeyBase64:
+
+  # The Octopus admin email
+  email:
+
+  # The task cap to set for the new node. If blank the default of 5 is used.
+  taskCap:
+
+  # The Octopus server image.
+  # Visit https://hub.docker.com/r/octopusdeploy/octopusdeploy for the available versions.
+  image:
+    # The repository defaults to DockerHub
+    repository: octopusdeploy/octopusdeploy
+    # The tag will default to using the chart appVersion
+    tag:
+  # The port the website is exposed on
+  webPort: 80
+  # The port polling tentacles will connect via https://www.octopus.com/docs/infrastructure/deployment-targets/windows-targets/tentacle-communication#polling-tentacles
+  tentaclePort: 10943
+  # The port for gRPC communication
+  grpcPort: 8443
+  # The number of server nodes to maintain
+  replicaCount: 1
+
+  # Resource requests and limits can be set
+  #resources:
+  #  requests:
+  #    memory: "4Gi"
+  #    cpu: "2"
+  #  limits:
+  #    memory: "8Gi"
+  #    cpu: "6"
+
+  # The built in worker can use execution containers to run steps inside special Docker images.
+  # https://octopus.com/docs/deployment-process/execution-containers-for-workers.
+  # This requires supporting Docker in Docker, which in turn means the Octopus image must be run with
+  # all privileges. Disabling this setting disables Docker-In-Docker and does not set the privileged mode.
+  enableDockerInDocker: true
+
+  # Volume used for Octopus server logs: https://octopus.com/docs/support/log-files
+  # Each Octopus node mounts its own server log volume (this volume is not shared across nodes)
+  serverLogVolume:
+    size: 200Mi
+    storageClassName: ""
+
+  # Certificate authorities for Octopus Server to trust
+  # Each entry mounts one key of an existing Secret or ConfigMap into /etc/ssl/certs as its own file.
+  customCertificateAuthorities: []
+    #- secretName: corporate-root-ca
+    #  key: ca.crt
+    #- configMapName: corporate-intermediate-ca
+    #  key: intermediate.crt
+
+  # Extra volumes. Use this for arbitrary volume mounts when using readOnlyRootFilesystem. You will want mounts for:
+  # /tmp, /home/octopus, /etc/octopus, /Octopus/Octopus/Logs, and /Octopus/.diagnostics
+  # See values-rorfsexample.yaml for a full example.
+  # Supported volume types: emptyDir, persistentVolumeClaim
+  extraVolumes:
+    # /tmp/
+    #tmp:
+    #  type: emptyDir
+    #  mountPath: /tmp
+    #  sizeLimit: "1Gi"
+    #  medium: ""
+
+  # The package repository, artifact, and task log volumes below are all shared across Octopus nodes.
+  # For each, an optional persistent volume claim class name can be supplied. This storage class must support
+  # ReadWriteMany access modes for HA clusters.
+  # ReadWriteOnce or ReadWriteMany can be used for single node clusters.
+  # Just be aware that ReadWriteOnce volumes can only be used with a replicaCount of 1, as higher replica counts means
+  # multiple Octopus nodes writing to the same volume at the same time,
+  # requiring ReadWriteMany volumes. Also note that the storageAccessMode value is automatically set to ReadWriteMany
+  # when replicaCount is greater than 1.
+
+  # The volume used for persisting packages pushed to the Octopus built-in package repository: https://octopus.com/docs/packaging-applications/package-repositories/built-in-repository
+  packageRepositoryVolume:
+    size: 1Gi
+    storageClassName: ""
+    storageAccessMode: ReadWriteOnce
+  # The volume used for persisting deployment artifacts: https://octopus.com/docs/projects/deployment-process/artifacts
+  artifactVolume:
+    size: 1Gi
+    storageClassName: ""
+    storageAccessMode: ReadWriteOnce
+ # Volume used for task logs: https://octopus.com/docs/support/get-the-raw-output-from-a-task
+  taskLogVolume:
+    size: 1Gi
+    storageClassName: ""
+    storageAccessMode: ReadWriteOnce
+  # Volume used for archived audit logs: https://octopus.com/docs/security/users-and-teams/auditing#archived-audit-events
+  auditLogVolume:
+    size: 1Gi
+    storageClassName: ""
+    storageAccessMode: ReadWriteOnce
+
+  # Sets CLUSTER_SHARED_MODE, which controls how files shared across nodes are stored. See the README for details.
+  clusterShared:
+    # One of "", SEPARATE_VOLUMES, SEPARATE_VOLUMES_WITH_CLUSTER_SHARED or CLUSTER_SHARED
+    mode: ""
+    # Volume mounted at /clusterShared, when mode is SEPARATE_VOLUMES_WITH_CLUSTER_SHARED or CLUSTER_SHARED
+    volume:
+      size: 1Gi
+      storageClassName: ""
+      storageAccessMode: ReadWriteOnce
+    # Optional volume mounted at /executionsClusterShared for transient execution data. Requires a mode of
+    # SEPARATE_VOLUMES_WITH_CLUSTER_SHARED or CLUSTER_SHARED
+    executionsVolume:
+      enabled: false
+      size: 1Gi
+      storageClassName: ""
+      storageAccessMode: ReadWriteOnce
+
+  # Lets polling tentacles connect to any node through a single load balancer. Requires Redis and a clusterShared.mode
+  # of SEPARATE_VOLUMES_WITH_CLUSTER_SHARED or CLUSTER_SHARED.
+  multiNodePollingTentacles:
+    enabled: false
+    redis:
+      # Redis connection string. Not required if redis.enabled is true or createSecrets is false.
+      # Ignored if redis.enabled is true, as the in-cluster Redis takes precedence
+      connectionString: ""
+    # TCP pass through service for polling tentacles. TLS must not be terminated in front of it
+    service:
+      enabled: true
+      # Defaults to octopus.service.type. Set to LoadBalancer to expose tentacles through a cloud load balancer
+      type: ""
+      annotations: {}
+      labels: {}
+      loadBalancerSourceRanges: []
+      externalTrafficPolicy: ""
+
+  service:
+    type: NodePort
+
+  ingress:
+    enabled: false
+    annotations: {}
+    labels: {}
+    path: /
+    hosts: []
+    className: ""
+    pollingTentacles:
+      enabled: false
+      annotations: {}
+      labels: {}
+      hostPrefix: "polling"
+    grpc:
+      enabled: false
+      annotations: {}
+      labels: {}
+      hostPrefix: "grpc"
+      tls:
+        enabled: false
+        secretName: ""
+
+  statefulSet:
+    annotations: {}
+    labels: {}
+  pods:
+    annotations: {}
+    labels: {}
+
+  proxy:
+    # the proxy to use for http requests
+    http:
+    # the proxy to use for https requests
+    https:
+    # the proxy to use for http and/or https requests, in case the above two values are not defined
+    all:
+    # an array of hostnames that should be excluded from proxying
+    excludedHostnames: []
+
+  # For minimum resource indications see https://octopus.com/docs/administration/managing-infrastructure/performance#minimum-requirements
+  resources: {}
+  #  requests:
+  #    memory: "400M"
+  #    cpu: "100m"
+  #  limits:
+  #    memory: "4G"
+  #    cpu: "1"
+
+  startupProbe:
+    # The number of failed startup checks, made every 60 seconds, before the Octopus container is restarted.
+    # Database upgrades run during startup, so increase this if upgrades on a large database take longer than 30 minutes.
+    failureThreshold: 30
+
+  tolerations: []
+  topologySpreadConstraints: []
+
+  serviceAccount:
+    create: false
+    ## The name of the ServiceAccount to use.
+    ## If not set and create is true, a name is generated using the fullname template
+    name:
+    ## Service Account annotations
+    annotations: {}
+    automountServiceAccountToken: false
+  rbac:
+    create: false
+    role:
+      ## Rules to create. It follows the role specification
+      rules:
+        - apiGroups:
+            - ''
+          resources:
+            - services
+            - endpoints
+            - pods
+          verbs:
+            - get
+            - watch
+            - list
+  # Pod security context settings
+  podSecurityContext: {}
+  # Container security context settings
+  # IMPORTANT: When enableDockerInDocker is true (default), the container must run as privileged.
+  # If setting security contexts that conflict with privileged mode, set enableDockerInDocker to false.
+  containerSecurityContext: {}
+  # Custom directory for Octopus server configuration when using non-root security contexts
+  serverConfigurationDirectory:
+
+  # DEPRECATED: Use containers.octopus.env instead
+  # Extra environment variables to set in the Octopus server container
+  # Example:
+  # extraEnv:
+  # - name: HTTPS_PROXY
+  #   value: http://example.com:3128
+  # - name: POD_NAME
+  #   valueFrom:
+  #     fieldRef:
+  #       fieldPath: metadata.name
+  extraEnv: []
+
+  # Additional pod spec to apply to the Octopus pod - does not override any other configuration
+  spec: {}
+
+  containers:
+    octopus:
+      # Additional container spec to apply to the Octopus container
+      spec: {}
+      # Additional environment variables to set in the Octopus container
+      env: []
+
+dockerHub:
+  # Set to true to create a secret containing the docker registry password
+  login: false
+  # The base 64 encoded Docker config JSON. This value can be created with the command:
+  # kubectl create secret docker-registry regcred --docker-username=myusername --docker-password=mypassword --dry-run=client -o="jsonpath={.data.\.dockerconfigjson}"
+  # See https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
+  creds:
+
+mssql:
+  enabled: false
+  ACCEPT_EULA: "Y"
+  SA_PASSWORD: ""
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+# In-cluster Redis for octopus.multiNodePollingTentacles. Runs a single pod with no persistence, by design
+redis:
+  enabled: false
+  # Generated if blank. Must not contain commas, equals signs, double quotes or backslashes
+  password: ""
+  # The Redis image is pulled from Docker Hub. To use the dockerHub credentials above, set this to [{name: dockerhubcreds}]
+  imagePullSecrets: []
+  # If resources.limits.memory is set, Redis's maxmemory is set to 80% of it
+  resources: {}
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+hooks:
+  # Enables a pre-upgrade hook that deletes (with --cascade=orphan) any StatefulSet
+  # whose selector matchLabels still contain the legacy `helm.sh/chart` key, so that
+  # the StatefulSet can be re-created with the corrected selector.
+  enableSelectorLabelsFix: true
+
+global:
+  # Set the default storageClass to be used for all persistent volume claims
+  # this is overridden by the storageClassName in the individual volume claims if specified
+  storageClass: ""

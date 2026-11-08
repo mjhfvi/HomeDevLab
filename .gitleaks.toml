@@ -17,6 +17,8 @@ useDefault = true
 # was invoked, not the location of the base config.
 #path = "common_config.toml"
 
+disabledRules = [ "slack-webhook-url"]
+
 # An array of tables that contain information that define instructions
 # on how to detect secrets
 [[rules]]
@@ -29,7 +31,7 @@ description = "security rule 1"
 
 # Golang regular expression used to detect secrets. Note Golang's regex engine
 # does not support lookaheads.
-#regex = '''(?i)(secret|password|api_key|apikey|access_token|auth_token)'''
+regex = '''(?i)(secret|password|api_key|apikey|access_token|auth_token)'''
 
 # Golang regular expression used to match paths. This can be used as a standalone rule or it can be used
 # in conjunction with a valid `regex` entry.
@@ -40,7 +42,7 @@ tags = ["tag","another tag"]
 
 # Int used to extract secret from regex match and used as the group that will have
 # its entropy checked if `entropy` is set.
-secretGroup = 3
+secretGroup = 0
 
 # Float representing the minimum shannon entropy a regex group must have to be considered a secret.
 entropy = 3.5

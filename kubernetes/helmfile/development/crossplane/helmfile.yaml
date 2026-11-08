@@ -1,0 +1,40 @@
+---
+# Commands to deploy:
+# helmfile deps  # < download dependencies
+# helmfile template  # < template stuff. You might have to be signed into vault
+# helmfile sync  # < deploy everything
+# helmfile sync -f filename.yaml  # < deploy everything from file
+# helmfile apply  # < deploy diff only
+# helmfile destroy  # < deploy diff only
+filepath: helmfile.yaml
+helmBinary: helm
+# kustomizeBinary: kustomize
+helmDefaults:
+  # verify: false
+  # enableDNS: false
+  # waitForJobs: false
+  timeout: 60
+  # skipDeps: false
+  # reuseValues: false
+  # deleteWait: false
+  # deleteTimeout: 0
+repositories:
+  - name: crossplane-stable
+    url: https://charts.crossplane.io/stable
+releases:
+  - name: crossplane
+    namespace: crossplane-system
+    createNamespace: true
+    chart: crossplane-stable/crossplane
+  # version: 2.1.3
+    labels:
+      app.kubernetes.io/name: crossplane
+  # values:
+  # - provider:
+  #     packages:
+  #     - xpkg.crossplane.io/crossplane/provider-aws:v0.55.0
+  # - serviceAccount:
+  #     customAnnotations:
+  #       eks.amazonaws.com/role-arn: arn:aws:iam::316115107540:role/crossplane-provider-aws
+
+  # Source: https://github.com/awslabs/crossplane-on-eks/blob/main/bootstrap/eksctl/README.md

@@ -1,0 +1,75 @@
+---
+name: Workflow Get Authors of Specific File Changes
+on:  # yamllint disable-line rule:truthy
+  push:  # Triggers on any push event
+    branches: [main]
+    paths: [.pre-commit-config.yaml, .gitleaks.toml, .talismanrc]
+  pull_request:
+    branches: [main]
+    paths: [.pre-commit-config.yaml, .gitleaks.toml, .talismanrc]
+  workflow_dispatch:  # Adds a "Run workflow" button in the GitHub Actions UI
+  workflow_call:  # Allows this workflow to be called and reused by other workflows
+  # schedule:
+  #  # Runs at 00:00 every day
+  #   - cron: '0 0 * * *'
+permissions: {}
+jobs:
+  build:
+    name: not-approved-file-changes
+    runs-on: ubuntu-latest
+    permissions:
+      # contents permission to clone the repository
+      contents: read
+      packages: read
+      # issues and pull-requests permissions to write results as pull
+      # request comments. Omit them if you don't need summary comments
+      issues: write
+      pull-requests: write
+      # To report GitHub Actions status checks. Omit if you don't need
+      # to update commit status
+      statuses: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Find users who changed the file
+        run: |-
+          # 1. Define your space-separated list of target files here
+          TARGET_FILES=(".pre-commit-config.yaml" ".gitleaks.toml" ".talismanrc")
+
+          # Initialize a flag to track if we need to fail at the end
+          VIOLATION_FOUND=false
+
+          # Determine the Git commit range to scan
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            RANGE="origin/${{ github.event.pull_request.base.ref }}...HEAD"
+          else
+            RANGE="${{ github.event.before }}...${{ github.event.after }}"
+            if [ "$RANGE" = "0000000000000000000000000000000000000000...${{ github.event.after }}" ]; then RANGE="HEAD~1...HEAD"; fi
+          fi
+
+          # 2. Loop through each file in the list
+          for FILE in "${TARGET_FILES[@]}"; do
+            echo "Checking for modifications to '$FILE'..."
+
+            # Extract unique authors who modified this specific file in the range
+            USERS=$(git log $RANGE --follow --format="%an <%ae>" -- "$FILE" | sort -u)
+            if [ -n "$USERS" ]; then
+              # Print a visible Red Error annotation in the GitHub UI
+              echo "::error file=$FILE::Unauthorized modification detected on $FILE!"
+              echo "The following users modified '$FILE':"
+              echo "$USERS"
+              echo "----------------------------------------"
+              VIOLATION_FOUND=true
+            fi
+          done
+
+          # 3. Fail the entire job if any target file had modifications
+          if [ "$VIOLATION_FOUND" = true ]; then
+            echo "Workflow failed due to unauthorized file modifications listed above."
+            exit 1
+          else
+            echo "Success: No protected files were modified in this event scope."
+          fi

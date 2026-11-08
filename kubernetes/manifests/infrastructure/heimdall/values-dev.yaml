@@ -1,0 +1,43 @@
+---
+# image:
+#   repository: linuxserver/chrome
+#   pullPolicy: IfNotPresent
+#  # Overrides the image tag whose default is the chart appVersion.
+#   tag: "latest"
+# ingress:
+#   enabled: true
+#   hosts:
+#   - host: chrome.eks-dev-il.octopus-cloud.com
+#     paths:
+#     - path: /
+#       pathType: ImplementationSpecific
+# persistence:
+#   enabled: false
+base:
+  # -- Image block with all image details
+  image:
+    # -- Default image pull policy
+    pullPolicy: IfNotPresent
+    # -- Additional command arguments which needs to be passed
+    command: []
+    # -- Default image repository
+    repository: linuxserver/heimdall
+    # -- Default image tag
+    tag: latest
+replicaCount: 1
+ingress:
+  enabled: true
+  class: traefik
+  # annotations:
+  #   ingress.gcp.kubernetes.io/pre-shared-cert: global-sign-opstree-com-2024
+  #   kubernetes.io/ingress.allow-http: "false"
+  rules:
+    - hostname: heimdall.eks-dev-il.octopus-cloud.com
+      path: /
+  hosts:
+    - host: heimdall.eks-dev-il.octopus-cloud.com
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+service:
+  port: 80

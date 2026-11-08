@@ -1,0 +1,12 @@
+clusterName: octopus-dev-01
+serviceAccount:
+  create: true
+  name: aws-load-balancer-controller
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::<ACCOUNT_ID>:role/eksctl-octopus-dev-01-addon-iamserviceaccount-Role1-kJ9mk39amHnb
+region: il-central-1
+vpcId: <VPC_ID>
+ingressClassParams:
+  create: false
+
+# Create IAM Role before building this chart: https://docs.aws.amazon.com/eks/latest/userguide/lbc-helm.html

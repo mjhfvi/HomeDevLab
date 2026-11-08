@@ -1,0 +1,231 @@
+---
+apiVersion: argocd-image-updater.argoproj.io/v1alpha1
+kind: ImageUpdater
+metadata:
+  name: argocd-image-updater
+  namespace: infrastructure
+spec:
+  commonUpdateSettings:
+    updateStrategy: "newest-build" # Default: "semver" | "latest" (Update to the most recently built image found in a registry), "digest" (Update to the latest version of a given version (tag), using the tag's SHA digest), "semver" (Update to the latest version of an image considering semantic versioning constraints), "name" (Sorts tags alphabetically and update to the one with the highest cardinality)
+    forceUpdate: false # Default: false, type boolean
+    allowTags: "regexp:^[a-zA-Z0-9]{6,10}$" # Default: all tags
+    ignoreTags: ["latest", "dev"] # Default: no tags ignored
+    # pullSecret: "infrastructure/ghcr-registry-secret" # Default: no pull secret
+    platforms: [] # Default: no platform restrictions
+  writeBackConfig:
+    method: "argocd" # Default: "argocd" - "git" (Write back changes to a git repository, creating a pull request), "argocd" (Write back changes directly to the Argo CD Application manifest in the cluster)
+    # gitConfig:
+    #   repository: "https://github.com/appdev/devops-kubernetes-clusters-manifests.git"
+    #   branch: "main"
+    #   writeBackTarget: helmvalues:.argocd-image-updater-git-source.yaml # Optional: specify the path within the repository where the updated manifest should be committed. If not specified, it defaults to the root of the repository.
+  applicationRefs:
+    - namePattern: "ai-agents" # Select application name in ArgoCD matching this pattern
+      images:
+        - alias: "ai-agents"
+          imageName: "ghcr.io/appdev/ai-agents" # Docker Image name with tag, digest or both. The tag and digest are optional, but at least one of them must be specified.
+          commonUpdateSettings:
+            pullSecret: "infrastructure/ghcr-registry-secret"
+            updateStrategy: "newest-build"
+    - namePattern: "ai-forecast" # Select application name in ArgoCD matching this pattern
+      images:
+        - alias: "ai-forecast"
+          imageName: "ghcr.io/appdev/ai-forecast" # Docker Image name with tag, digest or both. The tag and digest are optional, but at least one of them must be specified.
+          commonUpdateSettings:
+            pullSecret: "infrastructure/ghcr-registry-secret"
+            updateStrategy: "newest-build"
+    - namePattern: "ai-mcpserver" # Select application name in ArgoCD matching this pattern
+      images:
+        - alias: "ai-mcpserver"
+          imageName: "ghcr.io/appdev/ai-mcpserver" # Docker Image name with tag, digest or both. The tag and digest are optional, but at least one of them must be specified.
+          commonUpdateSettings:
+            pullSecret: "infrastructure/ghcr-registry-secret"
+            updateStrategy: "newest-build"
+    - namePattern: "ai-videochat-agents" # Select application name in ArgoCD matching this pattern
+      images:
+        - alias: "ai-videochat-agents"
+          imageName: "ghcr.io/appdev/ai-videochat-agents" # Docker Image name with tag, digest or both. The tag and digest are optional, but at least one of them must be specified.
+          commonUpdateSettings:
+            pullSecret: "infrastructure/ghcr-registry-secret"
+            updateStrategy: "newest-build"
+    - namePattern: ".ai.assistant" # Select application name in ArgoCD matching this pattern
+      images:
+        - alias: ".ai.assistant"
+          imageName: "ghcr.io/appdev/.ai.assistant" # Docker Image name with tag, digest or both. The tag and digest are optional, but at least one of them must be specified.
+          commonUpdateSettings:
+            pullSecret: "infrastructure/ghcr-registry-secret"
+            updateStrategy: "newest-build"
+    - namePattern: ".pdf.chat" # Select application name in ArgoCD matching this pattern
+      images:
+        - alias: ".pdf.chat"
+          imageName: "ghcr.io/appdev/.pdf.chat" # Docker Image name with tag, digest or both. The tag and digest are optional, but at least one of them must be specified.
+          commonUpdateSettings:
+            pullSecret: "infrastructure/ghcr-registry-secret"
+            updateStrategy: "newest-build"
+    - namePattern: ".ingestion.service" # Select application name in ArgoCD matching this pattern
+      images:
+        - alias: ".ingestion.service"
+          imageName: "ghcr.io/appdev/.ingestion.service" # Docker Image name with tag, digest or both. The tag and digest are optional, but at least one of them must be specified.
+          commonUpdateSettings:
+            pullSecret: "infrastructure/ghcr-registry-secret"
+            updateStrategy: "newest-build"
+    - namePattern: "bi-proxy" # Select application name in ArgoCD matching this pattern
+      images:
+        - alias: ".bi.proxy"
+          imageName: "ghcr.io/appdev/.bi.proxy" # Docker Image name with tag, digest or both. The tag and digest are optional, but at least one of them must be specified.
+          commonUpdateSettings:
+            pullSecret: "infrastructure/ghcr-registry-secret"
+            updateStrategy: "newest-build"
+    - namePattern: ".bi.server" # Select application name in ArgoCD matching this pattern
+      images:
+        - alias: ".bi.server"
+          imageName: "ghcr.io/appdev/.bi.server" # Docker Image name with tag, digest or both. The tag and digest are optional, but at least one of them must be specified.
+          commonUpdateSettings:
+            pullSecret: "infrastructure/ghcr-registry-secret"
+            updateStrategy: "newest-build"
+    - namePattern: ".api.core" # Select application name in ArgoCD matching this pattern
+      images:
+        - alias: ".api.core"
+          imageName: "ghcr.io/appdev/.api.core" # Docker Image name with tag, digest or both. The tag and digest are optional, but at least one of them must be specified.
+          commonUpdateSettings:
+            pullSecret: "infrastructure/ghcr-registry-secret"
+            updateStrategy: "newest-build"
+    - namePattern: ".guard.location.api" # Select application name in ArgoCD matching this pattern
+      images:
+        - alias: ".guard.location.api"
+          imageName: "ghcr.io/appdev/.guard.location.api" # Docker Image name with tag, digest or both. The tag and digest are optional, but at least one of them must be specified.
+          commonUpdateSettings:
+            pullSecret: "infrastructure/ghcr-registry-secret"
+            updateStrategy: "newest-build"
+    - namePattern: ".identity.server" # Select application name in ArgoCD matching this pattern
+      images:
+        - alias: ".identity.server"
+          imageName: "ghcr.io/appdev/.identity.server" # Docker Image name with tag, digest or both. The tag and digest are optional, but at least one of them must be specified.
+          commonUpdateSettings:
+            pullSecret: "infrastructure/ghcr-registry-secret"
+            updateStrategy: "newest-build"
+    - namePattern: ".signalr.hub" # Select application name in ArgoCD matching this pattern
+      images:
+        - alias: ".signalr.hub"
+          imageName: "ghcr.io/appdev/.signalr.hub" # Docker Image name with tag, digest or both. The tag and digest are optional, but at least one of them must be specified.
+          commonUpdateSettings:
+            pullSecret: "infrastructure/ghcr-registry-secret"
+            updateStrategy: "newest-build"
+    - namePattern: ".ui.core" # Select application name in ArgoCD matching this pattern
+      images:
+        - alias: ".ui.core"
+          imageName: "ghcr.io/appdev/.ui.core" # Docker Image name with tag, digest or both. The tag and digest are optional, but at least one of them must be specified.
+          commonUpdateSettings:
+            pullSecret: "infrastructure/ghcr-registry-secret"
+            updateStrategy: "newest-build"
+    - namePattern: "microfrontend-videochat" # Select application name in ArgoCD matching this pattern
+      images:
+        - alias: "microfrontend-videochat"
+          imageName: "ghcr.io/appdev/microfrontend-videochat" # Docker Image name with tag, digest or both. The tag and digest are optional, but at least one of them must be specified.
+          commonUpdateSettings:
+            pullSecret: "infrastructure/ghcr-registry-secret"
+            updateStrategy: "newest-build"
+    - namePattern: "integrations-agrint" # Select application name in ArgoCD matching this pattern
+      images:
+        - alias: "integrations.agrint"
+          imageName: "ghcr.io/appdev/integrations.agrint" # Docker Image name with tag, digest or both. The tag and digest are optional, but at least one of them must be specified.
+          commonUpdateSettings:
+            pullSecret: "infrastructure/ghcr-registry-secret"
+            updateStrategy: "newest-build"
+    - namePattern: "integrations.cesva.noise.sensors" # Select application name in ArgoCD matching this pattern
+      images:
+        - alias: "integrations.cesva.noise.sensors"
+          imageName: "ghcr.io/appdev/integrations.cesva.noise.sensors" # Docker Image name with tag, digest or both. The tag and digest are optional, but at least one of them must be specified.
+          commonUpdateSettings:
+            pullSecret: "infrastructure/ghcr-registry-secret"
+            updateStrategy: "newest-build"
+    - namePattern: "integrations.agrint" # Select application name in ArgoCD matching this pattern
+      images:
+        - alias: "integrations.agrint"
+          imageName: "ghcr.io/appdev/integrations.agrint" # Docker Image name with tag, digest or both. The tag and digest are optional, but at least one of them must be specified.
+          commonUpdateSettings:
+            pullSecret: "infrastructure/ghcr-registry-secret"
+            updateStrategy: "newest-build"
+    - namePattern: "integrations.aqua" # Select application name in ArgoCD matching this pattern
+      images:
+        - alias: "integrations.aqua"
+          imageName: "ghcr.io/appdev/integrations.aqua" # Docker Image name with tag, digest or both. The tag and digest are optional, but at least one of them must be specified.
+          commonUpdateSettings:
+            pullSecret: "infrastructure/ghcr-registry-secret"
+            updateStrategy: "newest-build"
+    - namePattern: "integrations.platform.api" # Select application name in ArgoCD matching this pattern
+      images:
+        - alias: "integrations.platform.api"
+          imageName: "ghcr.io/appdev/integrations.platform.api" # Docker Image name with tag, digest or both. The tag and digest are optional, but at least one of them must be specified.
+          commonUpdateSettings:
+            pullSecret: "infrastructure/ghcr-registry-secret"
+            updateStrategy: "newest-build"
+    - namePattern: "integrations.platform.incident.service" # Select application name in ArgoCD matching this pattern
+      images:
+        - alias: "integrations.platform.incident.service"
+          imageName: "ghcr.io/appdev/integrations.platform.incident.service" # Docker Image name with tag, digest or both. The tag and digest are optional, but at least one of them must be specified.
+          commonUpdateSettings:
+            pullSecret: "infrastructure/ghcr-registry-secret"
+            updateStrategy: "newest-build"
+    - namePattern: "integrations.platform.rule.engine" # Select application name in ArgoCD matching this pattern
+      images:
+        - alias: "integrations.platform.rule.engine"
+          imageName: "ghcr.io/appdev/integrations.platform.rule.engine" # Docker Image name with tag, digest or both. The tag and digest are optional, but at least one of them must be specified.
+          commonUpdateSettings:
+            pullSecret: "infrastructure/ghcr-registry-secret"
+            updateStrategy: "newest-build"
+    - namePattern: "microservices.incidents" # Select application name in ArgoCD matching this pattern
+      images:
+        - alias: "microservices.incidents"
+          imageName: "ghcr.io/appdev/microservices.incidents" # Docker Image name with tag, digest or both. The tag and digest are optional, but at least one of them must be specified.
+          commonUpdateSettings:
+            pullSecret: "infrastructure/ghcr-registry-secret"
+            updateStrategy: "newest-build"
+    - namePattern: "microservices.notifications.emails" # Select application name in ArgoCD matching this pattern
+      images:
+        - alias: "microservices.notifications.emails"
+          imageName: "ghcr.io/appdev/microservices.notifications.emails" # Docker Image name with tag, digest or both. The tag and digest are optional, but at least one of them must be specified.
+          commonUpdateSettings:
+            pullSecret: "infrastructure/ghcr-registry-secret"
+            updateStrategy: "newest-build"
+    - namePattern: "microservices.report.builder" # Select application name in ArgoCD matching this pattern
+      images:
+        - alias: "microservices.report.builder"
+          imageName: "ghcr.io/appdev/microservices.report.builder" # Docker Image name with tag, digest or both. The tag and digest are optional, but at least one of them must be specified.
+          commonUpdateSettings:
+            pullSecret: "infrastructure/ghcr-registry-secret"
+            updateStrategy: "newest-build"
+    - namePattern: "microservices.storage" # Select application name in ArgoCD matching this pattern
+      images:
+        - alias: "microservices.storage"
+          imageName: "ghcr.io/appdev/microservices.storage" # Docker Image name with tag, digest or both. The tag and digest are optional, but at least one of them must be specified.
+          commonUpdateSettings:
+            pullSecret: "infrastructure/ghcr-registry-secret"
+            updateStrategy: "newest-build"
+    - namePattern: "microservices.bi.proxy" # Select application name in ArgoCD matching this pattern
+      images:
+        - alias: "microservices.bi.proxy"
+          imageName: "ghcr.io/appdev/microservices.bi.proxy" # Docker Image name with tag, digest or both. The tag and digest are optional, but at least one of them must be specified.
+          commonUpdateSettings:
+            pullSecret: "infrastructure/ghcr-registry-secret"
+            updateStrategy: "newest-build"
+    - namePattern: "media.octomedia" # Select application name in ArgoCD matching this pattern
+      images:
+        - alias: "media.octomedia"
+          imageName: "ghcr.io/appdev/media.octomedia" # Docker Image name with tag, digest or both. The tag and digest are optional, but at least one of them must be specified.
+          commonUpdateSettings:
+            pullSecret: "infrastructure/ghcr-registry-secret"
+            updateStrategy: "newest-build"
+    - namePattern: "video-chat-management" # Select application name in ArgoCD matching this pattern
+      images:
+        - alias: "video-chat-management"
+          imageName: "ghcr.io/appdev/video-chat-management" # Docker Image name with tag, digest or both. The tag and digest are optional, but at least one of them must be specified.
+          commonUpdateSettings:
+            pullSecret: "infrastructure/ghcr-registry-secret"
+            updateStrategy: "newest-build"
+    - namePattern: "backend.incidents.3rd" # Select application name in ArgoCD matching this pattern
+      images:
+        - alias: "backend.incidents.3rd"
+          imageName: "ghcr.io/appdev/backend.incidents.3rd" # Docker Image name with tag, digest or both. The tag and digest are optional, but at least one of them must be specified.
+          commonUpdateSettings:
+            pullSecret: "infrastructure/ghcr-registry-secret"
+            updateStrategy: "newest-build"

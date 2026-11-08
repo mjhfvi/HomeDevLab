@@ -1,0 +1,15 @@
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: activepieces
+  namespace: infra
+spec:
+  entryPoints: [websecure]
+  routes:
+    - kind: Rule
+      match: Host(`activepieces.azure-dev-01.octopus-cloud.com`)
+      services:
+        - name: activepieces
+          port: 80
+  tls: {}

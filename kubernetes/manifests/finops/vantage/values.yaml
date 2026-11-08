@@ -1,0 +1,11 @@
+agent:
+  token: "vntg_tkn_xxxxxx"
+  clusterID: "eks-dev-il"
+  # secret:
+  #   name: ""
+  #   key: "token"
+  # persist:
+  # mountPath: "/var/lib/vantage-agent"
+  # name: "data"
+  # size: "10Gi"
+  # storageClassName: "ebs-sc"

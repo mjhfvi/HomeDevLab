@@ -1,0 +1,484 @@
+---
+nodeSelector:
+  octopus.infrastructure.as.code/node-instance-purpose: general-purpose-pool
+service:
+  type: ClusterIP
+  port: 3000
+  annotations: {}
+ingress:
+  main:
+    enabled: true
+    className: traefik
+    # annotations:
+    #   traefik.ingress.kubernetes.io/whitelist-source-range: "127.0.0.1/32"
+    hosts:
+      - host: urls.eks-dev-il.octopus-cloud.com
+        paths:
+          - path: /
+            pathType: Prefix
+    tls: []
+# podAnnotations:
+#   traefik.ingress.kubernetes.io/router.middlewares: ingress-traefik-secureheaders@kubernetescrd
+persistence:
+  config:
+    enabled: false
+    accessMode: ReadWriteOnce
+    size: 1Gi
+    # storageClass: ""
+env:
+  - name: LOG_TARGETS
+    value: stdout
+  # Add your ingress hostname here
+  - name: HOMEPAGE_ALLOWED_HOSTS
+    value: urls.eks-dev-il.octopus-cloud.com
+config:
+  settings:
+    title: EKS Homepage
+    description: Octopus EKS homepage
+    background: https://images.unsplash.com/photo-1502790671504-542ad42d5189?auto=format&fit=crop&w=2560&q=80
+    favicon: https://www.google.com/favicon.ico
+    theme: dark  # or light
+    color: slate  # Supported colors are: slate, gray, zinc, neutral, stone, amber, yellow, lime, green, emerald, teal, cyan, sky, blue, indigo, violet, purple, fuchsia, pink, rose, red, white
+    layout:
+      Octopus:
+        icon: docker-compose.png  # https://dashboardicons.com/icons
+        header: false
+        headerStyle: boxedWidgets # either "boxedWidgets" or "underlined" or "clean" or "boxed"
+        groupsInitiallyCollapsed: true
+        initiallyCollapsed: false
+        tab: Octopus
+        style: column  # either "column" or "row" based layouts
+        # columns: 4  # number of columns for row based layout
+      Infrastructure:
+        icon: azure-kubernetes-services.png  # https://dashboardicons.com/icons
+        header: false
+        headerStyle: underlined # either "boxedWidgets" or "underlined" or "clean"
+        initiallyCollapsed: false
+        tab: Infrastructure
+        style: column
+        # columns: 6
+  widgets:
+    - greeting:
+        text_size: xl
+        text: EKS Dev
+    - logo:
+        icon: https://octopus-app.com/wp-content/uploads/2025/03/octopus_logo.svg
+    - datetime:
+        text_size: xl
+        format:
+          timeStyle: short
+          dateStyle: short
+          hourCycle: h23
+        locale: il
+    - kubernetes:
+        cluster:
+          show: true
+          cpu: true
+          memory: true
+          showLabel: true
+          label: aws-dev-01-il-central-1
+        nodes:
+          show: false
+          cpu: true
+          memory: true
+          showLabel: true
+    # - resources:
+    #     backend: resources
+    #     expanded: true
+    #     cpu: true
+    #     memory: true
+    #     network: default
+  kubernetes:
+    mode: cluster
+    ingress: true
+    # gateway: true
+  services:
+    - Octopus:
+        - Ai:
+            - Agents:
+                icon: app-service.png
+                href: https://ai-agents.eks-dev-il.octopus-cloud.com/
+                siteMonitor: https://ai-agents.eks-dev-il.octopus-cloud.com/
+                description: AI Agents Service
+                app: ai-agents
+                namespace: octopus-ai
+                podSelector: app.kubernetes.io/instance=octopus-ai-agents-values
+                showStats: true
+                statusStyle: basic   # "dot", "basic", "detailed"
+            - Forecast:
+                icon: app-service.png
+                href: https://ai-forecast.eks-dev-il.octopus-cloud.com/
+                siteMonitor: https://ai-forecast.eks-dev-il.octopus-cloud.com/
+                description: AI Forecast Service
+                app: ai-forecast
+                namespace: octopus-ai
+                podSelector: app.kubernetes.io/instance=ai-forecast-helm-values
+                showStats: true
+                statusStyle: basic   # "dot", "basic", "detailed"
+            - Mcpserver:
+                icon: app-service.png
+                href: https://ai-mcpserver.eks-dev-il.octopus-cloud.com/
+                siteMonitor: https://ai-mcpserver.eks-dev-il.octopus-cloud.com/
+                description: AI MCP Server Service
+                app: ai-mcpserver
+                namespace: octopus-ai
+                podSelector: app.kubernetes.io/instance=ai-mcpserver-helm-values
+                showStats: true
+                statusStyle: basic   # "dot", "basic", "detailed"
+            - Assistant:
+                icon: app-service.png
+                href: https://ai-assistant.eks-dev-il.octopus-cloud.com/
+                siteMonitor: https://ai-assistant.eks-dev-il.octopus-cloud.com/
+                description: AI Assistant Service
+                app: ai-assistant
+                namespace: octopus-ai
+                podSelector: app.kubernetes.io/instance=ai-assistant-helm-values
+                showStats: true
+                statusStyle: basic   # "dot", "basic", "detailed"
+            - Ingestion:
+                icon: app-service.png
+                href: https://ai-ingestion.eks-dev-il.octopus-cloud.com/
+                siteMonitor: https://ai-ingestion.eks-dev-il.octopus-cloud.com/
+                description: AI Ingestion Service
+                app: ai-ingestion
+                namespace: octopus-ai
+                podSelector: app.kubernetes.io/instance=ai-ingestion-helm-values
+                showStats: true
+                statusStyle: basic   # "dot", "basic", "detailed"
+            - Pdf:
+                icon: app-service.png
+                href: https://ai-pdf-chat.eks-dev-il.octopus-cloud.com/
+                siteMonitor: https://ai-pdf-chat.eks-dev-il.octopus-cloud.com/
+                description: AI PDF Chat Service
+                app: ai-pdf
+                namespace: octopus-ai
+                podSelector: app.kubernetes.io/instance=ai-pdf-helm-values
+                showStats: true
+                statusStyle: basic   # "dot", "basic", "detailed"
+            - Videochat:
+                icon: app-service.png
+                href: https://ai-videochat.eks-dev-il.octopus-cloud.com/
+                siteMonitor: https://ai-videochat.eks-dev-il.octopus-cloud.com/
+                description: AI Videochat Service
+                app: ai-videochat
+                namespace: octopus-ai
+                podSelector: app.kubernetes.io/instance=ai-videochat-helm-values
+                showStats: true
+                statusStyle: basic   # "dot", "basic", "detailed"
+        - Integrations:
+            - Cesva:
+                icon: app-service.png
+                href: https://cesva.eks-dev-il.octopus-cloud.com/
+                siteMonitor: https://cesva.eks-dev-il.octopus-cloud.com/
+                description: Cesva Service
+                app: cesva
+                namespace: octopus-integrations
+                podSelector: app.kubernetes.io/instance=integrations-cesva-noise-sensors-values
+                showStats: true
+                statusStyle: basic   # "dot", "basic", "detailed"
+            - Agrint:
+                icon: app-service.png
+                href: https://agrint.eks-dev-il.octopus-cloud.com/
+                siteMonitor: https://agrint.eks-dev-il.octopus-cloud.com/
+                description: Agrint Service
+                app: agrint
+                namespace: octopus-integrations
+                podSelector: app.kubernetes.io/instance=integrations-agrint-values
+                showStats: true
+                statusStyle: basic   # "dot", "basic", "detailed"
+            - Aqua:
+                icon: app-service.png
+                href: https://aqua.eks-dev-il.octopus-cloud.com/
+                siteMonitor: https://aqua.eks-dev-il.octopus-cloud.com/
+                description: Aqua Service
+                app: aqua
+                namespace: octopus-integrations
+                podSelector: app.kubernetes.io/instance=aqua-helm-values
+                showStats: true
+                statusStyle: basic   # "dot", "basic", "detailed"
+            - Platform-Api:
+                icon: app-service.png
+                href: https://platform-api.eks-dev-il.octopus-cloud.com/
+                siteMonitor: https://platform-api.eks-dev-il.octopus-cloud.com/
+                description: Platform API Service
+                app: platform-api
+                namespace: octopus-integrations
+                podSelector: app.kubernetes.io/instance=platform-api-helm-values
+                showStats: true
+                statusStyle: basic   # "dot", "basic", "detailed"
+            - Platform-Incident:
+                icon: app-service.png
+                href: https://platform-incident.eks-dev-il.octopus-cloud.com/
+                siteMonitor: https://platform-incident.eks-dev-il.octopus-cloud.com/
+                description: Platform Incident Service
+                app: platform-incident
+                namespace: octopus-integrations
+                podSelector: app.kubernetes.io/instance=platform-incident-helm-values
+                showStats: true
+                statusStyle: basic   # "dot", "basic", "detailed"
+            - Platform-Rule:
+                icon: app-service.png
+                href: https://platform-rule.eks-dev-il.octopus-cloud.com/
+                siteMonitor: https://platform-rule.eks-dev-il.octopus-cloud.com/
+                description: Platform Rule Service
+                app: platform-rule
+                namespace: octopus-integrations
+                podSelector: app.kubernetes.io/instance=integrations-platform-incident-service-values
+                showStats: true
+                statusStyle: basic   # "dot", "basic", "detailed"
+        - Microservices:
+            - Incidents:
+                icon: app-service.png
+                href: https://incidents.eks-dev-il.octopus-cloud.com/
+                siteMonitor: https://incidents.eks-dev-il.octopus-cloud.com/
+                description: Incidents Service
+                app: incidents
+                namespace: octopus-microservices
+                podSelector: app.kubernetes.io/instance=incidents-helm-values
+                showStats: true
+                statusStyle: basic   # "dot", "basic", "detailed"
+            - Notifications:
+                icon: app-service.png
+                href: https://notifications.eks-dev-il.octopus-cloud.com/
+                siteMonitor: https://notifications.eks-dev-il.octopus-cloud.com/
+                description: Notifications Service
+                app: notifications
+                namespace: octopus-microservices
+                podSelector: app.kubernetes.io/instance=microservices-notifications-emails-values
+                showStats: true
+                statusStyle: basic   # "dot", "basic", "detailed"
+            - Report:
+                icon: app-service.png
+                href: https://report.eks-dev-il.octopus-cloud.com/
+                siteMonitor: https://report.eks-dev-il.octopus-cloud.com/
+                description: Report Service
+                app: report
+                namespace: octopus-microservices
+                podSelector: app.kubernetes.io/instance=report-helm-values
+                showStats: true
+                statusStyle: basic   # "dot", "basic", "detailed"
+            - Storage:
+                icon: app-service.png
+                href: https://storage.eks-dev-il.octopus-cloud.com/
+                siteMonitor: https://storage.eks-dev-il.octopus-cloud.com/
+                description: Storage Service
+                app: storage
+                namespace: octopus-microservices
+                podSelector: app.kubernetes.io/instance=storage-helm-values
+                showStats: true
+                statusStyle: basic   # "dot", "basic", "detailed"
+        - Platform:
+            - Api-Core:
+                icon: app-service.png
+                href: https://api-core.eks-dev-il.octopus-cloud.com/
+                siteMonitor: https://api-core.eks-dev-il.octopus-cloud.com/
+                description: API Core Service
+                app: api-core
+                namespace: octopus-platform
+                podSelector: app.kubernetes.io/instance=octopus-api-core-values
+                showStats: true
+                statusStyle: basic   # "dot", "basic", "detailed"
+            - UI-Core:
+                icon: app-service.png
+                href: https://ui-core.eks-dev-il.octopus-cloud.com/
+                siteMonitor: https://ui-core.eks-dev-il.octopus-cloud.com/
+                description: UI Core Service
+                app: ui-core
+                namespace: octopus-platform
+                podSelector: app.kubernetes.io/instance=octopus-ui-core-values
+                showStats: true
+                statusStyle: basic   # "dot", "basic", "detailed"
+            - Bi-Server:
+                icon: app-service.png
+                href: https://bi.eks-dev-il.octopus-cloud.com/
+                siteMonitor: https://bi.eks-dev-il.octopus-cloud.com/
+                description: BI Server
+                app: bi-server
+                namespace: octopus-platform
+                podSelector: app.kubernetes.io/instance=bi-server
+                showStats: true
+                statusStyle: basic   # "dot", "basic", "detailed"
+            - Octomedia:
+                icon: app-service.png
+                href: https://octomedia.eks-dev-il.octopus-cloud.com/
+                siteMonitor: https://octomedia.eks-dev-il.octopus-cloud.com/
+                description: Octomedia Service
+                app: octomedia
+                namespace: octopus-platform
+                podSelector: app.kubernetes.io/instance=octomedia-helm-values
+                showStats: true
+                statusStyle: basic   # "dot", "basic", "detailed"
+            - Guard:
+                icon: app-service.png
+                href: https://guard.eks-dev-il.octopus-cloud.com/
+                siteMonitor: https://guard.eks-dev-il.octopus-cloud.com/
+                description: Guard Service
+                app: guard
+                namespace: octopus-platform
+                podSelector: app.kubernetes.io/instance=octopus-guard-location-api-values
+                showStats: true
+                statusStyle: basic   # "dot", "basic", "detailed"
+            - Identity:
+                icon: app-service.png
+                href: https://identity.eks-dev-il.octopus-cloud.com/
+                siteMonitor: https://identity.eks-dev-il.octopus-cloud.com/
+                description: Identity Service
+                app: identity
+                namespace: octopus-platform
+                podSelector: app.kubernetes.io/instance=octopus-identity-server-values
+                showStats: true
+                statusStyle: basic   # "dot", "basic", "detailed"
+            - 3rd-Party:
+                icon: app-service.png
+                href: https://incidents-3rd.eks-dev-il.octopus-cloud.com/
+                siteMonitor: https://incidents-3rd.eks-dev-il.octopus-cloud.com/
+                description: 3rd Party Services
+                app: incidents-3rd
+                namespace: octopus-platform
+                podSelector: app.kubernetes.io/instance=incidents-3rd-helm-values
+                showStats: true
+                statusStyle: basic   # "dot", "basic", "detailed"
+            - SignalR:
+                icon: app-service.png
+                href: https://signalr.eks-dev-il.octopus-cloud.com/
+                siteMonitor: https://signalr.eks-dev-il.octopus-cloud.com/
+                description: SignalR Service
+                app: signalr
+                namespace: octopus-platform
+                podSelector: app.kubernetes.io/instance=octopus-signalr-hub-values
+                showStats: true
+                statusStyle: basic   # "dot", "basic", "detailed"
+        - Shared-Services:
+            - Windmill:
+                icon: windmill.png
+                href: https://windmill.eks-dev-il.octopus-cloud.com/
+                siteMonitor: https://windmill.eks-dev-il.octopus-cloud.com/
+                description: Windmill Server
+                app: windmill
+                namespace: shared-services
+                podSelector: app.kubernetes.io/name=windmill-app
+                showStats: true
+                statusStyle: basic   # "dot", "basic", "detailed"
+            - Reports:
+                icon: app-service.png
+                href: https://reports.eks-dev-il.octopus-cloud.com/
+                siteMonitor: https://reports.eks-dev-il.octopus-cloud.com/
+                description: Reports Dashboard
+                app: reports
+                namespace: shared-services
+                podSelector: app.kubernetes.io/instance=reports-grafana-values
+                showStats: true
+                statusStyle: basic   # "dot", "basic", "detailed"
+        - VideoChat:
+            - VideoChat:
+                icon: app-service.png
+                href: https://videochat.eks-dev-il.octopus-cloud.com/
+                siteMonitor: https://videochat.eks-dev-il.octopus-cloud.com/
+                description: VideoChat Service
+                app: videochat
+                namespace: octopus-videochat
+                podSelector: app.kubernetes.io/instance=video-chat-management-helm-values
+                showStats: true
+                statusStyle: basic   # "dot", "basic", "detailed"
+            - Management:
+                icon: app-service.png
+                href: https://management.eks-dev-il.octopus-cloud.com/
+                siteMonitor: https://management.eks-dev-il.octopus-cloud.com/
+                description: Management Service
+                app: microfrontend
+                namespace: octopus-videochat
+                podSelector: app.kubernetes.io/instance=octopus-microfrontend-videochat-values
+                showStats: true
+                statusStyle: basic   # "dot", "basic", "detailed"
+    - Infrastructure:
+        - ArgoCD:
+            icon: argo-cd.png
+            href: https://argocd.eks-dev-il.octopus-cloud.com/
+            siteMonitor: https://argocd.eks-dev-il.octopus-cloud.com/
+            description: ArgoCD
+            app: argocd-server-5c9b9f8c6c-7z5j8
+            namespace: infrastructure
+            podSelector: app.kubernetes.io/name=argocd-server
+            statusStyle: basic   # "dot", "basic", "detailed"
+        - OpenSearch:
+            icon: opensearch.png
+            href: https://opensearch.eks-dev-il.octopus-cloud.com/
+            siteMonitor: https://opensearch.eks-dev-il.octopus-cloud.com/
+            description: OpenSearch Dashboard
+            app: opensearch-dashboards
+            namespace: observability
+            podSelector: app.kubernetes.io/name=opensearch-dashboards
+            statusStyle: basic   # "dot", "basic", "detailed"
+        - Grafana:
+            icon: grafana.png
+            href: https://grafana.eks-dev-il.octopus-cloud.com/
+            siteMonitor: https://grafana.eks-dev-il.octopus-cloud.com/
+            description: Grafana Dashboard
+            app: grafana
+            namespace: observability
+            podSelector: app.kubernetes.io/name=grafana
+            statusStyle: basic   # "dot", "basic", "detailed"
+        - Tools:
+            - hoppscotch:
+                icon: hoppscotch.png
+                href: https://hoppscotch.eks-dev-il.octopus-cloud.com/
+                siteMonitor: https://hoppscotch.eks-dev-il.octopus-cloud.com/
+                description: Hoppscotch API Testing
+                app: hoppscotch
+                namespace: management
+                podSelector: app.kubernetes.io/name=hoppscotch
+                statusStyle: basic   # "dot", "basic", "detailed"
+            - pgadmin:
+                icon: pgadmin.png
+                href: https://pgadmin.eks-dev-il.octopus-cloud.com/
+                siteMonitor: https://pgadmin.eks-dev-il.octopus-cloud.com/
+                description: pgAdmin Database Management
+                app: pgadmin
+                namespace: management
+                podSelector: app.kubernetes.io/instance=pgadmin
+                statusStyle: basic   # "dot", "basic", "detailed"
+            - redisinsight:
+                icon: redis.png
+                href: https://redisinsight.eks-dev-il.octopus-cloud.com/
+                siteMonitor: https://redisinsight.eks-dev-il.octopus-cloud.com/
+                description: RedisInsight Management
+                app: redisinsight
+                namespace: management
+                podSelector: app.kubernetes.io/instance=redisinsight
+                statusStyle: basic   # "dot", "basic", "detailed"
+            - vscode:
+                icon: vscode.png
+                href: https://vscode.eks-dev-il.octopus-cloud.com/
+                siteMonitor: https://vscode.eks-dev-il.octopus-cloud.com/
+                description: VSCode Web IDE
+                app: code-server
+                namespace: management
+                podSelector: app.kubernetes.io/instance=vscode
+                statusStyle: basic   # "dot", "basic", "detailed"
+            - chrome:
+                icon: chrome.png
+                href: https://chrome.eks-dev-il.octopus-cloud.com/
+                siteMonitor: https://chrome.eks-dev-il.octopus-cloud.com/
+                description: Chrome Remote Desktop
+                app: chrome-remote-desktop
+                namespace: management
+                podSelector: app.kubernetes.io/name=chrome-remote-desktop
+                statusStyle: basic   # "dot", "basic", "detailed"
+            - terminal:
+                icon: terminal.png
+                href: https://terminal.eks-dev-il.octopus-cloud.com/
+                siteMonitor: https://terminal.eks-dev-il.octopus-cloud.com/
+                description: Web Terminal
+                app: web-terminal
+                namespace: management
+                podSelector: app.kubernetes.io/instance=terminal
+                statusStyle: basic   # "dot", "basic", "detailed"
+            - kite:
+                icon: flightaware.png  # https://dashboardicons.com/icons
+                href: https://kite.eks-dev-il.octopus-cloud.com/
+                siteMonitor: https://kite.eks-dev-il.octopus-cloud.com/
+                description: Kite Kubernetes Management
+                app: kite
+                namespace: management
+                podSelector: app.kubernetes.io/instance=kite
+                statusStyle: basic   # "dot", "basic", "detailed"

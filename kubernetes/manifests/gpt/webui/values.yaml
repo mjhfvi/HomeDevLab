@@ -1,0 +1,41 @@
+nodeSelector:
+  infrastructure.as.code/node-instance-purpose: general-purpose-pool
+ingress:
+  enabled: true
+  host: "webui.eks-dev-il.cloud.com"
+persistence:
+  enabled: false
+extraEnvVars:
+  - name: WEBUI_ADMIN_EMAIL
+    value: "devops@app.com"
+  - name: WEBUI_ADMIN_PASSWORD
+    value: ""
+serviceAccount:
+  enable: true
+  create: true
+  # name: "argo-workflows-server-controller"
+websocket:
+  nodeSelector:
+    infrastructure.as.code/node-instance-purpose: general-purpose-pool
+ollama:
+  enabled: true
+  nodeSelector:
+    infrastructure.as.code/node-instance-purpose: general-purpose-pool
+  ollama:
+    models:
+      pull:
+        - llama3.2
+        # - llama3.1
+terminals:
+  enabled: true
+  apiKey: ""
+  crd:
+    install: true
+  orchestrator:
+    backend: kubernetes-operator
+  persistence:
+    enabled: false
+
+  # -e OPEN_TERMINAL_PACKAGES="cowsay figlet" \
+  # -e OPEN_TERMINAL_PIP_PACKAGES="httpx polars" \
+  # -e OPEN_TERMINAL_NPM_PACKAGES="typescript tsx" \

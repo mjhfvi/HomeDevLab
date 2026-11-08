@@ -1,0 +1,77 @@
+---
+applicationName: kali
+componentOverride: kali
+ingress:
+  # -- (bool) Enable Ingress.
+  # @section -- Ingress Parameters
+  enabled: true
+  # -- (string) Name of the ingress class.
+  # @section -- Ingress Parameters
+  ingressClassName: traefik
+  hosts:
+      # -- (tpl/string) Hostname.
+      # @section -- Ingress Parameters
+    - host: kali.eks-dev-il.octopus-cloud.com
+      paths:
+          # -- (string) Path.
+          # @section -- Ingress Parameters
+        - path: /
+          # -- (string) Path type.
+          # @default -- `ImplementationSpecific`
+          # @section -- Ingress Parameters
+          # pathType: ImplementationSpecific
+          # -- (string) Service name.
+          # @default -- `{{ include "application.name" $ }}`
+          # @section -- Ingress Parameters
+          # serviceName: http
+          # -- (string) Service port.
+          # @default -- `http`
+          # @section -- Ingress Parameters
+          # servicePort: "8080"
+deployment:
+  nodeSelector:
+    octopus.infrastructure.as.code/node-instance-purpose: general-purpose-pool
+  image:
+    repository: kasmweb/core-kali-rolling
+    tag: 1.18.0
+  containerSecurityContext:
+    readOnlyRootFilesystem: false
+    runAsNonRoot: false
+  ports:
+    - containerPort: 6901
+      name: https
+      protocol: TCP
+    - containerPort: 4902
+      name: http
+      protocol: TCP
+  env:
+    VNC_PW:
+      value: password
+service:
+  enabled: true
+  # annotations:
+  #   meta.helm.sh/release-name: kali
+  #   meta.helm.sh/release-namespace: management
+  ports:
+    - port: 8080
+      name: http
+      protocol: TCP
+      targetPort: 6901
+# additionalLabels:
+#   app.kubernetes.io/instance: kali
+#   app.kubernetes.io/managed-by: Helm
+#   app.kubernetes.io/name: kali
+#   app.kubernetes.io/part-of: kali
+#   app.kubernetes.io/version: latest
+#   helm.sh/chart: application-6.16.1
+
+# labels:
+#   app.kubernetes.io/instance: terminal
+#   app.kubernetes.io/managed-by: Helm
+#   app.kubernetes.io/name: terminal
+#   app.kubernetes.io/part-of: terminal
+#   app.kubernetes.io/version: latest
+#   helm.sh/chart: application-6.16.1
+# annotations:
+#   meta.helm.sh/release-name: terminal
+#   meta.helm.sh/release-namespace: management

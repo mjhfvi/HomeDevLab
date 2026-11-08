@@ -38,6 +38,7 @@ repos:
       - id: check-yaml
         verbose: true
         args: [--allow-multiple-documents]
+        exclude: kubernetes/manifests/
       - id: pretty-format-json
         verbose: true
         args: [--autofix]
@@ -52,6 +53,7 @@ repos:
         verbose: true
       - id: check-vcs-permalinks
         verbose: true
+        exclude: kubernetes/manifests/
       - id: forbid-new-submodules
         verbose: true
       - id: no-commit-to-branch
@@ -92,13 +94,13 @@ repos:
         # - id: typos-docker
         name: typos (Finds and corrects spelling mistakes)
         args: ["--config", ".typos.toml", "-v"]
-        exclude: gitleaks-report.json|charts/|helm-template-example/
+        exclude: kubernetes/manifests/
 
   - repo: https://github.com/lyz-code/yamlfix/
     rev: 1.19.1
     hooks:
       - id: yamlfix
-        exclude: charts/|helm-template/|.pre-commit-config.yaml
+        exclude: .pre-commit-config.yaml|kubernetes/manifests/
 
   # - repo: https://github.com/adrienverge/yamllint
   #   rev: v1.38.0

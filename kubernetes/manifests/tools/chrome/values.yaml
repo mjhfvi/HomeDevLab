@@ -1,0 +1,85 @@
+applicationName: "chrome"
+ingress:
+  # -- (bool) Enable Ingress.
+  # @section -- Ingress Parameters
+  enabled: true
+  # -- (string) Name of the ingress class.
+  # @section -- Ingress Parameters
+  ingressClassName: "traefik"
+  hosts:
+    - # -- (tpl/string) Hostname.
+      # @section -- Ingress Parameters
+      host: "chrome.eks-dev-il.octopus-cloud.com"
+      paths:
+        - # -- (string) Path.
+          # @section -- Ingress Parameters
+          path: /
+          # -- (string) Path type.
+          # @default -- `ImplementationSpecific`
+          # @section -- Ingress Parameters
+          # pathType: ImplementationSpecific
+          # -- (string) Service name.
+          # @default -- `{{ include "application.name" $ }}`
+          # @section -- Ingress Parameters
+          # serviceName: http
+          # -- (string) Service port.
+          # @default -- `http`
+          # @section -- Ingress Parameters
+          # servicePort: "8080"
+deployment:
+  nodeSelector:
+    octopus.infrastructure.as.code/node-instance-purpose: general-purpose-pool
+  image:
+    repository: "linuxserver/chrome"
+    tag: "latest"
+  containerSecurityContext:
+    readOnlyRootFilesystem: false
+    runAsNonRoot: false
+  ports:
+    - containerPort: 3000
+      name: http
+      protocol: TCP
+service:
+  enabled: true
+  ports:
+    - port: 3000
+      name: http
+      protocol: TCP
+      targetPort: 3000
+# image:
+#   repository: linuxserver/chrome
+#   pullPolicy: IfNotPresent
+#   # Overrides the image tag whose default is the chart appVersion.
+#   tag: "latest"
+# ingress:
+#   enabled: true
+#   hosts:
+#   - host: chrome.eks-dev-il.octopus-cloud.com
+#     paths:
+#     - path: /
+#       pathType: ImplementationSpecific
+# persistence:
+#   enabled: false
+# base:
+#   # -- Image block with all image details
+#   image:
+#     # -- Default image pull policy
+#     pullPolicy: "IfNotPresent"
+#     # -- Additional command arguments which needs to be passed
+#     command: []
+#     # -- Default image repository
+#     repository: linuxserver/chrome
+#     # -- Default image tag
+#     tag: latest
+# replicaCount: 1
+# ingress:
+#   enabled: true
+#   class: traefik
+#   # annotations:
+#   #   ingress.gcp.kubernetes.io/pre-shared-cert: global-sign-opstree-com-2024
+#   #   kubernetes.io/ingress.allow-http: "false"
+#   rules:
+#     - hostname: chrome.eks-dev-il.octopus-cloud.com
+#       path: /
+# service:
+#   port: 3000

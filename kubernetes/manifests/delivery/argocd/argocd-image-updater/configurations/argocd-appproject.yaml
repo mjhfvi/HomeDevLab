@@ -1,0 +1,8 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: projects
+  namespace: infrastructure
+spec:
+  sourceNamespaces: [microservices, integrations]

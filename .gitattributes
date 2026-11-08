@@ -20,6 +20,8 @@
 *.go    text diff=golang, eol=lf
 
 # *.yml     text eol=lf whitespace=blank-at-eol,-blank-at-eof,-space-before-tab,tab-in-indent,tabwidth=2
+*.yaml text eol=lf whitespace=blank-at-eol,-blank-at-eof,-space-before-tab,tab-in-indent,tabwidth=2
+*.yml text eol=lf whitespace=blank-at-eol,-blank-at-eof,-space-before-tab,tab-in-indent,tabwidth=2
 
 # Basic .gitattributes for a python repo.
 # Source files
@@ -152,8 +154,8 @@
 # Force all .config files to be treated as JSON
 
 # Force all .config files to be treated as YAML
-.gitattributes linguist-language=yaml
-.talismanrc linguist-language=yaml
+.gitattributes linguist-language=YAML
+.talismanrc linguist-language=YAML
 
 # Force all .config files to be treated as INI
 .gitconfig linguist-language=INI

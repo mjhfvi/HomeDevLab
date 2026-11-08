@@ -1,0 +1,48 @@
+# ---
+# apiVersion: pkg.crossplane.io/v1
+# kind: Provider
+# metadata:
+#   name: upbound-provider-aws-ec2
+# spec:
+#   package: xpkg.upbound.io/upbound/provider-aws-ec2:v2.3.0
+# ---
+# apiVersion: ec2.aws.m.upbound.io/v1beta1
+# kind: EBSVolume
+# metadata:
+#   annotations:
+#     meta.upbound.io/example-id: ec2/v1beta1/ebssnapshotcopy
+#   labels:
+#     testing.upbound.io/example-name: vaultwarden-data
+#   name: vaultwarden-data
+#   namespace: crossplane-system
+# spec:
+#   forProvider:
+#     availabilityZone: us-east-1a
+#     region: us-east-1
+#     size: 20
+#     type: gp3
+#     tags:
+#       Name: vaultwarden-data
+# ---
+# apiVersion: ec2.aws.m.upbound.io/v1beta1
+# kind: EBSVolume
+# metadata:
+#   annotations:
+#     meta.upbound.io/example-id: ec2/v1beta1/ebssnapshotcopy
+#   labels:
+#     testing.upbound.io/example-name: vaultwarden-files
+#   name: vaultwarden-files
+#   namespace: crossplane-system
+# spec:
+#   forProvider:
+#     availabilityZone: us-east-1a
+#     region: us-east-1
+#     size: 20
+#     type: gp3
+#     tags:
+#       Name: vaultwarden-files
+
+# kubectl apply -f ebs-op-01.yaml
+# kubectl get ebsvolumes.ec2.aws.upbound.io -n crossplane-system
+#
+# kubectl describe clusterproviderconfigs default

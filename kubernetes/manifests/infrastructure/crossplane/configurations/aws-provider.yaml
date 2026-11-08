@@ -1,0 +1,54 @@
+---
+apiVersion: pkg.crossplane.io/v1
+kind: Provider
+metadata:
+  name: upbound-provider-aws-rds
+spec:
+  package: xpkg.upbound.io/upbound/provider-aws-rds:v2.3.0
+# kubectl describe provider.pkg upbound-provider-aws-rds
+---
+apiVersion: pkg.crossplane.io/v1
+kind: Provider
+metadata:
+  name: upbound-provider-aws-ec2
+spec:
+  package: xpkg.upbound.io/upbound/provider-aws-ec2:v2.3.0
+# Need EC2 provider for RDS security group association
+# kubectl describe provider.pkg upbound-provider-aws-ec2
+# ---
+# apiVersion: pkg.crossplane.io/v1
+# kind: Provider
+# metadata:
+#   name: upbound-provider-family-aws
+# spec:
+#   package: xpkg.upbound.io/upbound/provider-family-aws:v2.3.0
+---
+apiVersion: aws.m.upbound.io/v1beta1
+kind: ProviderConfig
+metadata:
+  name: default  # dont change this name
+  namespace: crossplane-system
+spec:
+  credentials:
+    source: Secret
+    secretRef:
+      namespace: crossplane-system
+      name: aws-secret
+      key: creds
+---
+apiVersion: aws.m.upbound.io/v1beta1
+kind: ClusterProviderConfig
+metadata:
+  name: default  # dont change this name
+  labels:
+    provider: aws
+spec:
+  credentials:
+    source: Secret
+    secretRef:
+      namespace: crossplane-system
+      name: aws-secret
+      key: creds
+# kubectl describe clusterproviderconfigs default
+# kubectl describe secrets -n crossplane-system aws-secret
+# Source: https://docs.crossplane.io/latest/get-started/get-started-with-managed-resources/

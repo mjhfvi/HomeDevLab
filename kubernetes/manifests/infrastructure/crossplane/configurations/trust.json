@@ -1,0 +1,17 @@
+{
+  "Statement": [
+    {
+      "Action": "sts:AssumeRoleWithWebIdentity",
+      "Condition": {
+        "StringLike": {
+          "oidc.eks.us-east-1.amazonaws.com/id/[]:sub": "system:serviceaccount:crossplane-system:provider-*"
+        }
+      },
+      "Effect": "Allow",
+      "Principal": {
+        "Federated": "arn:aws:iam::[]:oidc-provider/oidc.eks.us-east-1.amazonaws.com/id/[]"
+      }
+    }
+  ],
+  "Version": "2012-10-17"
+}

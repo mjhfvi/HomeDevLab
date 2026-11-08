@@ -1,0 +1,80 @@
+---
+apiVersion: v2
+name: sonarqube
+description: SonarQube is a self-managed, automatic code review tool that systematically
+  helps you deliver clean code. As a core element of our Sonar solution, SonarQube
+  integrates into your existing workflow and detects issues in your code to help you
+  perform continuous code inspections of your projects. The tool analyses 30+ different
+  programming languages and integrates into your CI pipeline and DevOps platform to
+  ensure that your code meets high-quality standards.
+type: application
+version: 2026.6.1000
+appVersion: 2026.5.0
+keywords: [coverage, security, code, quality]
+home: https://www.sonarqube.org/
+icon: https://raw.githubusercontent.com/SonarSource/sonarqube-static-resources/master/helm/SonarQubeServerLogo.png
+sources:
+  - https://github.com/SonarSource/helm-chart-sonarqube/tree/master/charts/sonarqube
+  - https://github.com/SonarSource/docker-sonarqube
+  - https://github.com/SonarSource/sonarqube
+kubeVersion: '>= 1.24.0-0'
+dependencies:
+  - name: keda
+    version: 2.20.2
+    repository: https://kedacore.github.io/charts
+    condition: keda.enabled
+maintainers:
+  - name: carminevassallo
+    email: carmine.vassallo@sonarsource.com
+  - name: emma44-m
+    email: emma.mansalier@sonarsource.com
+  - name: hatem-amairi-sonarsource
+    email: hatem.amairi@sonarsource.com
+  - name: jimil09
+    email: jimil.desai@sonarsource.com
+  - name: julienlancelot
+    email: julien.lancelot@sonarsource.com
+  - name: lukasz-jarocki-sonarsource
+    email: lukasz.jarocki@sonarsource.com
+  - name: matteo-mara-sonarsource
+    email: matteo.mara@sonarsource.com
+  - name: navyatejaotturu-sonarsource
+    email: navya.otturu@sonarsource.com
+annotations:
+  artifacthub.io/links: |
+    - name: support
+      url: https://community.sonarsource.com/
+    - name: Chart Source
+      url: https://github.com/SonarSource/helm-chart-sonarqube/tree/master/charts/sonarqube
+  artifacthub.io/changes: |
+    - kind: changed
+      description: "Upgrade the Agent Egress Proxy to Squid 7.7 and preserve Squid 6.x image overrides"
+    - kind: added
+      description: "Add prometheusExporter.netrcCreds to authenticate the JMX exporter download with a .netrc Secret"
+    - kind: changed
+      description: "Upgrade Chart's version to 2026.6.1000"
+    - kind: changed
+      description: "Upgrade SonarQube Community build to 26.11.0.134175"
+    - kind: fixed
+      description: "Apply initContainers.resources to the MCP and Agent Orchestrator wait-for-sonarqube init containers"
+    - kind: fixed
+      description: "Improve the gVisor installer's cleanup of its temporary files on the node"
+  artifacthub.io/containsSecurityUpdates: 'false'
+  artifacthub.io/images: |
+    - name: sonarqube-community
+      image: sonarqube:26.11.0.134175-community
+    - name: sonarqube-developer
+      image: sonarqube:2026.5.0-developer
+    - name: sonarqube-enterprise
+      image: sonarqube:2026.5.0-enterprise
+    - name: sonarqube-mcp
+      image: sonarsource/sonarqube-mcp:2026.5.0
+    - name: sonarqube-agent-orchestrator
+      image: sonarsource/sonarqube-agent-orchestrator:2026.5.0
+    - name: sonarqube-hunter-agent
+      image: sonarsource/sonarqube-hunter-agent:2026.5.0
+    - name: sonarqube-remediation-agent
+      image: sonarsource/sonarqube-remediation-agent:2026.5.0
+    - name: sonar-vortex
+      image: sonarsource/sonar-vortex:2026.5.0
+  charts.openshift.io/name: sonarqube

@@ -1,0 +1,950 @@
+---
+postgresql:
+  # -- enabled included Postgres container for demo purposes only using cloudnative-pg
+  enabled: true
+  resources:
+    limits:
+      memory: 2Gi
+  auth:
+    postgresUser: postgres
+    postgresPassword: windmill
+    database: windmill
+  # -- persistence configuration for PostgreSQL data
+  persistence:
+    # -- enable persistence using PVC
+    enabled: false
+    # -- storage class for the PVC (leave empty for default)
+    storageClass: ''
+    # -- access mode for the PVC
+    accessMode: ReadWriteOnce
+    # -- size of the PVC
+    size: 50Gi
+minio:
+  # -- enabled included Minio operator for s3 resource demo purposes
+  enabled: false
+  fullnameOverride: windmill-minio
+  mode: standalone
+  primary:
+    enabled: true
+  auth:
+    rootUser: windmill
+    rootPassword: windmill
+windmill:
+  # -- windmill app image tag, will use the App version if not defined
+  tag: ''
+  # -- windmill image tag, will use the Acorresponding ee or ce image from ghcr if not defined. Do not include tag in the image name.
+  image: ''
+  # -- image pull secrets for windmill.  by default no image pull secrets will be configured.
+  imagePullSecrets: ''
+  # -- replica for the application app
+  appReplicas: 2
+  # -- replicas for windmill-extra (LSP, Multiplayer, Debugger). Set to 0 to disable.
+  extraReplicas: 1
+  # -- replicas for the multiplayer containers used by the app (ee only and ignored if enterprise not enabled)
+  multiplayerReplicas: 1
+  # -- name of the existing secret storing the database URI, take precedence over databaseUrl.
+  databaseUrlSecretName: ''
+  # -- name of the key in existing secret storing the database URI. The default key of the url is 'url'
+  databaseUrlSecretKey: url
+  # -- Postgres URI, pods will crashloop if database is unreachable, sets DATABASE_URL environment variable in app and worker container
+  databaseUrl: postgres://postgres:windmill@windmill-postgresql/windmill?sslmode=disable  # pragma: allowlist secret
+  # -- whether to create a secret containing the value of databaseUrl
+  databaseSecret: false
+  # -- read the database URI from a file and set DATABASE_URL_FILE instead of injecting DATABASE_URL into the environment, so the connection string never appears in the pod spec. With databaseUrlSecretName or databaseSecret set, the chart mounts that secret at databaseUrlFilePath; without either, supply the file yourself with a per-component volume (an init container that decrypts it, a CSI driver, Vault Agent). Applies to the app, workers, indexer and operator; the hub has its own hub.databaseUrlAsFile, since it is a separately versioned image.
+  databaseUrlAsFile: false
+  # -- path the database URI is mounted at when databaseUrlAsFile is enabled. Its directory is the mount point, so keep it on a path of its own. Keep it out of /etc, /usr, /bin and /lib: nsjail exposes those worker directories to jobs, so a job could read the file there.
+  databaseUrlFilePath: /run/secrets/windmill/database-url
+  # -- file mode of the mounted database URI, in octal. 0400 requires the pod to run as the owner of the projected file, so set an fsGroup matching runAsUser alongside it.
+  databaseUrlFileMode: 0444
+  # -- domain as shown in browser. url of ths service is at: {baseProtocol}://{baseDomain}
+  baseDomain: windmill
+  # -- secondary domain that duplicates all ingress routes from baseDomain. Useful for having multiple domains point to the same services.
+  secondaryBaseDomain: ''
+  # -- protocol as shown in browser, change to https etc based on your endpoint/ingress configuration, this variable and `baseDomain` are used as part of the BASE_URL environment variable in app and worker container
+  baseProtocol: http
+  # -- domain to use for the cookies. Use it if windmill is hosted on a subdomain and you need to share the cookies with the hub for instance
+  cookieDomain: ''
+  # -- pass the index url to pip for private registries
+  pipIndexUrl: ''
+  # -- pass the extra index url to pip for private registries
+  pipExtraIndexUrl: ''
+  # -- pass the trusted host to pip for private registries
+  pipTrustedHost: ''
+  # -- pass the npm for private registries
+  npmConfigRegistry: ''
+  # -- send instance events to a webhook. Can be hooked back to windmill
+  instanceEventsWebhook: ''
+  # -- configure a custom openai base path for azure
+  openaiAzureBasePath: ''
+  # -- SECURITY RISK: mounts the host node's Docker socket into the worker, giving any user who can run a script root-equivalent control of the node's Docker daemon (and typically the cluster). Trusted, single-tenant use only — never enable for untrusted or multi-tenant workloads. Prefer a dedicated docker worker group with the rootless podman runtime (CONTAINER_RUNTIME=podman on a *-full image, run as a non-root user) instead.
+  exposeHostDocker: false
+  # -- rust log level, set to debug for more information etc, sets RUST_LOG environment variable in app and worker container
+  rustLog: info
+  # -- host aliases for all pods (can be overridden by individual worker groups)
+  hostAliases: []
+  # -- DNS policy for all Windmill pods (app, workers, indexer, operator, extra, hub). Valid options are "ClusterFirst", "Default", "ClusterFirstWithHostNet", "None". Can be overridden per component or per worker group
+  dnsPolicy: ''
+  # -- DNS configuration for all Windmill pods. When dnsPolicy is "None", nameservers must include at least one resolver. Per-component dnsConfig replaces this value entirely (no deep merge)
+  dnsConfig: {}
+  # -- domain to use for the public app. Use it for extra security so that custom apps cannot force the user to do custom api call on the main app
+  publicAppDomain: ''
+  # -- domain to use for the secondary api. Can be useful to have a secondary api domain that bypass a CDN like Cloudflare or similar.
+  secondaryApiDomain: ''
+  # -- image pull policy for the app, worker, lsp and multiplayer containers
+  imagePullPolicy: Always
+
+  # -- Disable PID namespace isolation (unshare). Set to true for nodes where user namespaces are disabled.
+  # -- Some systems like Bottlerocket AMI have max_user_namespaces=0 which prevents unshare from working.
+  disableUnsharePid: false
+
+  # -- Optional hardening, off by default and not needed for a standard install. When true, fail the render when a deployed worker group has no serviceAccountName of its own, instead of letting it inherit the global service account. Turn this on when the global service account carries anything workers must not hold: a cloud identity (EKS IRSA, GKE Workload Identity) or the Roles this chart binds to it (deployment scaler, operator, SMTP ACME job), which include reading the namespace's Secrets. Jobs run arbitrary user code with the worker pod's service account.
+  workerGroupsRequireServiceAccount: false
+
+  # worker groups
+  # NOTE: workerGroups may be provided either as a list (the form documented below)
+  # or as a dict/map keyed by the worker group name, e.g.:
+  #   workerGroups:
+  #     default:
+  #       replicas: 3
+  #     native:
+  #       replicas: 1
+  # The dict form is convenient for kustomize overlays, since it lets you patch a
+  # single group by key instead of redefining the whole list. When using the dict
+  # form, the key is used as the worker group name (an explicit `name` still wins).
+  workerGroups:
+    # workers configuration
+    # The default worker group
+    - name: default
+      # -- Controller to use. Valid options are "Deployment" and "StatefulSet"
+      controller: Deployment
+      replicas: 3
+      # -- Set to true when this worker group's replica count is managed by Windmill's
+      # -- native Kubernetes autoscaler. The chart then omits spec.replicas so helm
+      # -- upgrades no longer reset the count the autoscaler set (and avoids the
+      # -- server-side apply field-ownership conflict under Helm 4). When true, the
+      # -- `replicas` value above is ignored and the deployment is rendered regardless.
+      autoscalingManaged: false
+      # -- Annotations to apply to the pods
+      annotations: {}
+
+      # -- Annotations to apply to the controller (Deployment/StatefulSet) itself
+      deploymentAnnotations: {}
+
+      # -- If a job is being ran, the container will wait for it to finish before terminating until this grace period
+      terminationGracePeriodSeconds: 604800
+
+      # -- Labels to apply to the pods
+      labels: {}
+
+      # -- Node selector to use for scheduling the pods
+      nodeSelector: {}
+
+      # -- Tolerations to apply to the pods
+      tolerations: []
+
+      # -- Host aliases to apply to the pods (overrides global hostAliases if set)
+      hostAliases: []
+
+      # -- Whether to run the container as privileged (true by default).
+      # -- Needed to use proper OOM killer on k8s v1.32+ and use unshare pid for security reasons.
+      # -- A group that sandboxes its jobs with nsjail can use `isolationSecurity` below instead.
+      privileged: true
+
+      # -- Run the worker without `privileged`, with only what nsjail needs. Empty (default) keeps the `privileged` setting above.
+      # -- `capabilities`: root with only SYS_ADMIN, SETPCAP and SYS_RESOURCE. `userNamespaces`: non-root with no capability in a pod user namespace (Kubernetes 1.33+).
+      # -- Both turn nsjail on for the group and give up unshare PID isolation and the per-job out-of-memory kill. See "Running nsjail without privileged workers" in the README.
+      isolationSecurity: ''
+
+      # -- Seccomp and AppArmor profiles installed on the nodes, used when `isolationSecurity` is set, e.g. `{seccomp: profiles/windmill-nsjail.json, appArmor: windmill-nsjail}`.
+      # -- A layer without a profile is `Unconfined`, since the runtime default blocks nsjail.
+      localhostProfiles: {}
+
+      # -- Disable PID namespace isolation (unshare) for this worker group.
+      # -- Set to true for nodes where user namespaces are disabled (e.g., Bottlerocket AMI with max_user_namespaces=0).
+      disableUnsharePid: false
+
+      # -- Security context to apply to the container
+      podSecurityContext:
+        # -- run as user. The default is 0 for root user
+        runAsUser: 0
+        # -- run explicitly as a non-root user. The default is false.
+        runAsNonRoot: false
+      # -- Security context to apply to the pod
+      containerSecurityContext: {}
+
+      # -- Affinity rules to apply to the pods
+      affinity: {}
+
+      # -- Resource limits and requests for the pods
+      resources:
+        limits:
+          memory: 2Gi
+
+      # -- Extra environment variables to apply to the pods
+      # -- If running with arbitrary non-root UIDs (not root or UID 1000),
+      # -- add: - name: HOME
+      # --        value: "/tmp"
+      extraEnv: []
+      # -- Extra sidecar containers
+      extraContainers: []
+      # -- `worker`, or `agent` for an agent worker (set AGENT_TOKEN and BASE_INTERNAL_URL in extraEnv). An agent group gets no database url, as env var or as file.
+      mode: worker
+
+      # -- Init containers
+      initContainers: []
+      volumes: []
+      volumeMounts: []
+
+      # -- Volume claim templates. Only applies when controller is "StatefulSet"
+      volumeClaimTemplates: []
+
+      # -- command override
+      command: []
+
+      # -- SECURITY RISK: mounts the host node's Docker socket into this worker group, giving any script author root-equivalent control of the node's Docker daemon. Trusted, single-tenant use only. Prefer the rootless podman runtime (CONTAINER_RUNTIME=podman on a *-full image, non-root) instead.
+      exposeHostDocker: false
+      topologySpreadConstraints: []
+
+      # -- DNS policy for the pods. Valid options are "ClusterFirst", "Default", "ClusterFirstWithHostNet", "None"
+      # -- Set to "None" when using custom dnsConfig (e.g., for VPN sidecars or custom DNS resolution). Falls back to windmill.dnsPolicy when unset
+      dnsPolicy: ''
+
+      # -- Custom DNS configuration for the pods. Only used when dnsPolicy is set to "None"
+      # -- Useful for pods with VPN sidecars that need to resolve external DNS names. Falls back to windmill.dnsConfig when unset
+      dnsConfig: {}
+
+      # -- Optional override of the ServiceAccount name for this worker group.
+      # -- Useful for EKS IRSA where each worker group needs its own SA annotated with a distinct IAM role ARN.
+      # -- Falls back to the global service account when not set, unless windmill.workerGroupsRequireServiceAccount is on, which fails the render instead.
+      serviceAccountName: ''
+
+      # -- Optional, leave unset for a standard install: the ServiceAccount's own setting then applies. Set to false to keep the Kubernetes API token out of this worker group's pods, true to force it in. Workers do not call the Kubernetes API, but a projected cloud identity token (IRSA, Workload Identity) is mounted separately and is unaffected.
+      automountServiceAccountToken:
+
+      # -- Optional override of the container image for this worker group.
+      # -- Useful for running a custom image (e.g. with pre-installed binaries) on some
+      # -- worker groups while keeping the standard image elsewhere.
+      # -- Falls back to windmill.image when not set.
+      image: ''
+      # -- Optional override of the container image tag for this worker group.
+      # -- Falls back to windmill.tag (then the chart appVersion) when not set.
+      tag: ''
+
+      # -- Optional name of an existing secret holding the DATABASE_URL for this
+      # -- worker group. Points a single group at a different Windmill instance's
+      # -- database without running a separate Helm release. When set, it takes
+      # -- precedence over the release-global windmill.databaseSecret and
+      # -- windmill.databaseUrlSecretName.
+      databaseUrlSecretName: ''
+      # -- Key within databaseUrlSecretName holding the database URL. Defaults to "url" when not set.
+      databaseUrlSecretKey: ''
+      # -- Optional override of BASE_URL for this worker group. Falls back to
+      # -- {windmill.baseProtocol}://{windmill.baseDomain} when not set.
+      baseUrl: ''
+    - name: native
+      # -- Controller to use. Valid options are "Deployment" and "StatefulSet"
+      controller: Deployment
+      replicas: 1
+      # -- Set to true when this worker group's replica count is managed by Windmill's
+      # -- native Kubernetes autoscaler. The chart then omits spec.replicas so helm
+      # -- upgrades no longer reset the count the autoscaler set (and avoids the
+      # -- server-side apply field-ownership conflict under Helm 4). When true, the
+      # -- `replicas` value above is ignored and the deployment is rendered regardless.
+      autoscalingManaged: false
+      # -- Annotations to apply to the pods
+      annotations: {}
+
+      # -- Annotations to apply to the controller (Deployment/StatefulSet) itself
+      deploymentAnnotations: {}
+
+      # -- Labels to apply to the pods
+      labels: {}
+
+      # -- Node selector to use for scheduling the pods
+      nodeSelector: {}
+
+      # -- Tolerations to apply to the pods
+      tolerations: []
+
+      # -- Host aliases to apply to the pods (overrides global hostAliases if set)
+      hostAliases: []
+
+      # -- Whether to run the container as privileged (false by default).
+      # -- Not needed for native workers as they use a different memory management and isolation mechanism.
+      privileged: false
+
+      # -- Disable PID namespace isolation (unshare) for this worker group.
+      # -- Set to true for nodes where user namespaces are disabled (e.g., Bottlerocket AMI with max_user_namespaces=0).
+      disableUnsharePid: false
+
+      # -- Security context to apply to the container
+      podSecurityContext:
+        # -- run as user. The default is 0 for root user
+        runAsUser: 0
+        # -- run explicitly as a non-root user. The default is false.
+        runAsNonRoot: false
+      # -- Security context to apply to the pod
+      containerSecurityContext: {}
+
+      # -- Affinity rules to apply to the pods
+      affinity: {}
+
+      # -- Resource limits and requests for the pods
+      resources:
+        limits:
+          memory: 2Gi
+
+      # -- Extra environment variables to apply to the pods
+      extraEnv:
+        - name: NATIVE_MODE
+          value: 'true'
+        - name: SLEEP_QUEUE
+          value: '200'
+      # -- Extra sidecar containers
+      extraContainers: []
+      mode: worker
+      volumes: []
+      volumeMounts: []
+
+      # -- SECURITY RISK: mounts the host node's Docker socket into this worker group, giving any script author root-equivalent control of the node's Docker daemon. Trusted, single-tenant use only. Prefer the rootless podman runtime (CONTAINER_RUNTIME=podman on a *-full image, non-root) instead.
+      exposeHostDocker: false
+
+      # -- Volume claim templates. Only applies when controller is "StatefulSet"
+      volumeClaimTemplates: []
+      topologySpreadConstraints: []
+
+      # -- Optional override of the ServiceAccount name for this worker group.
+      # -- Falls back to the global service account when not set, unless windmill.workerGroupsRequireServiceAccount is on, which fails the render instead.
+      serviceAccountName: ''
+
+      # -- Optional, leave unset for a standard install: the ServiceAccount's own setting then applies. Set to false to keep the Kubernetes API token out of this worker group's pods.
+      automountServiceAccountToken:
+
+      # -- Optional override of the container image for this worker group.
+      # -- Useful for running a custom image (e.g. with pre-installed binaries) on some
+      # -- worker groups while keeping the standard image elsewhere.
+      # -- Falls back to windmill.image when not set.
+      image: ''
+      # -- Optional override of the container image tag for this worker group.
+      # -- Falls back to windmill.tag (then the chart appVersion) when not set.
+      tag: ''
+
+      # -- Optional name of an existing secret holding the DATABASE_URL for this
+      # -- worker group. Points a single group at a different Windmill instance's
+      # -- database without running a separate Helm release. When set, it takes
+      # -- precedence over the release-global windmill.databaseSecret and
+      # -- windmill.databaseUrlSecretName.
+      databaseUrlSecretName: ''
+      # -- Key within databaseUrlSecretName holding the database URL. Defaults to "url" when not set.
+      databaseUrlSecretKey: ''
+      # -- Optional override of BASE_URL for this worker group. Falls back to
+      # -- {windmill.baseProtocol}://{windmill.baseDomain} when not set.
+      baseUrl: ''
+    - name: gpu
+      # -- Controller to use. Valid options are "Deployment" and "StatefulSet"
+      controller: Deployment
+      replicas: 0
+      # -- Annotations to apply to the pods
+      annotations: {}
+
+      # -- Labels to apply to the pods
+      labels: {}
+
+      # -- Node selector to use for scheduling the pods
+      nodeSelector: {}
+
+      # -- Tolerations to apply to the pods
+      tolerations: []
+
+      # -- Host aliases to apply to the pods (overrides global hostAliases if set)
+      hostAliases: []
+
+      # -- Whether to run the container as privileged (true by default).
+      # -- Needed to use proper OOM killer on k8s v1.32+ and use unshare pid for security reasons.
+      privileged: true
+
+      # -- Disable PID namespace isolation (unshare) for this worker group.
+      # -- Set to true for nodes where user namespaces are disabled (e.g., Bottlerocket AMI with max_user_namespaces=0).
+      disableUnsharePid: false
+
+      # -- Security context to apply to the container
+      podSecurityContext:
+        # -- run as user. The default is 0 for root user
+        runAsUser: 0
+        # -- run explicitly as a non-root user. The default is false.
+        runAsNonRoot: false
+      # -- Security context to apply to the pod
+      containerSecurityContext: {}
+
+      # -- Affinity rules to apply to the pods
+      affinity: {}
+
+      # -- Resource limits and requests for the pods
+      resources:
+        limits:
+          memory: 2Gi
+
+      # -- Extra environment variables to apply to the pods
+      extraEnv: []
+      # -- Extra sidecar containers
+      extraContainers: []
+      mode: worker
+      volumes: []
+      volumeMounts: []
+
+      # -- command override
+      command: []
+
+      # -- SECURITY RISK: mounts the host node's Docker socket into this worker group, giving any script author root-equivalent control of the node's Docker daemon. Trusted, single-tenant use only. Prefer the rootless podman runtime (CONTAINER_RUNTIME=podman on a *-full image, non-root) instead.
+      exposeHostDocker: false
+
+      # -- Volume claim templates. Only applies when controller is "StatefulSet"
+      volumeClaimTemplates: []
+      topologySpreadConstraints: []
+
+      # -- Optional override of the ServiceAccount name for this worker group.
+      # -- Falls back to the global service account when not set, unless windmill.workerGroupsRequireServiceAccount is on, which fails the render instead.
+      serviceAccountName: ''
+
+      # -- Optional, leave unset for a standard install: the ServiceAccount's own setting then applies. Set to false to keep the Kubernetes API token out of this worker group's pods.
+      automountServiceAccountToken:
+
+      # -- Optional override of the container image for this worker group.
+      # -- Useful for running a custom image (e.g. with pre-installed binaries) on some
+      # -- worker groups while keeping the standard image elsewhere.
+      # -- Falls back to windmill.image when not set.
+      image: ''
+      # -- Optional override of the container image tag for this worker group.
+      # -- Falls back to windmill.tag (then the chart appVersion) when not set.
+      tag: ''
+
+      # -- Optional name of an existing secret holding the DATABASE_URL for this
+      # -- worker group. Points a single group at a different Windmill instance's
+      # -- database without running a separate Helm release. When set, it takes
+      # -- precedence over the release-global windmill.databaseSecret and
+      # -- windmill.databaseUrlSecretName.
+      databaseUrlSecretName: ''
+      # -- Key within databaseUrlSecretName holding the database URL. Defaults to "url" when not set.
+      databaseUrlSecretKey: ''
+      # -- Optional override of BASE_URL for this worker group. Falls back to
+      # -- {windmill.baseProtocol}://{windmill.baseDomain} when not set.
+      baseUrl: ''
+
+  # app configuration
+  app:
+    # -- Optional, leave empty for a standard install: the app then runs as the chart's main ServiceAccount (see `serviceAccount` at the top level). Set it to the name of an existing ServiceAccount to give the app (server) pods their own. The deployment-scaler RoleBinding (enterprise.createKubernetesAutoscalingRolesAndBindings) follows this account. The chart does not create it: pre-create it or add it through extraDeploy.
+    serviceAccountName: ''
+
+    # -- Annotations to apply to the pods
+    annotations: {}
+
+    # -- Annotations to apply to the pods
+    labels: {}
+
+    # -- Node selector to use for scheduling the pods
+    nodeSelector: {}
+
+    # -- Tolerations to apply to the pods
+    tolerations: []
+
+    # -- Host aliases to apply to the pods (overrides global hostAliases if set)
+    hostAliases: []
+
+    # -- legacy, use podSecurityContext instead
+    securityContext: {}
+    # -- Security context to apply to the pods
+    podSecurityContext:
+      # -- run as user. The default is 0 for root user
+      runAsUser: 0
+      # -- run explicitly as a non-root user. The default is false.
+      runAsNonRoot: false
+    containerSecurityContext: {}
+
+    # -- Affinity rules to apply to the pods
+    affinity: {}
+    # -- DNS policy for the pods. Valid options are "ClusterFirst", "Default", "ClusterFirstWithHostNet", "None". Falls back to windmill.dnsPolicy when unset
+    dnsPolicy: ''
+    # -- Custom DNS configuration for the pods. Falls back to windmill.dnsConfig when unset
+    dnsConfig: {}
+
+    # -- Resource limits and requests for the pods
+    resources:
+      limits:
+        memory: 2Gi
+
+    # -- Extra environment variables to apply to the pods
+    extraEnv: []
+
+    # -- Init containers
+    initContainers: []
+
+    # -- Extra sidecar containers
+    extraContainers: []
+
+    # -- volumes
+    volumes: []
+    volumeMounts: []
+
+    # app autoscaling configuration
+    autoscaling:
+      # -- enable or disable autoscaling
+      enabled: false
+      # -- maximum autoscaler replicas
+      maxReplicas: 10
+      # -- target CPU utilization
+      targetCPUUtilizationPercentage: 80
+
+    # app service configuration
+    service:
+      # -- Annotations to apply to the service
+      annotations: {}
+
+    # -- smtp service configuration for email triggers
+    smtpService:
+      # -- whether to expose the smtp port of the app using a load balancer service
+      enabled: false
+      # -- annotations to apply to the service
+      annotations: {}
+
+    # -- SMTP TLS certificate configuration for the inbound email server (port 2525).
+    # Mount a TLS certificate from a Kubernetes Secret so acme.sh / cert-manager
+    # issued certs are used instead of the auto-generated self-signed certificate.
+    # The private key must be in PKCS#8 PEM format (openssl pkcs8 -topk8 -nocrypt -in key.pem -out key_pkcs8.pem).
+    # Certificates are hot-reloaded from disk every 12 hours (no restart needed on renewal).
+    smtpTls:
+      # -- enable mounting a TLS certificate for the SMTP server
+      enabled: false
+      # -- name of the Kubernetes Secret containing the certificate and key
+      certSecretName: ''
+      # -- key in the Secret for the certificate PEM file
+      certSecretKey: tls.crt
+      # -- key in the Secret for the private key PEM file (must be PKCS#8 format)
+      keySecretKey: tls.key
+
+      # -- Automated certificate issuance/renewal via acme.sh with DNS-01 challenge.
+      # Stores the cert in the same K8s Secret referenced by certSecretName above.
+      acme:
+        # -- enable the acme.sh CronJob for automatic cert issuance/renewal
+        enabled: false
+        # -- Optional, leave empty to run the acme.sh CronJob as the chart's main ServiceAccount. Set it to the name of an existing ServiceAccount to give the job its own. The Role that lets the job write the certificate Secret is bound to this account.
+        serviceAccountName: ''
+        # -- domain to issue the certificate for (e.g., mx.example.com)
+        domain: ''
+        # -- cron schedule for the renewal check (default: daily at 03:00 UTC)
+        schedule: 0 3 * * *
+        # -- acme.sh container image
+        image: neilpang/acme.sh
+        # -- acme.sh container image tag
+        imageTag: latest
+        # -- ACME server URL (default: Let's Encrypt production)
+        server: https://acme-v02.api.letsencrypt.org/directory
+        # -- acme.sh DNS plugin name (e.g., dns_cf, dns_aws, dns_gd)
+        dnsProvider: dns_cf
+        # -- name of an existing Secret containing DNS provider credentials (e.g., CF_Token, CF_Zone_ID)
+        dnsSecretName: ''
+        # -- RSA key length for the certificate
+        keyLength: 2048
+        # -- only renew when fewer than this many days remain before expiry
+        renewBeforeDays: 30
+        # -- resource limits and requests for the CronJob pod
+        resources:
+          limits:
+            memory: 128Mi
+            cpu: 200m
+          requests:
+            memory: 64Mi
+            cpu: 50m
+        # -- node selector for the CronJob pod
+        nodeSelector: {}
+        # -- tolerations for the CronJob pod
+        tolerations: []
+
+    # -- Topology spread constraints. The default prefers a different node for each app pod, so losing one node does not take every app pod down. `ScheduleAnyway` keeps it a preference: pods still schedule when they cannot be spread (single node, not enough capacity). Set your own list to replace it, or `[]` to drop it.
+    topologySpreadConstraints:
+      - maxSkew: 1
+        topologyKey: kubernetes.io/hostname
+        whenUnsatisfiable: ScheduleAnyway
+        labelSelector:
+          matchLabels:
+            app: windmill-app
+
+    # app PodDisruptionBudget configuration
+    podDisruptionBudget:
+      # -- Create a PodDisruptionBudget so node drains (cluster autoscaler scale-down, node pool upgrades, `kubectl drain`) evict the app pods one at a time instead of all at once. Only created when the app can run 2 or more pods. Disable it if you already have a PodDisruptionBudget covering the app pods: Kubernetes refuses to evict a pod covered by two of them.
+      enabled: true
+      # -- How many app pods a drain may take down at once (a number or a percentage)
+      maxUnavailable: 1
+      # -- Lets a drain evict app pods that are not Ready even when the budget is used up, so a crashlooping pod cannot block it. Only set on Kubernetes 1.27+. Set to "" to leave it out.
+      unhealthyPodEvictionPolicy: AlwaysAllow
+
+  # indexer configuration
+  indexer:
+    # -- enable or disable indexer
+    enabled: true
+
+    # -- Optional, leave empty for a standard install: the indexer then runs as the chart's main ServiceAccount (see `serviceAccount` at the top level). Set it to the name of an existing ServiceAccount to give the indexer pods their own.
+    serviceAccountName: ''
+
+    # -- How long a rollout may take before Kubernetes reports ProgressDeadlineExceeded.
+    # The incoming pod waits for the outgoing one to hand over the index write lock and
+    # then loads the index from object storage, so raise this further if your index is
+    # large enough that upgrades still time out.
+    progressDeadlineSeconds: 1800
+
+    # -- Optional, leave empty for a standard install. Timing overrides for the indexer readiness probe, merged over the defaults (timeoutSeconds: 1, successThreshold: 1, failureThreshold: 1, initialDelaySeconds: 5, periodSeconds: 5). Raise timeoutSeconds/failureThreshold when a busy indexer answers slowly and flaps out of the Service. The probe handler is fixed and cannot be overridden here.
+    readinessProbe: {}
+
+    # -- Optional, leave empty for a standard install. Timing overrides for the indexer liveness probe, merged over the defaults (periodSeconds: 10, timeoutSeconds: 5, failureThreshold: 6). Raise timeoutSeconds/failureThreshold when a busy indexer is restarted for answering slowly while it indexes. The probe handler is fixed and cannot be overridden here.
+    livenessProbe: {}
+
+    # -- Extra volumes to add to the pods
+    volumes: []
+
+    # -- Extra volume mounts to add to the container
+    volumeMounts: []
+
+    # -- Annotations to apply to the pods
+    annotations: {}
+
+    # -- Annotations to apply to the pods
+    labels: {}
+
+    # -- Node selector to use for scheduling the pods
+    nodeSelector: {}
+
+    # -- Tolerations to apply to the pods
+    tolerations: []
+
+    # -- legacy, use podSecurityContext instead
+    securityContext:
+    # -- Security context to apply to the pods
+    podSecurityContext:
+      # -- run as user. The default is 0 for root user
+      runAsUser: 0
+      # -- run explicitly as a non-root user. The default is false.
+      runAsNonRoot: false
+    containerSecurityContext: {}
+
+    # -- Affinity rules to apply to the pods
+    affinity: {}
+    # -- DNS policy for the pods. Valid options are "ClusterFirst", "Default", "ClusterFirstWithHostNet", "None". Falls back to windmill.dnsPolicy when unset
+    dnsPolicy: ''
+    # -- Custom DNS configuration for the pods. Falls back to windmill.dnsConfig when unset
+    dnsConfig: {}
+
+    # -- Resource limits and requests for the pods
+    resources:
+      limits:
+        memory: 2Gi
+        ephemeral-storage: 50Gi
+
+    # -- Extra sidecar containers
+    extraContainers: []
+
+    # -- Extra init containers
+    initContainers: []
+
+    # -- Extra environment variables to apply to the pods
+    extraEnv: []
+
+  # operator configuration (Kubernetes operator for declarative instance config)
+  operator:
+    # -- enable the Windmill Kubernetes operator
+    enabled: false
+    # -- Optional, leave empty for a standard install: the operator then runs as the chart's main ServiceAccount (see `serviceAccount` at the top level). Set it to the name of an existing ServiceAccount to give the operator pods their own. The operator Role (read ConfigMaps and Secrets, write events) is bound to this account.
+    serviceAccountName: ''
+    # -- number of operator replicas (typically 1)
+    replicas: 1
+    # -- Extra volumes to add to the pods
+    volumes: []
+    # -- Extra volume mounts to add to the container
+    volumeMounts: []
+    # -- instance spec for the operator. When set, the chart creates a ConfigMap
+    # -- that the operator watches and syncs to the database. Leave empty/omit to manage it externally.
+    # instanceSpec:
+    #   global_settings:
+    #     base_url: "https://windmill.example.com"
+    #   worker_configs: {}
+    # -- Annotations to apply to the pods
+    annotations: {}
+    # -- Labels to apply to the pods
+    labels: {}
+    # -- Node selector to use for scheduling the pods
+    nodeSelector: {}
+    # -- Tolerations to apply to the pods
+    tolerations: []
+    # -- Affinity rules to apply to the pods
+    affinity: {}
+    # -- DNS policy for the pods. Valid options are "ClusterFirst", "Default", "ClusterFirstWithHostNet", "None". Falls back to windmill.dnsPolicy when unset
+    dnsPolicy: ''
+    # -- Custom DNS configuration for the pods. Falls back to windmill.dnsConfig when unset
+    dnsConfig: {}
+    # -- Security context to apply to the pods
+    podSecurityContext: {}
+    # -- Security context to apply to the container
+    containerSecurityContext: {}
+    # -- Resource limits and requests for the pods
+    resources:
+      limits:
+        memory: 512Mi
+      requests:
+        cpu: 100m
+        memory: 256Mi
+    # -- Extra environment variables to apply to the pods
+    extraEnv: []
+    # -- Extra sidecar containers
+    extraContainers: []
+
+  # windmill-extra configuration (unified LSP, Multiplayer, and Debugger container)
+  windmillExtra:
+    # -- custom image (defaults to ghcr.io/windmill-labs/windmill-extra)
+    image: ''
+
+    # -- custom image tag. Falls back to windmill.tag (then the chart appVersion) when not set.
+    tag: ''
+
+    # -- Annotations to apply to the pods
+    annotations: {}
+
+    # -- Labels to apply to the pods
+    labels: {}
+
+    # -- Node selector to use for scheduling the pods
+    nodeSelector: {}
+
+    # -- Tolerations to apply to the pods
+    tolerations: []
+
+    # -- Security context to apply to the pods
+    podSecurityContext:
+      runAsUser: 0
+      runAsNonRoot: false
+
+    # -- Security context to apply to the container
+    containerSecurityContext: {}
+
+    # -- legacy, use podSecurityContext instead
+    securityContext: {}
+
+    # -- Affinity rules to apply to the pods
+    affinity: {}
+    # -- DNS policy for the pods. Valid options are "ClusterFirst", "Default", "ClusterFirstWithHostNet", "None". Falls back to windmill.dnsPolicy when unset
+    dnsPolicy: ''
+    # -- Custom DNS configuration for the pods. Falls back to windmill.dnsConfig when unset
+    dnsConfig: {}
+
+    # -- Resource limits and requests for the pods
+    resources:
+      limits:
+        memory: 1Gi
+
+    # -- enable LSP (Language Server Protocol) for code completion
+    enableLsp: true
+
+    # -- enable Debugger for debugging scripts
+    enableDebugger: true
+
+    # -- enable Gateway reverse proxy (routes /ws/*, /ws_mp/*, /ws_debug/* via a single port)
+    enableGateway: true
+
+    # -- require signed debug requests (JWT tokens for debug sessions). Do NOT disable on internet-reachable deployments: it exposes an unauthenticated code-execution debugger.
+    requireSignedDebugRequests: true
+
+    # -- comma-separated allowlist of browser Origins permitted to open debug WebSockets (cross-site WebSocket hijacking hardening). Empty = rely on signed-token verification only; set to your external URL(s), e.g. "https://windmill.example.com", to also reject cross-origin handshakes.
+    debugAllowedOrigins: ''
+
+    # -- require signed multiplayer requests (JWT tokens for collaborative editing sessions). Keep enabled in production.
+    requireSignedMultiplayerRequests: true
+
+    # -- override WINDMILL_BASE_URL for the extra container (defaults to http://windmill-app:8000).
+    # -- Set to your external URL (e.g. "https://windmill.example.com") if the debugger fails with token verification errors.
+    windmillBaseUrl: ''
+
+    # -- Extra environment variables to apply to the pods
+    extraEnv: []
+
+    # service configuration
+    service:
+      # -- Annotations to apply to the service
+      annotations: {}
+ingress:
+  # -- enable/disable included ingress resource
+  enabled: true
+  className: ''
+  annotations: {}
+  # -- TLS config for the ingress resource. Useful when using cert-manager and nginx-ingress
+  tls: []
+  secondaryApi:
+    # -- render `windmill.secondaryApiDomain` as its own Ingress resource instead of an extra host on the main one. Required to route the API domain through a different ingress class, controller entrypoint or LoadBalancer IP, which is what allows firewalling API traffic separately from UI traffic. The Gateway API path already does this through `httproute.secondaryApiDomainParentRefs`.
+    separateIngress: false
+    # -- ingress class for the API ingress. Falls back to `ingress.className`.
+    className: ''
+    # -- annotations for the API ingress. Replaces `ingress.annotations`, it does not merge with them.
+    annotations: {}
+    # -- TLS config for the API ingress. When empty, entries of `ingress.tls` listing the API domain are carried over.
+    tls: []
+httproute:
+  # -- enable/disable creation of a httproute resource (experimental)
+  enabled: false
+  # -- default parentRefs for all httproutes
+  parentRefs: []
+  # -- override parentRefs for the windmill app httproute (falls back to parentRefs)
+  appParentRefs: []
+  # -- override parentRefs for the windmill hub httproute (falls back to parentRefs)
+  hubParentRefs: []
+  # -- override parentRefs for the secondaryBaseDomain httproute (falls back to parentRefs)
+  secondaryBaseDomainParentRefs: []
+  # -- override parentRefs for the secondaryApiDomain httproute (falls back to parentRefs)
+  secondaryApiDomainParentRefs: []
+  # -- override parentRefs for the publicAppDomain httproute (falls back to parentRefs)
+  publicAppDomainParentRefs: []
+enterprise:
+  # -- enable Windmill Enterprise, requires license key.
+  enabled: false
+  # -- name of the secret storing the enterprise license key, take precedence over licenseKey string.
+  licenseKeySecretName: ''
+  # -- name of the key in secret storing the enterprise license key. The default key is 'licenseKey'
+  licenseKeySecretKey: licenseKey
+  # -- enterprise license key. (Recommended to avoid: It is recommended to pass it from the Instance settings UI instead)
+  licenseKey: ''
+  enabledS3DistributedCache: false
+  # -- S3 bucket to use for dependency cache. Sets S3_CACHE_BUCKET environment variable in worker container
+  s3CacheBucket: ''
+  # -- SAML Metadata URL/Content to enable SAML SSO (Can be set in the Instance Settings UI which is the recommended method)
+  samlMetadata: ''
+  # -- SCIM token (Can be set in the instance settings UI which is the recommended method)
+  scimToken: ''
+  # -- name of the secret storing the SCIM token, takes precedence over SCIM token string.
+  scimTokenSecretName: ''
+  # -- name of the key in secret storing the SCIM token. The default key of the SCIM token is 'scimToken'
+  scimTokenSecretKey: scimToken
+  # -- Create RBAC Roles and RoleBindings needed for native k8s autoscaling integration.
+  createKubernetesAutoscalingRolesAndBindings: false
+  # -- Bind address for metrics server. Sets METRICS_ADDR environment variable.
+  metricsAddr: 'true'
+# The chart's main ServiceAccount. By default it is created by the chart and every pod runs as
+# it; a standard install needs no other service account setting.
+# To split identities (optional, see "Service accounts" in the README): the app, indexer,
+# operator, hub and SMTP ACME job can each name their own (windmill.app.serviceAccountName,
+# windmill.indexer.serviceAccountName, windmill.operator.serviceAccountName,
+# hub.serviceAccount.name, windmill.app.smtpTls.acme.serviceAccountName), worker groups have a
+# per-group serviceAccountName, and windmill.workerGroupsRequireServiceAccount makes that one
+# mandatory.
+serviceAccount:
+  # Specifies whether a ServiceAccount should be created
+  create: true
+  # The name of the ServiceAccount to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ''
+  annotations: {}
+  automountServiceAccountToken:
+hub:
+  # -- enable Windmill Hub, requires Windmill Enterprise and license key
+  enabled: false
+  # -- enterprise license key, deprecated use the enterprise values instead
+  licenseKey: ''
+  # -- replicas for the hub
+  replicas: 1
+  # -- image
+  image: ''
+  tag: 2.18.0
+  # -- name of the secret storing the database URI, take precedence over databaseUrl.
+  databaseUrlSecretName: ''
+  # -- name of the key in secret storing the database URI. The default key of the url is 'url'
+  databaseUrlSecretKey: url
+  # -- Postgres URI, pods will crashloop if database is unreachable, sets DATABASE_URL environment variable in app and worker container
+  databaseUrl: postgres://postgres:windmill@windmill-hub-postgresql/windmillhub?sslmode=disable  # pragma: allowlist secret
+  # -- whether to create a secret containing the value of databaseUrl
+  databaseSecret: false
+  # -- read the database URI from a file and set DATABASE_URL_FILE instead of injecting DATABASE_URL into the environment, the hub's half of windmill.databaseUrlAsFile. Separate because the hub is a separately versioned image: enable it only on hub 2.12.0 or later, since an older one reads DATABASE_URL only and would start with no database configured at all. Mounts hub.databaseUrlSecretName at windmill.databaseUrlFilePath; without a secret, supply the file yourself with a hub.volumes entry.
+  databaseUrlAsFile: false
+  # -- domain as shown in browser. url of ths service is at: {baseProtocol}://{baseDomain}
+  # -- should be a subdomain of the app domain so that cookies can be shared
+  # -- you also need to set the cookieDomain to the root domain in the app configuration
+  baseDomain: hub.windmill
+  # -- protocol as shown in browser, change to https etc based on your endpoint/ingress configuration, this variable and `baseDomain` are used as part of the BASE_URL environment variable in app and worker container
+  baseProtocol: http
+  # -- URL the hub uses for server-side requests to the Windmill app (PUBLIC_APP_URL). Defaults to `{windmill.baseProtocol}://{windmill.baseDomain}`. Set to an internal cluster URL (e.g. `http://windmill-app:8000`) to avoid TLS validation issues when the external ingress uses a self-signed certificate.
+  appUrl: ''
+  # -- URL the hub renders in the browser for links pointing back to the Windmill app (PUBLIC_APP_ACCESSIBLE_URL). When unset, the hub falls back to `appUrl`. Set this to your external URL when `appUrl` is an internal cluster URL.
+  appAccessibleUrl: ''
+  # -- name of the secret storing the API secret, take precedence over apiSecret
+  apiSecretSecretName: ''
+  # -- name of the key in secret storing the API secret. The default key of the api secret is 'apiSecret'
+  apiSecretSecretKey: apiSecret
+  # -- API secret for the hub. Optional, only set if you want to restrict access to the hub.
+  apiSecret: ''
+  serviceAccount:
+    # -- Name of an existing ServiceAccount to use for the hub pods. If empty, falls back to the chart's main ServiceAccount (see `serviceAccount` at the top level). Set this to bind a dedicated SA for IRSA (EKS) / Workload Identity (GKE).
+    name: ''
+
+  # -- Annotations to apply to the pods
+  annotations: {}
+  # -- Annotations to apply to the pods
+  labels: {}
+  # -- Node selector to use for scheduling the pods
+  nodeSelector: {}
+  # -- Tolerations to apply to the pods
+  tolerations: []
+  # -- legacy, use podSecurityContext instead
+  securityContext:
+  # -- Security context to apply to the pods
+  podSecurityContext:
+    # -- run as user. The default is 0 for root user
+    runAsUser: 0
+    # -- run explicitly as a non-root user. The default is false.
+    runAsNonRoot: false
+  containerSecurityContext: {}
+
+  # -- Affinity rules to apply to the pods
+  affinity: {}
+  # -- DNS policy for the pods. Valid options are "ClusterFirst", "Default", "ClusterFirstWithHostNet", "None". Falls back to windmill.dnsPolicy when unset
+  dnsPolicy: ''
+  # -- Custom DNS configuration for the pods. Falls back to windmill.dnsConfig when unset
+  dnsConfig: {}
+  # -- Resource limits and requests for the pods
+  resources:
+    limits:
+      memory: 2Gi
+  # -- Extra environment variables to apply to the pods
+  extraEnv: []
+
+  # -- Extra sidecar containers
+  extraContainers: []
+
+  # -- Extra init containers
+  initContainers: []
+
+  # -- volumes
+  volumes: []
+
+  # -- volumeMounts
+  volumeMounts: []
+hub-postgresql:
+  # -- enabled included Postgres container for demo purposes
+  enabled: false
+  resources:
+    limits:
+      memory: 2Gi
+  auth:
+    postgresUser: postgres
+    postgresPassword: windmill
+    database: windmillhub
+  # -- persistence configuration for PostgreSQL data
+  persistence:
+    # -- enable persistence using PVC
+    enabled: false
+    # -- storage class for the PVC (leave empty for default)
+    storageClass: ''
+    # -- access mode for the PVC
+    accessMode: ReadWriteOnce
+    # -- size of the PVC
+    size: 50Gi
+# -- Support for deploying additional arbitrary resources. Use for External Secrets, etc.
+extraDeploy: []
+# - apiVersion: v1
+#   kind: ExternalSecret
+#   metadata:
+#     name: foo1
+#   data:
+#     bar: baz

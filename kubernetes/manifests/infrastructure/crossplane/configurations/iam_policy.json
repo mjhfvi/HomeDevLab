@@ -1,0 +1,65 @@
+{
+  "Statement": [
+    {
+      "Action": [
+        "iam:DeletePolicy",
+        "iam:DeletePolicyVersion",
+        "iam:CreatePolicyVersion",
+        "iam:SetDefaultPolicyVersion"
+      ],
+      "Effect": "Deny",
+      "Resource": [
+        "arn:aws:iam::11111111111:policy/crossplaneBoundary"
+      ],
+      "Sid": "DenyPermBoundaryIAMPolicyAlteration"
+    },
+    {
+      "Action": [
+        "iam:DeleteUserPermissionsBoundary",
+        "iam:DeleteRolePermissionsBoundary"
+      ],
+      "Condition": {
+        "StringEquals": {
+          "iam:PermissionsBoundary": "arn:aws:iam::11111111111:policy/crossplaneBoundary"
+        }
+      },
+      "Effect": "Deny",
+      "Resource": [
+        "arn:aws:iam::11111111111:user/*",
+        "arn:aws:iam::11111111111:role/*"
+      ],
+      "Sid": "DenyRemovalOfPermBoundaryFromAnyUserOrRole"
+    },
+    {
+      "Action": [
+        "iam:CreateUser",
+        "iam:AddUserToGroup",
+        "iam:AttachUserPolicy",
+        "iam:ChangePassword",
+        "iam:CreateAccessKey",
+        "iam:*AccountAlias",
+        "iam:CreateGroup",
+        "iam:*LoginProfile",
+        "iam:*IDConnectProvider*",
+        "iam:*SAMLProvider*",
+        "iam:CreateServiceSpecificCredential",
+        "iam:*MFA*",
+        "iam:UpdateUser"
+      ],
+      "Effect": "Deny",
+      "Resource": [
+        "*"
+      ]
+    },
+    {
+      "Action": [
+        "*"
+      ],
+      "Effect": "Allow",
+      "Resource": [
+        "*"
+      ]
+    }
+  ],
+  "Version": "2012-10-17"
+}

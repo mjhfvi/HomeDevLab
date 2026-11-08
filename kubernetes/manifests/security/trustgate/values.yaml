@@ -1,0 +1,248 @@
+# TrustGuard subchart.
+# Core v2 runtime. control-plane (admin API) renders only in external mode;
+# data-plane (runtime /v1/guard) renders in hybrid + external.
+# NOTE: the control/data split is in progress upstream; args + ports below are
+# placeholders modeled on the split branch — confirm before GA.
+nameOverride: ""
+fullnameOverride: "trustguard"
+securityHardening: true
+image:
+  repository: europe-west1-docker.pkg.dev/neuraltrust-app-prod/nt-docker/trustguard
+  tag: "v0.61.0"
+  pullPolicy: IfNotPresent
+# imagePullSecrets: unset → global.imagePullSecrets → gcr-secret; "" → global
+# only; "none" suppresses. Accepts a name or a list of names / {name:} maps.
+serviceAccount:
+  create: true
+  name: "trustguard"
+  annotations: {}
+config:
+  logLevel: "info"
+  appEnv: "production"
+  # Plan/tier request limiting — burst per minute, monthly quota and
+  # MaxInstances, enforced from entitlements stamped on a guard. That is SaaS
+  # metering, so a customer-run install has no entitlement source and the chart
+  # ships it off; the binary's own default is on (TrustGuard v0.16.0+), which is
+  # why the key is always rendered rather than left unset. Set true only when
+  # guards in this cluster really carry entitlements.
+  rateLimitEnabled: false
+# PostgreSQL connection (external-capable). Password lives in the secret.
+# In v2 hybrid this block is IGNORED — hybrid workloads envFrom the shared
+# `postgresql-secrets` rendered from `global.postgresql.*` (default user +
+# database = neuraltrust). In v2 external the data plane connects to its
+# private "trustguard" DB (control plane owns its migrations); DB_NAME is
+# mode-derived from an EMPTY name — set an explicit name only to override.
+database:
+  host: "" # Empty ⇒ global.postgresql.host, else the in-cluster control-plane-postgresql Service
+  port: "" # Empty ⇒ global.postgresql.port, else 5432
+  name: "" # Empty ⇒ mode-derived (external: "trustguard"; hybrid: shared "neuraltrust")
+  user: "trustguard" # v2 external only; hybrid overrides via global.postgresql.user
+  password: "" # Auto-generated if empty
+  # Read the password from a Secret you created instead of writing it above. The
+  # chart then omits DB_PASSWORD from trustguard-secrets and the pods read your
+  # Secret directly, so no credential reaches values or release history.
+  existingSecret:
+    name: "" # Empty ⇒ the chart owns the password (inline or generated)
+    key: "" # Empty ⇒ "DB_PASSWORD"
+  sslMode: "" # Empty ⇒ global.postgresql.sslMode (default "prefer"); "require" forces TLS on hosted DBs
+  # AWS region for RDS IAM token minting. Empty => global.postgresql.awsRegion.
+  # IRSA does not supply a region, so leaving both empty makes IAM depend on
+  # node-level configuration and fail with "aws region is required" without it.
+  awsRegion: ""
+  # IAM (e.g. AWS RDS) database auth. Emits POSTGRES_LOGIN=aws and omits the static
+  # DB_PASSWORD; the service mints a SigV4 token at connect time. When unset,
+  # inherits global.postgresql.authMode=iam (AUT-392). Explicit true/false wins
+  # so a mixed-auth external install stays expressible. Requires IRSA.
+  # iamAuth:
+redis:
+  host: "" # Empty ⇒ global.redis.host, else the in-cluster redis Service
+  port: "" # Empty ⇒ global.redis.port, then 6379
+  password: "" # Optional. Empty ⇒ global.redis.password
+  # As with the database above: name a pre-created Secret to keep the cache
+  # credential out of values.
+  existingSecret:
+    name: "" # Empty ⇒ the chart owns the password
+    key: "" # Empty ⇒ "REDIS_PASSWORD"
+  username: "" # Empty ⇒ global.redis.username. Optional Redis 6+ ACL username (e.g. ElastiCache user group). Emits REDIS_USERNAME.
+  # Empty ⇒ global.redis.tls. Set "true" for TLS-only managed Redis (e.g.
+  # ElastiCache Serverless). Emits REDIS_TLS. To opt out of an inherited "true",
+  # quote it: tls: "false" (or --set-string). A bare boolean false renders as
+  # empty and therefore inherits instead.
+  tls: ""
+  # IAM (e.g. AWS ElastiCache) Redis auth. When true, emits REDIS_LOGIN=aws +
+  # REDIS_IAM_AUTH and omits REDIS_PASSWORD. Requires username + tls + cacheName
+  # (and awsServerless=true for ElastiCache Serverless). Needs an IRSA role with
+  # elasticache:Connect. false = password.
+  iamAuth: false
+  cacheName: "" # ElastiCache replication-group / serverless cache name → REDIS_CACHE_NAME
+  awsServerless: false # true for ElastiCache Serverless → REDIS_AWS_SERVERLESS
+  enableCachePubSub: true # Publish cache invalidations between replicas
+# Admin API JWT signing key + runtime token signing key.
+adminJwtSecret: "" # Auto-generated if empty
+tokenSigningSecret: "" # Auto-generated if empty
+redisEventsSecret: "" # Auto-generated if empty; authenticates Redis cache events
+# Config-sync: hybrid → on, external → off (override with true/false).
+# When on, the data plane pulls config over gRPC (DB-less). Hybrid requires a
+# token (existingSecret or inline). TLS uses system roots by default.
+configSync:
+  enabled: null
+  # Empty => mode-derived:
+  #   hybrid: trustguard-configsync.<saasDomain>:443
+  #   external: in-cluster control-plane Service
+  endpoint: ""
+  # Hybrid DNS suffix for the mode-derived endpoint. Ignored in external.
+  # Empty => global.saasRegion (eu → neuraltrust.ai, us → us.neuraltrust.ai).
+  # Set only to pin a suffix the region map does not cover.
+  saasDomain: ""
+  # External plaintext dial. App rejects TLS insecure when APP_ENV is
+  # staging/production — use config.appEnv=dev/local. Ignored in hybrid.
+  tlsInsecure: true
+  # TLS SNI (empty => host of endpoint).
+  serverName: ""
+  # Path to a CA bundle for the config-sync endpoint (empty => system roots).
+  # Two uses: a TLS-intercepting corporate proxy, or a customer-owned control
+  # plane whose listener presents a private or chart-generated certificate. Mount
+  # the PEM with global.customCaCert, or any other volume.
+  tlsCa: ""
+  # Must match the control plane. Never auto-generated.
+  token: ""
+  # Point at a Secret you own to keep the UI-issued token out of values. Only
+  # the token is required while the chart owns the service Secret, because
+  # CONFIG_SYNC_LKG_KEY is generated and delivered via envFrom. Under
+  # global.autoGenerateSecrets=false or global.preserveExistingSecrets=true the
+  # chart owns nothing, and this Secret must also carry CONFIG_SYNC_LKG_KEY
+  # (base64, 32 bytes) or the data planes will not start. To pin the generated
+  # value instead, set configSync.lkgKey below.
+  existingSecret:
+    name: ""
+    tokenKey: "CONFIG_SYNC_TOKEN"
+    lkgKey: "CONFIG_SYNC_LKG_KEY"
+  # Local LKG cache key (base64, 32 bytes). Auto-generated when empty; it only
+  # encrypts the on-disk snapshot cache and is never shared with the SaaS.
+  lkgKey: ""
+  # ---- control-plane gRPC listener TLS (external/full mode) ----
+  # In a deployed APP_ENV (prod/staging) the control plane REFUSES to start its
+  # config-sync gRPC server without a cert/key. The chart auto-generates a
+  # self-signed CA + server cert (SANs cover the control-plane Service DNS),
+  # preserved across upgrades via lookup, mounts the cert/key on the control
+  # plane and the CA on the data plane (which then dials with TLS verification).
+  grpcTls:
+    autoGenerate: true # false + existingSecret to bring your own cert/key/ca
+    existingSecret: "" # kubernetes.io/tls-style Secret with tls.crt, tls.key, ca.crt
+    durationDays: 3650
+  # Publish the config-sync gRPC listener outside the cluster. Only rendered
+  # under global.deploymentMode=saas. Layer 4 — control plane terminates TLS.
+  expose:
+    enabled: null # null => on in saas; false to keep it ClusterIP (private link)
+    # Happy path: true when no grpcTls.existingSecret (chart CA + export script).
+    # Set false only with a BYO existingSecret. Explicit false without a secret fails.
+    selfSignedTls: true
+    type: LoadBalancer
+    port: 443
+    # Empty ⇒ AWS NLB defaults from global.controlPlane.loadBalancerScheme.
+    annotations: {}
+    # Restrict to the remote clusters' egress ranges. Empty means the listener
+    # is reachable from anywhere the LB is.
+    loadBalancerSourceRanges: []
+    loadBalancerClass: ""
+    loadBalancerIP: ""
+    externalTrafficPolicy: ""
+# Platform client-credentials (data-plane validates the AgentGateway proxy's
+# client_credentials token exchange for scope=platform).
+platform:
+  # DEPRECATED: client credentials are now owned centrally by the umbrella chart
+  # (global.v2.trustguardClientId / trustguardClientSecret → shared
+  # trustguard-client-credentials Secret) so they always match AgentGateway's
+  # client. These fields are ignored; kept for backward compatibility.
+  clientId: ""
+  clientSecret: ""
+  # Empty ⇒ auto-derived from global.domain (https://trustguard.<domain>), else
+  # the in-cluster Service URL. Stamped as the `aud` on issued platform tokens.
+  baseURL: ""
+# Firewall client (prompt_guard / toxicity / prompt_moderation plugins).
+# With the NeuralTrust-hosted firewall (the default) TrustGuard reads
+# FIREWALL_JWT: the per-install client that carries the firewall URL. Hybrid
+# takes it from app.neuraltrust.ai when it creates the TrustGuard; external and
+# saas get it from NeuralTrust. Set jwt, or
+# jwtExistingSecret.name for a Secret you manage — not both. jwt is stored in
+# trustguard-secrets, so it needs chart Secret generation. Ignored while you run
+# the firewall yourself (global.firewall.deploy=true, or global.firewall.baseURL).
+# Otherwise TrustGuard reads NEURAL_TRUST_FIREWALL_BASE_URL +
+# NEURAL_TRUST_FIREWALL_SECRET_KEY (the firewall's JWT_SECRET).
+firewall:
+  jwt: ""
+  jwtExistingSecret:
+    name: ""
+    key: "FIREWALL_JWT"
+  # Empty ⇒ the in-release firewall Service, global.firewall.baseURL when
+  # external, or the URL inside FIREWALL_JWT when hosted.
+  baseURL: ""
+  # Empty ⇒ the shared platform Secret (see global.platformSecret). Set name to
+  # point TrustGuard at a Secret you manage instead.
+  existingSecret:
+    name: ""
+    key: "JWT_SECRET"
+# ---- control-plane (admin API) — full deployments only ----
+controlPlane:
+  name: trustguard-control-plane
+  args: ["control"]
+  replicas: 2
+  # Optional HPA (disabled by default). Customer scale: min 1 / max 3.
+  # When enabled, Deployment.spec.replicas is omitted so HPA owns the count.
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 3
+    targetCPUUtilizationPercentage: 80
+    targetMemoryUtilizationPercentage: 90
+  ports:
+    http: 8080
+    # config-sync gRPC listener (CONFIG_SYNC_GRPC_LISTEN_ADDR default :8082).
+    # Exposed on the control-plane Service so full-mode data planes can dial it.
+    grpc: 8082
+  resources:
+    requests: {cpu: 250m, memory: 512Mi}
+    limits: {cpu: 500m, memory: 1Gi}
+  nodeSelector: {}
+  tolerations: []
+  extraEnv: []
+  service:
+    port: 8080
+# ---- data-plane (runtime /v1/guard) — hybrid + full ----
+# The binary selects the plane via argv[1] ("data") and serves on SERVER_DATA_PORT
+# (8081); config-sync makes it DB-less when configSync.enabled.
+dataPlane:
+  name: trustguard-data-plane
+  args: ["data"]
+  replicas: 2
+  # Optional HPA (disabled by default). Customer scale: min 1 / max 3.
+  # When enabled, Deployment.spec.replicas is omitted so HPA owns the count.
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 3
+    targetCPUUtilizationPercentage: 80
+    targetMemoryUtilizationPercentage: 90
+  ports:
+    http: 8081
+  resources:
+    requests: {cpu: 500m, memory: 1Gi}
+    limits: {cpu: 2000m, memory: 2Gi}
+  nodeSelector: {}
+  tolerations: []
+  extraEnv: []
+  service:
+    port: 8080
+ingress:
+  enabled: true
+  className: ""
+  annotations: {}
+  tls:
+    enabled: # Unset = on when you supply the cert: secretName below, or global.ingress.tls.autoGenerate=false
+    secretName: "" # Empty = shared global.ingress.tls secret
+  controlPlane:
+    host: ""
+    hostPrefix: "trustguard-admin"
+  dataPlane:
+    host: ""
+    hostPrefix: "trustguard"

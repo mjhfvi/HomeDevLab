@@ -1,0 +1,28 @@
+---
+apiVersion: argocd-image-updater.argoproj.io/v1alpha1
+kind: ImageUpdater
+metadata:
+  name: argocd-image-updater-global-internal
+  namespace: infrastructure
+spec:
+  commonUpdateSettings:
+    updateStrategy: "newest-build" # Default: "semver" | "latest" (Update to the most recently built image found in a registry), "digest" (Update to the latest version of a given version (tag), using the tag's SHA digest), "semver" (Update to the latest version of an image considering semantic versioning constraints), "name" (Sorts tags alphabetically and update to the one with the highest cardinality)
+    forceUpdate: false # Default: false, type boolean
+    allowTags: "regexp:^[0-9]+\\.[0-9]+\\.[0-9]+$" # Default: all tags
+    ignoreTags: ["latest", "dev"] # Default: no tags ignored
+    # pullSecret: "infrastructure/ghcr-registry-secret" # Default: no pull secret
+    platforms: [] # Default: no platform restrictions
+  writeBackConfig:
+    method: "argocd" # Default: "argocd" - "git" (Write back changes to a git repository, creating a pull request), "argocd" (Write back changes directly to the Argo CD Application manifest in the cluster)
+    # gitConfig:
+    #   repository: "https://github.com/appdev/devops-kubernetes-clusters-manifests.git"
+    #   branch: "main"
+    #   writeBackTarget: helmvalues:.argocd-image-updater-git-source.yaml # Optional: specify the path within the repository where the updated manifest should be committed. If not specified, it defaults to the root of the repository.
+  applicationRefs:
+    - namePattern: "sentinel-echo-f641305b" # Select application name in ArgoCD matching this pattern
+      images:
+        - alias: "sentinel-echo-f641305b"
+          imageName: "ghcr.io/global-internal/sentinel-echo-f641305b" # Docker Image name with tag, digest or both. The tag and digest are optional, but at least one of them must be specified.
+          commonUpdateSettings:
+            pullSecret: "infrastructure/ghcr-registry-secret-internal"
+            updateStrategy: "newest-build"

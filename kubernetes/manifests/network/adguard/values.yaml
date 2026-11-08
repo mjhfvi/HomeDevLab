@@ -1,0 +1,294 @@
+---
+# Default values for adguard-home.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# Workload configuration
+workloadType: Deployment  # Deployment or StatefulSet
+replicas: 1
+# Deployment only. AdGuard holds an exclusive lock on sessions.db, so a
+# RollingUpdate deadlocks: the new pod can't start until the old one exits.
+strategy:
+  type: Recreate
+# AdGuard Home configuration
+adguardHome:
+  # Timezone for the container
+  timezone: UTC
+  # AdGuard Home configuration YAML (overwrite the existing configuration in your PVC)
+  # You must have the configuration already present in your PVC if you disable this.
+  configYaml:
+    dns:
+      bind_hosts: [0.0.0.0]
+      ratelimit: 0
+      aaaa_disabled: true
+      all_servers: true
+      upstream_dns: [9.9.9.10]
+      bootstrap_dns: [9.9.9.10]
+      cache_size: 1073741824
+      max_goroutines: 1024
+      hostsfile_enabled: false
+    dhcp:
+      enabled: false
+    http:
+      address: 0.0.0.0:3000
+      session_ttl: 720h
+    querylog:
+      enabled: true
+      file_enabled: true
+      size_memory: 8
+      dir_path: /adguard/var
+    users: []
+    auth_attempts: 3
+    block_auth_min: 60
+    filtering:
+      blocking_mode: nxdomain
+      cache_time: 1440
+      filters_update_interval: 24
+      blocked_response_ttl: 3660
+      protection_enabled: true
+    clients:
+      persistent:
+        - name: dnslookup
+          ids: [127.0.0.1]
+          ignore_querylog: true
+          ignore_statistics: true
+    log:
+      enabled: true
+      file: ''
+      max_backups: 0
+      max_size: 100
+      max_age: 3
+      compress: false
+      local_time: true
+      verbose: false
+    schema_version: 29
+# Docker image configuration
+image:
+  repository: 11notes/adguard
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  # tag: ""
+# Service configurations
+services:
+  # DNS service (port 53/tcp and 53/udp)
+  dns:
+    enabled: true
+    type: LoadBalancer
+    annotations: {}
+    labels: {}
+    ports:
+      dns:
+        name: dns
+        port: 53
+        targetPort: 53
+        protocol: UDP
+      dnsTcp:
+        name: dns-tcp
+        port: 53
+        targetPort: 53
+        protocol: TCP
+
+  # DHCP service (ports 67/udp, 68/tcp and 68/udp)
+  dhcp:
+    enabled: true
+    type: LoadBalancer
+    annotations: {}
+    labels: {}
+    ports:
+      dhcpServer:
+        name: dhcp-server
+        port: 67
+        targetPort: 67
+        protocol: UDP
+      dhcpClientTcp:
+        name: dhcp-client-tcp
+        port: 68
+        targetPort: 68
+        protocol: TCP
+      dhcpClientUdp:
+        name: dhcp-client-udp
+        port: 68
+        targetPort: 68
+        protocol: UDP
+
+  # Admin service (ports 80/tcp, 443/tcp, 443/udp, 3000/tcp)
+  admin:
+    enabled: true
+    type: ClusterIP
+    annotations: {}
+    labels: {}
+    ports:
+      http:
+        name: http
+        port: 80
+        targetPort: 80
+        protocol: TCP
+      https:
+        name: https
+        port: 443
+        targetPort: 443
+        protocol: TCP
+      httpsUdp:
+        name: https-udp
+        port: 443
+        targetPort: 443
+        protocol: UDP
+      httpAdmin:
+        name: http-admin
+        port: 3000
+        targetPort: 3000
+        protocol: TCP
+
+  # DNS over TLS service (port 853/tcp)
+  dnsOverTLS:
+    enabled: true
+    type: LoadBalancer
+    annotations: {}
+    labels: {}
+    ports:
+      dnsTls:
+        name: dns-tls
+        port: 853
+        targetPort: 853
+        protocol: TCP
+
+  # DNS over QUIC service (ports 784/udp, 853/udp and 8853/udp)
+  dnsOverQUIC:
+    enabled: true
+    type: LoadBalancer
+    annotations: {}
+    labels: {}
+    ports:
+      dnsQuic784:
+        name: dns-quic-784
+        port: 784
+        targetPort: 784
+        protocol: UDP
+      dnsQuic853:
+        name: dns-quic-853
+        port: 853
+        targetPort: 853
+        protocol: UDP
+      dnsQuic8853:
+        name: dns-quic-8853
+        port: 8853
+        targetPort: 8853
+        protocol: UDP
+
+  # DNSCrypt service (ports 5443/tcp and 5443/udp)
+  dnsCrypt:
+    enabled: true
+    type: LoadBalancer
+    annotations: {}
+    labels: {}
+    ports:
+      dnscryptTcp:
+        name: dnscrypt-tcp
+        port: 5443
+        targetPort: 5443
+        protocol: TCP
+      dnscryptUdp:
+        name: dnscrypt-udp
+        port: 5443
+        targetPort: 5443
+        protocol: UDP
+# Ingress configuration
+ingress:
+  enabled: false
+  className: ''
+  annotations: {}
+  hosts:
+    - host: adguard-home.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+  #  - secretName: adguard-home-tls
+  #    hosts:
+  #      - adguard-home.local
+# Persistence configuration
+persistence:
+  enabled: false
+  config:
+    enabled: false
+    size: 5Gi
+    accessModes:
+      - ReadWriteOnce
+    # existingClaim: ""
+    storageClass: ''
+  work:
+    enabled: false
+    size: 1Gi
+    accessModes:
+      - ReadWriteOnce
+    # existingClaim: ""
+    storageClass: ''
+# Health check configuration
+healthCheck:
+  enabled: true
+  # Readiness probe - checks admin web UI health via HTTP on port 3000
+  readinessProbe:
+    path: /
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 6
+    successThreshold: 1
+  # Liveness probe - checks DNS server health via dnslookup command
+  livenessProbe:
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 6
+    successThreshold: 1
+  startupProbe:
+    enabled: true
+    path: /
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 30
+    successThreshold: 1
+# Security context
+podSecurityContext:
+  fsGroup: 1000
+  runAsNonRoot: true
+  runAsUser: 1000
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: false
+  runAsNonRoot: true
+  runAsUser: 1000
+  capabilities:
+    drop:
+      - ALL
+# Resources
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+# Node selector
+nodeSelector: {}
+
+# Tolerations
+tolerations: []
+
+# Affinity
+affinity: {}
+
+# Extra environment variables
+extraEnvVars: []
+
+# Extra volumes
+extraVolumes: []
+
+# Extra volume mounts
+extraVolumeMounts: []

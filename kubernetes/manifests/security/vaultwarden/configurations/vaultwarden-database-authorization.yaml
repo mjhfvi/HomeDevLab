@@ -1,0 +1,13 @@
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: vaultwarden-database-authorization
+  namespace: infra
+  labels:
+    app.kubernetes.io/instance: vaultwarden
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: vaultwarden
+data:
+  db_username: [ in the excel password file ]
+  db_password: [ in the excel password file ]

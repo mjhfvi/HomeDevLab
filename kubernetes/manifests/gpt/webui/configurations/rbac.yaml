@@ -1,0 +1,71 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: open-webui-ollama
+  labels:
+    app: open-webui-ollama
+    app.kubernetes.io/component: open-webui-ollama
+    app.kubernetes.io/instance: open-webui-ollama
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: open-webui-ollama
+    app.kubernetes.io/part-of: open-webui
+    helm.sh/chart: open-webui-ollama-1.0.6
+rules:
+  - apiGroups:
+      - "*"
+    resources:
+      - "*"
+      # - pods
+      # - pods/log
+      # - deployments
+      # - ingresses
+      # - configmaps
+      # - events
+      # - nodes
+      # - persistentvolumeclaims
+    verbs:
+      - get
+      - watch
+      - list
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: open-webui-ollama
+subjects:
+  - kind: ServiceAccount
+    name: open-webui-ollama
+    namespace: argo-workflows
+roleRef:
+  kind: ClusterRole
+  name: open-webui-ollama
+  apiGroup: rbac.authorization.k8s.io
+
+# ---
+# apiVersion: rbac.authorization.k8s.io/v1
+# kind: Role
+# metadata:
+#   namespace: argo-workflows
+#   name: argo-workflows-role-controller
+# rules:
+# - apiGroups: ["*"]
+#   resources: ["*"]
+#   verbs: ["*"]
+# ---
+# apiVersion: rbac.authorization.k8s.io/v1
+# kind: RoleBinding
+# metadata:
+#   name: argo-workflows-binding
+#   namespace: argo-workflows
+# subjects:
+# - kind: ServiceAccount
+#   name: argo-workflows-workflow-controller
+#   namespace: argo-workflows
+# roleRef:
+#   kind: Role
+#   apiGroup: rbac.authorization.k8s.io
+#   name: argo-workflows-role-controller
+
+# kubectl auth can-i '*' '*' --as=system:serviceaccount:argo-workflows:open-webui-ollama

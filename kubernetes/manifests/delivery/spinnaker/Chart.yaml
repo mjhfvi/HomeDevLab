@@ -1,0 +1,23 @@
+apiVersion: v2
+description: Open source Spinnaker with v1.33.0 Gitops Support
+name: spinnaker
+version: 2.2.20
+appVersion: 1.33.0
+license: Apache-2.0
+annotations:
+  chart.license: Apache-2.0
+home: http://spinnaker.io/
+sources:
+- https://github.com/spinnaker
+- https://github.com/OpsMx/spinnaker-helm
+- https://github.com/viglesiasce/images
+icon: https://pbs.twimg.com/profile_images/669205226994319362/O7OjwPrh_400x400.png
+maintainers:
+- email: srinivas@opsmx.io
+  name: ksrinimba
+- email: mahesh.kota@opsmx.io
+  name: maheshopsmx
+- email: saiteja.katabhatina@opsmx.io
+  name: saitejaopsmx
+- name: abhinaybyrisetty
+  email: abhinay.byrisetty@hotmail.com

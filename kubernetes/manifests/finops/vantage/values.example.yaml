@@ -1,0 +1,134 @@
+---
+# Default values for vantage-kubernetes-agent.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+image:
+  repository: quay.io/vantage-sh/kubernetes-agent
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: ''
+agent:
+  # The agent can be deployed as a Deployment instead of StatefulSet but requires persistS3 to be present.
+  useDeployment: false
+  debug: false
+  # logLevel corresponds to https://pkg.go.dev/log/slog#Level
+  # Info: 0
+  # Debug: -4
+  logLevel: '0'
+  # Unique identifier for your cluster.
+  clusterID: ''
+  # Vantage API Token
+  token: ''
+  # If the Secret is pre-provisioned, can override the secret name and key as needed below. If name is not set a Secret using `token` is provisioned.
+  secret:
+    name: ''
+    key: token
+  # Comma separated list of node address types to use in priority order when looking up node addresses.
+  # Default value works for most clusters but can be tuned if getting node hostname lookup errors.
+  # eg: "Hostname,InternalDNS,InternalIP,ExternalDNS,ExternalIP"
+  nodeAddressTypes: ''
+
+  # Optional. Comma separated list of allowed annotations to be sent to Vantage. Max 10 annotations. Note that values are truncated after 100 chars.
+  allowedAnnotations: ''
+
+  # Optional. Some cluster providers have self signed certificates on the kubelet. If you are seeing TLS errors, you can disable TLS verification here.
+  disableKubeTLSverify: false
+
+  # Optional. When enabled, includes the labels of that pod's namespace in the pod metadata.
+  collectNamespaceLabels: 'false'
+
+  # Optional. When enabled, includes the labels of the volumes mounted to pods.
+  collectPVCLabels: 'false'
+
+  # Optional. When enabled, includes ArgoCD Rollouts within controller metadata similar to Deployments.
+  argocdRollouts: false
+
+  # Optional. URL of an HTTP proxy used for external communications during the periodic report. This includes HTTP requests to the Vantage API and AWS S3. ie. http://example.com:3001
+  reportHTTPProxy: ''
+
+  # Optional. Number of seconds between scrapes of the kubelet metrics endpoint. Values are 60, 30, 15, 10, or 5
+  pollingInterval: 60
+
+  # Optional. Limit the number of resources returned in the initial lists used to populate informers. 0 can be used to return to the previous behavior of listing all resources.
+  listLimit: 5000
+  gpu:
+    # Optional. Whether the agent should scrape GPU metrics or not. Requires NVIDIA dcgm-exporter to be deployed and configured with DCGM_FI_DEV_FB_USED and DCGM_FI_DEV_FB_TOTAL
+    usageMetrics: false
+    # Optional. The namespace the GPU exporter is deployed in.
+    # Uses agent default if not specified: "gpu-operator"
+    exporterNamespace: ''
+    # Optional. The service name for the GPU exporter. Used to lookup the endpoints.
+    # Uses agent default if not specified: "nvidia-dcgm-exporter"
+    exporterServiceName: ''
+    # Optional. The port name for the metrics port of the gpu exporter.
+    # Uses agent default if not specified: "gpu-metrics"
+    exporterPortName: ''
+    # Optional. The path the metrics endpoint is available under.
+    # Uses agent default if not specified: "/metrics"
+    exporterPath: ''
+  volumes: []
+  volumeMounts: []
+# Specifies the pod DNS configuration.
+dnsConfig: {}
+#  nameservers:
+#    - 1.2.3.4
+#  searches:
+#    - ns1.svc.cluster-domain.example
+#    - my.dns.search.suffix
+#  options:
+#    - name: ndots
+#      value: "1"
+#    - name: attempts
+#      value: "3"
+persist:
+  mountPath: /var/lib/vantage-agent
+  name: data
+  size: 10Gi
+  storageClassName: '' # Optional, uses default if not set
+# Configuration for persisting to S3. The agent will use IAM Roles for Service Accounts to authenticate. This should be setup prior to deploying the agent. See the agent docs for what policy is necessary, https://docs.vantage.sh/kubernetes_agent
+persistS3:
+  # S3 Bucket Name
+  bucket: ''
+  # Prefix prepended to the standard '$CLUSTER_ID/filename.json.gz' key the agent uses.
+  prefix: ''
+service:
+  name: report
+  type: ClusterIP
+  port: 9010
+# These limits are set low to support small clusters (<=20nodes) and should be considered minimum values for deploying an agent.
+# Estimates for larger clusters are roughly:
+# ~1CPU/1000node
+# ~5MB/node
+# These are estimates and will vary significantly based on pod density per node, label usage, cluster activity, etc.
+# Agent should reach an approximate steady state after ~1hour of consistent uptime and can be tuned accordingly.
+resources:
+  limits:
+    cpu: 100m
+    memory: 100Mi
+  requests:
+    cpu: 100m
+    memory: 100Mi
+imagePullSecrets: []
+nameOverride: ''
+fullnameOverride: ''
+serviceAccount:
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ''
+clusterRole:
+  annotations: {}
+clusterRoleBinding:
+  annotations: {}
+appLabels: {}
+podLabels: {}
+podAnnotations: {}
+securityContext: {}
+podSecurityContext: {}
+nodeSelector: {}
+tolerations: []
+affinity: {}
+# Ref: https://kubernetes.io/docs/tasks/run-application/configure-pdb/
+podDisruptionBudget: {}
+  # maxUnavailable: 1
+  # minAvailable: 1

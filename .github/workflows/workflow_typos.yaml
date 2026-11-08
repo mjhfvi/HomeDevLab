@@ -3,6 +3,10 @@ name: Workflow Typos
 on:  # yamllint disable-line rule:truthy
   # push:  # Triggers on any push event
   #   branches: [main]
+  #   paths-ignore:
+  #     - 'config/**'
+  #     - 'config/local.json'
+  #     - '/*.draft.md' # Ignores files matching extension globally
   pull_request:
     branches: [main]
   workflow_dispatch:  # Adds a "Run workflow" button in the GitHub Actions UI
