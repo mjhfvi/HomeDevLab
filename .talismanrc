@@ -1,11 +1,6 @@
 ---
 fileignoreconfig:
-- filename: kubernetes/documentation/CREDENTIALS.md
-  checksum: 4370b15078f938b19b2f8e53d01e2295748d74688ebda5b16fddc834b743af3c
-- filename: kubernetes/documentation/TROUBLESHOOTING.md
-  checksum: 557fad3f02c329da433466bad5e97f41b64b9b5a4f4dc68f56f98f065f61ab51
-- filename: kubernetes/documentation/CERTIFICATES.md
-  checksum: 42111f81995f10ca847884441b2961d63550359d22bb749b286183f9f7b145de
-- filename: kubernetes/documentation/docker-daemon/docker-daemon-metrics-setup-README.md
-  checksum: 70bbd73b14022b6f9c40b9e0d410a39b4524966c4df3e1a6417eacd2a5e29768
+
+- filename: .github/workflows/workflow_aegisgate_scanner.yaml
+  checksum: 379e15c07f231ad882bba5773638f71f75120c570149e75080a7eb0ddef8428f
 version: "1.0"
