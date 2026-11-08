@@ -18,7 +18,7 @@ on:  # yamllint disable-line rule:truthy
 permissions: {}
 jobs:
   build:
-    name: typos
+    name: ai-pr-agent
     runs-on: ubuntu-latest
     permissions:
       # contents permission to clone the repository

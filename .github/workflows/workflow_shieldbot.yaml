@@ -17,7 +17,7 @@ on:  # yamllint disable-line rule:truthy
 permissions: {}
 jobs:
   build:
-    name: typos
+    name: shieldbot
     runs-on: ubuntu-latest
     permissions:
       # contents permission to clone the repository
@@ -36,6 +36,5 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
-      - name: Shieldbot AI-powered security scanner that runs directly inside Claude
-          Code
+      - name: Shieldbot AI-powered security scanner that runs with Claude Code
         uses: BalaSriharsha/shieldbot@6cc67b21b5ce6770e400d30f6403b5e0d51b2c27

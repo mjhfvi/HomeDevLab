@@ -1,12 +1,6 @@
----
 fileignoreconfig:
-
-- filename: .github/workflows/workflow_python_unused_imports.yaml
-  checksum: 38038e339a02ecdcfdc09b9a1e9d619358cda5a6a7e7cae3daae027e24378c81
-- filename: .github/workflows/workflow_talisman.yaml
-  checksum: 788d232e7955c12ca3171312ff97356351b02efe823d8246def46f29af345b4d
-- filename: .github/workflows/workflow_shieldbot.yaml
-  checksum: 7f2c562f88b1e398ea85d8508d1e6d68f1f304a51e5f9183da8af7b0300feb8d
-- filename: .github/workflows/workflow_ai_pr_agent.yaml
-  checksum: 7082b038f01fc892c6898aa9fcef06bee81d41e5af36051deb0e2b51f5fbce71
+- filename: .github/workflows/workflow_python_ruff_linter.yaml
+  checksum: ff448fd98ee1cd87752ad69a409bf1af8a670362be4270f542607b980e492987
+- filename: .github/workflows/workflow_aparte_scanner.yaml
+  checksum: 500d3c72a529190f4541b5f0fd323b334a93a7bf0b252da49ebe504b60213877
 version: "1.0"

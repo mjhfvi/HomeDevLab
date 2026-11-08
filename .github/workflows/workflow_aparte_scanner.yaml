@@ -32,4 +32,5 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
-      - uses: apartejs/aparte-secrets-action@f1535c7323f766c4ca8beb2bc1cf1d6157213345
+      - name: Aparte Secrets Action
+        uses: apartejs/aparte-secrets-action@f1535c7323f766c4ca8beb2bc1cf1d6157213345
