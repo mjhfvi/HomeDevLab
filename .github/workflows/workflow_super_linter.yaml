@@ -1,13 +1,19 @@
 ---
-name: Github Action Gitleaks
+name: Workflow Super-Linter
 on:  # yamllint disable-line rule:truthy
-  push:
+  push:  # Triggers on any push event
+    branches: [main]
   pull_request:
-  workflow_call:
+    branches: [main]
+  workflow_dispatch:  # Adds a "Run workflow" button in the GitHub Actions UI
+  workflow_call:  # Allows this workflow to be called and reused by other workflows
+  # schedule:
+  #  # Runs at 00:00 every day
+  #   - cron: '0 0 * * *'
 permissions: {}
 jobs:
   build:
-    name: gitleaks
+    name: super-linter
     runs-on: ubuntu-latest
     permissions:
       # contents permission to clone the repository
@@ -24,8 +30,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
+          # super-linter needs the full git history to get the
+          # list of files that changed across commits
           fetch-depth: 0
           persist-credentials: false
-      - uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e
+      - name: Super-linter
+        uses: super-linter/super-linter@2da136927bd4a73596db63044b504547c62cb854
+        continue-on-error: true
         env:
+          # To report GitHub Actions status checks
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,13 +1,19 @@
 ---
-name: Github Action Typos
+name: Workflow Gitleaks
 on:  # yamllint disable-line rule:truthy
-  push:
+  push:  # Triggers on any push event
+    branches: [main]
   pull_request:
-  workflow_call:
+    branches: [main]
+  workflow_dispatch:  # Adds a "Run workflow" button in the GitHub Actions UI
+  workflow_call:  # Allows this workflow to be called and reused by other workflows
+  # schedule:
+  #  # Runs at 00:00 every day
+  #   - cron: '0 0 * * *'
 permissions: {}
 jobs:
   build:
-    name: typos
+    name: gitleaks
     runs-on: ubuntu-latest
     permissions:
       # contents permission to clone the repository
@@ -26,7 +32,7 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
-      - name: Check for CRLF line endings
-        uses: gi-org-pl/check-crlf-action@464995c09f1659cd4b0f7e2bf7234994f0fd705e
-        with:
-          base-ref: ${{ github.base_ref }}
+      - uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e
+        continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

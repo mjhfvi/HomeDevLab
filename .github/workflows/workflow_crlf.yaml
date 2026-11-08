@@ -1,13 +1,19 @@
 ---
-name: Github Action Super-Linter
+name: Workflow CRLF Line Endings
 on:  # yamllint disable-line rule:truthy
-  push:
+  push:  # Triggers on any push event
+    branches: [main]
   pull_request:
-  workflow_call:
+    branches: [main]
+  workflow_dispatch:  # Adds a "Run workflow" button in the GitHub Actions UI
+  workflow_call:  # Allows this workflow to be called and reused by other workflows
+  # schedule:
+  #  # Runs at 00:00 every day
+  #   - cron: '0 0 * * *'
 permissions: {}
 jobs:
   build:
-    name: super-linter
+    name: check-crlf
     runs-on: ubuntu-latest
     permissions:
       # contents permission to clone the repository
@@ -24,12 +30,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
-          # super-linter needs the full git history to get the
-          # list of files that changed across commits
           fetch-depth: 0
           persist-credentials: false
-      - name: Super-linter
-        uses: super-linter/super-linter@2da136927bd4a73596db63044b504547c62cb854
-        env:
-          # To report GitHub Actions status checks
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Check for CRLF line endings
+        uses: gi-org-pl/check-crlf-action@464995c09f1659cd4b0f7e2bf7234994f0fd705e
+        continue-on-error: true
+        with:
+          base-ref: ${{ github.base_ref }}

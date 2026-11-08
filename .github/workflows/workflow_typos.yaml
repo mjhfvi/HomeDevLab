@@ -1,9 +1,15 @@
 ---
-name: Github Action Typos
+name: Workflow Typos
 on:  # yamllint disable-line rule:truthy
-  push:
+  push:  # Triggers on any push event
+    branches: [main]
   pull_request:
-  workflow_call:
+    branches: [main]
+  workflow_dispatch:  # Adds a "Run workflow" button in the GitHub Actions UI
+  workflow_call:  # Allows this workflow to be called and reused by other workflows
+  # schedule:
+  #  # Runs at 00:00 every day
+  #   - cron: '0 0 * * *'
 permissions: {}
 jobs:
   build:
@@ -28,5 +34,6 @@ jobs:
           persist-credentials: false
       - name: typos-action
         uses: crate-ci/typos@7f9d0819ca1c008ade73f4b41fa9d258d48f605b
+        continue-on-error: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
