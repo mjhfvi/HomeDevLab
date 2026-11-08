@@ -1,6 +1,8 @@
 ---
 fileignoreconfig:
 
-- filename: kubernetes/manifests/automation/airflow/Kustomization.yaml
-  checksum: 753d74c598f41932d208dccec29f39801842e27e9313eedb378c2d94ca3b8cce
+- filename: certificates/SSH/OpenSSH_Server_Certificate.txt
+  checksum: dfd2105159fb0780ac7876a064f700e678bdaa62dea13655042a8d08c4397783
+- filename: certificates/GitHub/Build_Certificate.md
+  checksum: 226975e1447b526213474cfc01e5983ee9de6c3748538a6382f99a576855ff26
 version: "1.0"

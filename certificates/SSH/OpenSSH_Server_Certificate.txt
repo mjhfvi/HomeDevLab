@@ -1,0 +1,45 @@
+# create certificate
+ssh-keygen -t ed25519 -C "User Name SSH Login Key ed25519 with Password" -f ssh_login_key_ed25519 -N FILL_IN_PASSWORD
+sudo cat ssh_login_key_ed25519.pub  >> ~/.ssh/authorized_keys
+
+# get MD5 key fingerprint
+ssh-keygen -l -f ssh_login_key_ed25519.pub
+
+export readonly TMOUT=600
+
+sudo apt-get install openssh-server
+
+# set up ssh server login
+sudo vi /etc/ssh/sshd_config
+
+AuthenticationMethods publickey
+PubkeyAuthentication yes
+#HostKey /home/tzahi/.ssh/id_ed25519
+HostKeyAlgorithms ssh-ed25519
+KexAlgorithms curve25519-sha256
+#Ciphers chacha20-poly1305@openssh.com,aes256-gcm@openssh.com
+#MACs hmac-sha2-512-etm@openssh.com
+HostbasedAcceptedKeyTypes ecdsa-sha2-nistp256,ecdsa-sha2-nistp384,ecdsa-sha2-nistp521,ssh-ed25519
+PermitRootLogin no
+PasswordAuthentication no
+PermitEmptyPasswords no
+LoginGraceTime 2m
+MaxAuthTries 6
+ClientAliveInterval 100
+ClientAliveCountMax 3
+
+# restart service
+sudo systemctl daemon-reload
+sudo systemctl reload ssh.service
+sudo systemctl restart ssh.socket
+sudo systemctl status ssh.service
+
+cd ~/.ssh
+ssh-keygen -t ed25519 -C "Jenkins Node SSH Login Key ed25519 with Password" -f jenkins_ssh_login_key_ed25519 -N PASSWORD
+sudo cat jenkins_ssh_login_key_ed25519.pub  >> ~/.ssh/authorized_keys
+
+ssh user@192.168.x.x
+[debug] ssh -vvv user@192.168.x.x
+
+# create folder for jenkins
+/home/user/.cargo/env
