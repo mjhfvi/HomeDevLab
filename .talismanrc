@@ -1,6 +1,4 @@
 fileignoreconfig:
-- filename: .github/workflows/workflow_python_ruff_linter.yaml
-  checksum: ff448fd98ee1cd87752ad69a409bf1af8a670362be4270f542607b980e492987
-- filename: .github/workflows/workflow_aparte_scanner.yaml
-  checksum: 500d3c72a529190f4541b5f0fd323b334a93a7bf0b252da49ebe504b60213877
+- filename: .github/workflows/workflow_ai_language_grammar.yaml
+  checksum: 33dbecd8fb0e4ee53fe9dd35d99d7d934351d307595391a57574b62d4499409f
 version: "1.0"

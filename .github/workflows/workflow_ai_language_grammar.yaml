@@ -1,0 +1,59 @@
+---
+name: Workflow Ai Language and Grammar Check
+on:  # yamllint disable-line rule:truthy
+  # push:  # Triggers on any push event
+  #   branches: [main]
+  #   paths:
+  #     - '**/*.md'
+  #   paths-ignore:
+  #     - 'config/**'
+  #     - 'config/local.json'
+  #     - '/*.draft.md' # Ignores files matching extension globally
+  # pull_request:
+  #   branches: [main]
+  #   paths:
+  #     - '**/*.md'
+  workflow_dispatch:  # Adds a "Run workflow" button in the GitHub Actions UI
+  workflow_call:  # Allows this workflow to be called and reused by other workflows
+  # schedule:
+  #  # Runs at 00:00 every day
+  #   - cron: '0 0 * * *'
+permissions: {}
+jobs:
+  build:
+    name: claude-code-action-language-grammar
+    runs-on: ubuntu-latest
+    permissions:
+      # contents permission to clone the repository
+      contents: read
+      packages: read
+      # issues and pull-requests permissions to write results as pull
+      # request comments. Omit them if you don't need summary comments
+      issues: write
+      pull-requests: write
+      # To report GitHub Actions status checks. Omit if you don't need
+      # to update commit status
+      statuses: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: anthropics/claude-code-action@61a9c274fa7110a66dfafc1bbbced03833eb25fe
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: |-
+            You are an expert technical editor specializing in US English localization, technical documentation, and code comment clarity.
+            Your task is to analyze the provided code, markdown files, or text diffs specifically for language, grammar, spelling, and stylistic errors.
+            Strictly adhere to the following guidelines:
+            1. Target Audience: US English (en-US). Ensure compliance with standard American spelling (e.g., 'color' instead of 'colour', 'initialize' instead of 'initialise').
+            2. Grammar & Syntax: Check for common technical writing issues, including dangling modifiers, subject-verb disagreement, improper punctuation, and incorrect tense.
+            3. Tone & Style: Enforce an objective, clear, and concise technical tone. Prefer active voice over passive voice wherever appropriate.
+            4. Technical Context: Do not flag valid programming syntax, code keywords, APIs, variable names, or technical acronyms as spelling or grammatical mistakes. Focus only on human-readable strings, comments, documentation blocks, and markdown text.
+            5. Format Your Output: For every issue found, provide a clear, scannable response using the following format:
+              - **File**: [File Path and Line Number]
+              - **Original**: "[Snippet of the incorrect text]"
+              - **Correction**: "[Suggested rewrite in US English]"
+              - **Reason**: [Brief, direct explanation of why the change is necessary]
+            If no grammatical or stylistic issues are found, reply exactly with: "No language or grammar issues detected."

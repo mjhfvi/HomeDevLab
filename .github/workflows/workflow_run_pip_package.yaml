@@ -1,5 +1,5 @@
 ---
-name: Workflow Install pip Packages
+name: Workflow Run pip Package
 on:  # yamllint disable-line rule:truthy
   # push:  # Triggers on any push event
   #   branches: [main]
@@ -21,7 +21,7 @@ env:
   PYTHON_VERSION: '3.13'
 jobs:
   build:
-    name: install-pip-packages
+    name: run-pip-package
     runs-on: ubuntu-latest
     permissions:
       # contents permission to clone the repository
