@@ -1,5 +1,5 @@
 ---
-name: Workflow Aegisgate-Scanner
+name: Workflow Aparte-Secrets-Scanner
 on:  # yamllint disable-line rule:truthy
   push:  # Triggers on any push event
     branches: [main]
@@ -13,7 +13,7 @@ on:  # yamllint disable-line rule:truthy
 permissions: {}
 jobs:
   build:
-    name: aegisgate-scanner
+    name: aparte-scanner
     runs-on: ubuntu-latest
     permissions:
       # contents permission to clone the repository
@@ -32,11 +32,4 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
-      - uses: aegisgatesecurity/aegisgate-scanner@b657b96c8c6fbdc6ae1ce0c7b4476f2b52e10dd0
-        with:
-          path: .
-          format: sarif
-          severity: medium
-      # - uses: github/codeql-action/upload-sarif@33d7b85da1a04171e211befe2c739303b9a4c066
-      #   with:
-      #     sarif_file: aegisgate-scanner-report.sarif
+      - uses: apartejs/aparte-secrets-action@f1535c7323f766c4ca8beb2bc1cf1d6157213345
