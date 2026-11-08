@@ -1,5 +1,5 @@
 ---
-name: Workflow Get Authors of Specific File Changes
+name: Workflow Approved File Changes
 on:  # yamllint disable-line rule:truthy
   push:  # Triggers on any push event
     branches: [main]
@@ -15,7 +15,7 @@ on:  # yamllint disable-line rule:truthy
 permissions: {}
 jobs:
   build:
-    name: not-approved-file-changes
+    name: approved-file-changes
     runs-on: ubuntu-latest
     permissions:
       # contents permission to clone the repository
