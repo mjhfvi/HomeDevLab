@@ -3,10 +3,22 @@ name: Workflow Approved File Changes
 on:  # yamllint disable-line rule:truthy
   push:  # Triggers on any push event
     branches: [main]
-    paths: [.pre-commit-config.yaml, .gitleaks.toml, .talismanrc]
+    paths:
+      - .pre-commit-config.yaml
+      - .gitleaks.toml
+      - .talismanrc
+      - settings.json
+      - extensions.json
+      - tasks.json
   pull_request:
     branches: [main]
-    paths: [.pre-commit-config.yaml, .gitleaks.toml, .talismanrc]
+    paths:
+      - .pre-commit-config.yaml
+      - .gitleaks.toml
+      - .talismanrc
+      - settings.json
+      - extensions.json
+      - tasks.json
   workflow_dispatch:  # Adds a "Run workflow" button in the GitHub Actions UI
   workflow_call:  # Allows this workflow to be called and reused by other workflows
   # schedule:
@@ -37,7 +49,7 @@ jobs:
       - name: Find users who changed the file
         run: |-
           # 1. Define your space-separated list of target files here
-          TARGET_FILES=(".pre-commit-config.yaml" ".gitleaks.toml" ".talismanrc")
+          TARGET_FILES=(".pre-commit-config.yaml" ".gitleaks.toml" ".talismanrc" "settings.json" "extensions.json" "tasks.json")
 
           # Initialize a flag to track if we need to fail at the end
           VIOLATION_FOUND=false

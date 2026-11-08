@@ -1,15 +1,47 @@
 {
-  "[python]": {
-    "diffEditor.ignoreTrimWhitespace": false,
-    "editor.defaultColorDecorators": "never"
-  },
   "_comment": "Source: https://code.visualstudio.com/docs/getstarted/settings",
   "_comment02": "Configure settings to be overridden for the python language.",
   "_comment03": "The terminal profile to use for automation-related terminal usage like tasks and debug.",
-  "cSpell.words": [],
-  "editor.formatOnSave": true,
+  // ========== Debug ==========
+  "debug.onTaskErrors": "debugAnyway",
+  // ========== Editor ==========
+  "diffEditor.ignoreTrimWhitespace": false,
+  "editor.wordSeparators": "`~!@#%^&*()=+[{]}\\|;:'\",.<>/?",
+  "editor.find.addExtraSpaceOnTop": false,
+  "editor.inlineSuggest.enabled": true,
+  "editor.multiCursorModifier": "ctrlCmd",
+  "editor.suggestSelection": "first",
+  "editor.tabSize": 2,
+  "editor.unicodeHighlight.invisibleCharacters": false,
+  "editor.stickyScroll.enabled": true,
+  "editor.hover.sticky": true,
+  "editor.fontFamily": "Input Mono, monospace",
+  "editor.lineNumbers": "on",
+  "editor.renderWhitespace": "boundary",
+  "editor.formatOnSave": true, // Automatically format code when you save
+  "editor.minimap.enabled": true, // Hide the tiny code preview map on the right side
+  "editor.linkedEditing": true, // Automatically rename matching HTML/XML tags
   "editor.insertSpaces": false,
+  "editor.guides.bracketPairs": "active", // Show clear vertical lines connecting matching brackets
+  "editor.cursorSmoothCaretAnimation": "on", // Make the cursor slide smoothly as you type
+  "editor.wordWrap": "on", // Wrap long lines so you don't have to scroll horizontally
+  "editor.codeActionsOnSave": {
+    "source.fixAll": "never",
+    "source.fixAll.eslint": "explicit",
+    "source.organizeImports": "never"
+  },
+  // ========== Explorer ==========
+  "explorer.compactFolders": true, // Collapse empty nested folders into a single line
+  "explorer.confirmDragAndDrop": false,
+  "explorer.confirmDelete": false,
+  // ========== Extensions ==========
   "extensions.autoRestart": false,
+  // ========== Files ==========
+  "files.autoSave": "afterDelay", // Automatically save modified files after a short delay
+  "files.trimTrailingWhitespace": true,
+  "files.eol": "\n",
+  "files.insertFinalNewline": true,
+  "files.simpleDialog.enable": true,
   "files.exclude": {
     ".cspell.json": true,
     ".editorconfig": true,
@@ -30,7 +62,68 @@
     "sonar-project.properties": true,
     "tox.ini": true
   },
-  "files.trimTrailingWhitespace": true,
+  // ========== Git ==========
   "git.branchProtection": [],
-  "terminal.integrated.automationProfile.windows": true
+  "git.autofetch": true,
+  "git.confirmSync": false,
+  "git.enableSmartCommit": true,
+  "git.untrackedChanges": "separate",
+  // ========== Scm ==========
+  "scm.diffDecorationsGutterWidth": 2,
+  // ========== Search ==========
+  "search.exclude": {
+    "**/*.snap": true,
+    "**/*.svg": true,
+    "**/.git": true,
+    "**/.github": false,
+    "**/.nuxt": true,
+    "**/.output": true,
+    "**/.pnpm": true,
+    "**/.vscode": true,
+    "**/.yarn": true,
+    "**/assets": true,
+    "**/bower_components": true,
+    "**/dist/**": true,
+    "**/logs": true,
+    "**/node_modules": true,
+    "**/out/**": true,
+    "**/package-lock.json": true,
+    "**/pnpm-lock.yaml": true,
+    "**/public": true,
+    "**/temp": true,
+    "**/yarn.lock": true,
+    "**/CHANGELOG*": true,
+    "**/LICENSE*": true,
+  },
+  // ========== Terminal ==========
+  "terminal.integrated.cursorBlinking": true,
+  "terminal.integrated.cursorStyle": "line",
+  "terminal.integrated.fontWeight": "300",
+  "terminal.integrated.persistentSessionReviveProcess": "never",
+  "terminal.integrated.tabs.enabled": true,
+  "terminal.integrated.automationProfile.windows": true,
+  // ========== Window ==========
+  "window.autoDetectColorScheme": true,
+  // ========== Workbench ==========
+  "workbench.colorTheme": "Vitesse Dark",
+  "workbench.editor.tabActionLocation": "left",
+  "workbench.fontAliasing": "antialiased",
+  "workbench.iconTheme": "catppuccin-mocha",
+  "workbench.list.smoothScrolling": true,
+  "workbench.preferredDarkColorTheme": "Vitesse Dark",
+  "workbench.preferredLightColorTheme": "Vitesse Light",
+  "workbench.productIconTheme": "icons-carbon",
+  "workbench.sideBar.location": "right",
+  "workbench.startupEditor": "newUntitledFile",
+  "workbench.tree.expandMode": "singleClick",
+  "workbench.tree.indent": 10,
+  "workbench.editor.closeOnFileDelete": true,
+  "workbench.editor.highlightModifiedTabs": true,
+  "workbench.editor.limit.enabled": true,
+  "workbench.editor.limit.perEditorGroup": true,
+  "workbench.editor.limit.value": 5,
+  // "[python]": {
+  //   "diffEditor.ignoreTrimWhitespace": false,
+  //   "editor.defaultColorDecorators": "never"
+  // },
 }
