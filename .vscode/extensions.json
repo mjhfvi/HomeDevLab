@@ -52,7 +52,10 @@
     "tim-koehler.helm-intellisense",
     "usernamehw.errorlens",
     "vscode-icons-team.vscode-icons",
-    "yzhang.markdown-all-in-one"
+    "yzhang.markdown-all-in-one",
+    "howardzuo.vscode-git-tags",
+    "waderyan.gitblame",
+    "adam-bender.commit-message-editor"
   ],
   "unwantedRecommendations": []
 }
