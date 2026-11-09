@@ -62,11 +62,11 @@
     "tox.ini": true
   },
   // ========== Git ==========
-  "git.branchProtection": [],
+  // "git.branchProtection": [],
   "git.autofetch": true,
   "git.confirmSync": false,
-  "git.enableSmartCommit": true,
-  "git.untrackedChanges": "separate",
+  // "git.enableSmartCommit": true,
+  // "git.untrackedChanges": "separate",
   // ========== Scm ==========
   "scm.diffDecorationsGutterWidth": 2,
   // ========== Search ==========
