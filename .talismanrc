@@ -1,15 +1,5 @@
 ---
 fileignoreconfig:
-- filename: kubernetes/manifests/tools/chromium/Chart.yaml
-  checksum: 7abf10520b6c8b4c208c551d717abcf1242173dd8fd2758aba05e1da77d0d3bb
-- filename: kubernetes/manifests/tools/netshoot/Chart.yaml
-  checksum: a9e8a244739f38c438c2f8455deb60a18f0a47a1dc211604a60e06cedb156461
-- filename: kubernetes/manifests/tools/netshoot/values.example.yaml
-  checksum: ae7b070bbf2cad8af749bbda19813c2ea3b5f1a058f3ccc070f4df6307f8859f
-- filename: kubernetes/manifests/tools/chromium/values.example.yaml
-  checksum: a6bbb28a2ef55f611dec1f9a0439efae18c5ef936a423b6836bf28a193e6413e
-- filename: kubernetes/manifests/tools/netshoot/values.yaml
-  checksum: 622b71f80d6b112c8947e2fad2c5e4fb2f5a36ca52ed0f6531e394a1e02aff4b
-- filename: kubernetes/manifests/tools/chromium/values.yaml
-  checksum: baae5a1d46c1c5a8cb8df890a20e903503332ca6789d0ff1f9ee17bf12218cea
+- filename: .github/workflows/workflow_code_unittest_helmfile_modified.yaml
+  checksum: c884ea996abbd370c683f7913a90656c72bf6fd6ce708aec794b00b7c5bfc95e
 version: "1.0"
