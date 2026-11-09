@@ -1,0 +1,48 @@
+---
+# namespace
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: shared-configs
+# Role definition
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: configmap-shared-resources
+  namespace: shared-configs
+rules:
+  - apiGroups: ['']
+    resources: [configmaps]
+    verbs: [get, watch, list]
+# RoleBinding to bind the role with a service account from Artifactory namespace
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  labels:
+    app: artifactory
+  name: configmap-shared-resources-artifactory
+  namespace: artifactory
+roleRef:
+  kind: Role
+  name: configmap-shared-resources
+  apiGroup: rbac.authorization.k8s.io
+subjects:
+  - kind: ServiceAccount
+    name: default
+    namespace: artifactory
+# RoleBinding to bind the role with a service account from PostgreSQL namespace
+# apiVersion: rbac.authorization.k8s.io/v1
+# kind: RoleBinding
+# metadata:
+#   name: configmap-shared-resources-postgres
+#   namespace: postgres
+# subjects:
+# - kind: ServiceAccount
+#   name: default
+#   namespace: postgres
+# roleRef:
+#   kind: Role
+#   name: configmap-shared-resources
+#   apiGroup: rbac.authorization.k8s.io

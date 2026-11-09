@@ -1,0 +1,23 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: artifactory-environment-variables
+  namespace: artifactory
+  labels:
+    app: artifactory
+data:
+  ARTIFACTORY_USER: admin
+  ARTIFACTORY_PASSWORD: ''  # Change this to your desired
+  ARTIFACTORY_HOME: /var/opt/jfrog/artifactory
+  ARTIFACTORY_DATA: /data/artifactory
+  EXTRA_JAVA_OPTIONS: -Xms1g -Xmx2g
+# DB_HOST (default value: postgresql)
+# DB_PORT (default value: 5432)
+# DB_NAME (default value: artifactory)
+# DB_USER (default value: artifactory)
+# DB_PASSWORD (default value: password)
+# ARTIFACTORY_HOME (default: /var/opt/artifactory)
+# ARTIFACTORY_DATA (default: /data/artifactory)
+# ARTIFACTORY_USER_ID (default: 1030)
+# HEAP_SIZE (default: 1024Mi)

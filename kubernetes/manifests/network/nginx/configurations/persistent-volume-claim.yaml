@@ -1,0 +1,14 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: nginx-persistent-volume-claim-nfs
+  namespace: nginx
+  labels:
+    app: nginx-persistent-volume-claim-nfs
+spec:
+  storageClassName: storage-nfs
+  accessModes: [ReadWriteMany]
+  resources:
+    requests:
+      storage: 2Gi

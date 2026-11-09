@@ -1,0 +1,35 @@
+apiVersion: v2
+name: jira
+description: A chart for installing Jira Data Center on Kubernetes
+type: application
+version: '2.0.21'
+appVersion: 11.3.13
+kubeVersion: ">=1.21.x-0"
+keywords:
+- Jira
+- Jira Software
+- Jira Server
+- Jira Data Center
+- Jira DC
+- Atlassian
+home: https://atlassian.github.io/data-center-helm-charts/
+icon:
+  https://atlassian.github.io/data-center-helm-charts/icons/jira-software.svg
+sources:
+- https://github.com/atlassian/data-center-helm-charts
+- https://bitbucket.org/atlassian-docker/docker-atlassian-jira/
+deprecated: false
+annotations:
+  artifacthub.io/containsSecurityUpdates: "false"
+  artifacthub.io/changes: |-
+    - "Update appVersions for DC apps (#1178)"
+    - "fix: wrap namespace/service variable queries in query_result() (#1171)"
+
+dependencies:
+- name: common
+  version: 1.2.7
+  repository: https://atlassian.github.io/data-center-helm-charts
+- name: opensearch
+  version: 3.5.0
+  repository: https://opensearch-project.github.io/helm-charts
+  condition: opensearch.enabled

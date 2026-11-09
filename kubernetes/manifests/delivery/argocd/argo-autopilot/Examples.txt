@@ -1,0 +1,26 @@
+## https://argocd-autopilot.readthedocs.io/en/stable/commands/argocd-autopilot_repo_uninstall/
+
+export GIT_REPO=TOKEN
+export GIT_TOKEN=https://github.com/mjhfvi/ArgoCDAutopilotExample
+
+git config --global user.name "Tzahi Cohen"
+git config --global user.email "mjhfvi@gmail.com"
+git config --bool core.bare true
+
+argocd-autopilot repo bootstrap --git-token TOKEN --repo https://github.com/mjhfvi/ArgoCDAutopilotExample --provider github
+
+argocd-autopilot repo bootstrap
+argocd-autopilot project create jenkins
+
+
+
+argocd-autopilot repo uninstall --git-token TOKEN --repo https://github.com/mjhfvi/ArgoCDAutopilotExample --provider github
+
+
+
+argocd-autopilot app create jenkins --app github.com/mjhfvi/argocd-ArgoCDAutopilotExample/apps/jenkins/ -p jenkins --wait-timeout 2m --type kustomize
+argocd-autopilot app create jenkins --app github.com/mjhfvi/argocd-ArgoCDAutopilotExample/apps/jenkins -p jenkins
+
+
+argocd-autopilot app create jenkins --app github.com/argoproj-labs/argocd-autopilot/examples/demo-app/ -p jenkins --wait-timeout 2m
+argocd-autopilot app create <APP_NAME> --app github.com/argoproj-labs/argocd-autopilot/examples/demo-app/ -p <PROJECT_NAME>

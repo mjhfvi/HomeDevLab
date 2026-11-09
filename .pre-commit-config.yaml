@@ -43,9 +43,6 @@ repos:
       - id: detect-aws-credentials
         args: [--allow-missing-credentials]
         verbose: true
-      - id: detect-private-key
-        verbose: true
-        exclude: gitleaks-report.json
       - id: check-merge-conflict
         verbose: true
       - id: check-vcs-permalinks

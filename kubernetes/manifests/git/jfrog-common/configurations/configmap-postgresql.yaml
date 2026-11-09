@@ -1,0 +1,27 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: artifactory
+  namespace: artifactory
+  labels:
+    app: artifactory
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: artifactory
+  template:
+    metadata:
+      labels:
+        app: artifactory
+    spec:
+      containers:
+        - name: artifactory
+          image: docker.bintray.io/jfrog/artifactory-pro:6.23.13
+          volumeMounts:
+            - name: artifactory-data
+              mountPath: /var/opt/jfrog/artifactory
+      volumes:
+        - name: artifactory-data
+          emptyDir: {}

@@ -1,0 +1,41 @@
+# ---
+# apiVersion: traefik.io/v1alpha1
+# kind: IngressRoute
+# metadata:
+#   name: dashboard
+# spec:
+#   entryPoints: [web]
+#   routes:
+#     - match: Host(`traefik.localhost`) && PathPrefix(`/`) || (PathPrefix(`/dashboard`) || PathPrefix(`/api`))
+#       kind: Rule
+#       services:
+#         - name: traefik
+#           port: TraefikService
+# ---
+# # Redirect with domain replacement
+# apiVersion: traefik.io/v1alpha1
+# kind: Middleware
+# metadata:
+#   name: traefik-redirectregex
+# spec:
+#   redirectRegex:
+#     regex: ^http://traefik.localhost/(.*)
+#     replacement: http://traefik.localhost/${1}
+
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: traefik-dashboard
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`traefik.localhost`) && PathPrefix(`/`) || (PathPrefix(`/dashboard`)
+      kind: Rule
+      middlewares:
+        - name: traefik-dashboard
+          # namespace: traefik
+      services:
+        - name: api@internal
+          kind: TraefikService

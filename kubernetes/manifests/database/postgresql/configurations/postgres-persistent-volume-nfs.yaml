@@ -1,0 +1,18 @@
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: postgres-persistent-volume-nfs
+  labels:
+    app: storage-nfs
+spec:
+  capacity:
+    storage: 5Gi
+  volumeMode: Filesystem
+  accessModes: [ReadWriteMany]
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: storage-nfs
+  nfs:
+    path: /home/tzahi/nfsshare/storage/postgresql
+    server: 172.22.54.171
+    readOnly: false

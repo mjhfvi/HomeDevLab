@@ -1,0 +1,20 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: artifactory-login-information
+  # namespace: artifactory
+  labels:
+    app: artifactory
+data:
+  DB_HOST:
+    - name: postgresql-user
+      valueFrom:  # THIS NEED general-secrets.yml
+        secretKeyRef:
+          name: general-secrets
+          key: POSTGRES_USER
+    - name: postgresql-user-password
+      valueFrom:  # THIS NEED general-secrets.yml
+        secretKeyRef:
+          name: general-secrets
+          key: POSTGRES_PASSWORD

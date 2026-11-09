@@ -1,0 +1,639 @@
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  annotations:
+    meta.helm.sh/release-name: artifactory
+    meta.helm.sh/release-namespace: artifactory
+  creationTimestamp: '2024-02-15T22:46:27Z'
+  generation: 1
+  labels:
+    app: artifactory
+    app.kubernetes.io/managed-by: Helm
+    chart: artifactory-107.77.5
+    component: artifactory
+    heritage: Helm
+    release: artifactory
+  name: artifactory
+  namespace: artifactory
+  resourceVersion: '273297'
+  uid: 7fe504e0-aaa9-487c-8ee4-0e637dd638ff
+spec:
+  persistentVolumeClaimRetentionPolicy:
+    whenDeleted: Retain
+    whenScaled: Retain
+  podManagementPolicy: OrderedReady
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: artifactory
+      release: artifactory
+      role: artifactory
+  serviceName: artifactory
+  template:
+    metadata:
+      # annotations:
+      #   checksum/access-config:
+      #   checksum/admin-creds:
+      #   checksum/binarystore:
+      #   checksum/database-secrets:
+      #   checksum/systemyaml:
+      # creationTimestamp:
+      labels:
+        app: artifactory
+        chart: artifactory-107.77.5
+        component: artifactory
+        heritage: Helm
+        release: artifactory
+        role: artifactory
+    spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app: artifactory
+                    release: artifactory
+                topologyKey: kubernetes.io/hostname
+              weight: 100
+      containers:
+        - command:
+            - /bin/bash
+            - -c
+            - |
+              exec /opt/jfrog/router/app/bin/entrypoint-router.sh
+          env:
+            - name: JF_ROUTER_TOPOLOGY_LOCAL_REQUIREDSERVICETYPES
+              value: jfrt,jfac,jfob,jfmd,jfevt,jffe,jfcon
+          image: releases-docker.jfrog.io/jfrog/router:7.91.0
+          imagePullPolicy: IfNotPresent
+          lifecycle:
+            preStop:
+              exec:
+                command:
+                  - sh
+                  - -c
+                  - while [[ $(curl --fail --silent --connect-timeout 2 http://localhost:8081/artifactory/api/v1/system/liveness)
+                    =~ OK ]]; do echo Artifactory is still alive; sleep 2; done
+          livenessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - curl -s -k --fail --max-time 5 http://localhost:8082/router/api/v1/system/liveness
+            failureThreshold: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 5
+          name: router
+          ports:
+            - containerPort: 8082
+              name: http
+              protocol: TCP
+          readinessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - curl -s -k --fail --max-time 5 http://localhost:8082/router/api/v1/system/readiness
+            failureThreshold: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 5
+          resources: {}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
+            runAsNonRoot: true
+            seccompProfile:
+              type: RuntimeDefault
+          startupProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - curl -s -k --fail --max-time 5 http://localhost:8082/router/api/v1/system/readiness
+            failureThreshold: 30
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            successThreshold: 1
+            timeoutSeconds: 5
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+            - mountPath: /var/opt/jfrog/router
+              name: artifactory-volume
+        - command:
+            - /bin/bash
+            - -c
+            - |
+              exec /opt/jfrog/artifactory/app/third-party/node/bin/node /opt/jfrog/artifactory/app/frontend/bin/server/dist/bundle.js /opt/jfrog/artifactory/app/frontend
+          env:
+            - name: JF_SHARED_NODE_ID
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.name
+          image: releases-docker.jfrog.io/jfrog/artifactory-pro:7.77.5
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - curl --fail --max-time 5 http://localhost:8070/api/v1/system/liveness
+            failureThreshold: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 5
+          name: frontend
+          resources: {}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
+            runAsNonRoot: true
+            seccompProfile:
+              type: RuntimeDefault
+          startupProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - curl --fail --max-time 5 http://localhost:8070/api/v1/system/readiness
+            failureThreshold: 90
+            initialDelaySeconds: 30
+            periodSeconds: 5
+            successThreshold: 1
+            timeoutSeconds: 5
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+            - mountPath: /var/opt/jfrog/artifactory
+              name: artifactory-volume
+        - command:
+            - /bin/bash
+            - -c
+            - |
+              exec /opt/jfrog/artifactory/app/metadata/bin/jf-metadata start
+          env:
+            - name: JF_SHARED_NODE_ID
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.name
+            - name: JF_SHARED_DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: postgresql-password
+                  name: artifactory-postgresql
+          image: releases-docker.jfrog.io/jfrog/artifactory-pro:7.77.5
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - curl --fail --max-time 5 http://localhost:8086/api/v1/system/liveness
+            failureThreshold: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 5
+          name: metadata
+          resources: {}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
+            runAsNonRoot: true
+            seccompProfile:
+              type: RuntimeDefault
+          startupProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - curl --fail --max-time 5 http://localhost:8086/api/v1/system/readiness
+            failureThreshold: 90
+            initialDelaySeconds: 30
+            periodSeconds: 5
+            successThreshold: 1
+            timeoutSeconds: 5
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+            - mountPath: /var/opt/jfrog/artifactory
+              name: artifactory-volume
+        - command:
+            - /bin/bash
+            - -c
+            - |
+              exec /opt/jfrog/artifactory/app/event/bin/jf-event start
+          env:
+            - name: JF_SHARED_NODE_ID
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.name
+          image: releases-docker.jfrog.io/jfrog/artifactory-pro:7.77.5
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - curl --fail --max-time 5 http://localhost:8061/api/v1/system/liveness
+            failureThreshold: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 5
+          name: event
+          resources: {}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
+            runAsNonRoot: true
+            seccompProfile:
+              type: RuntimeDefault
+          startupProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - curl --fail --max-time 5 http://localhost:8061/api/v1/system/readiness
+            failureThreshold: 90
+            initialDelaySeconds: 30
+            periodSeconds: 5
+            successThreshold: 1
+            timeoutSeconds: 5
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+            - mountPath: /var/opt/jfrog/artifactory
+              name: artifactory-volume
+        - command:
+            - /bin/bash
+            - -c
+            - |
+              exec /opt/jfrog/artifactory/app/jfconnect/bin/jf-connect start
+          env:
+            - name: JF_SHARED_NODE_ID
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.name
+          image: releases-docker.jfrog.io/jfrog/artifactory-pro:7.77.5
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - curl --fail --max-time 5 http://localhost:8030/api/v1/system/liveness
+            failureThreshold: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 5
+          name: jfconnect
+          resources: {}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
+            runAsNonRoot: true
+            seccompProfile:
+              type: RuntimeDefault
+          startupProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - curl --fail --max-time 5 http://localhost:8030/api/v1/system/readiness
+            failureThreshold: 90
+            initialDelaySeconds: 30
+            periodSeconds: 5
+            successThreshold: 1
+            timeoutSeconds: 5
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+            - mountPath: /var/opt/jfrog/artifactory
+              name: artifactory-volume
+        - command:
+            - /bin/bash
+            - -c
+            - |
+              exec /opt/jfrog/artifactory/app/observability/bin/jf-observability start
+          env:
+            - name: JF_SHARED_NODE_ID
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.name
+          image: releases-docker.jfrog.io/jfrog/artifactory-pro:7.77.5
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - curl --fail --max-time 5 http://localhost:8036/api/v1/system/liveness
+            failureThreshold: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 5
+          name: observability
+          resources: {}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
+            runAsNonRoot: true
+            seccompProfile:
+              type: RuntimeDefault
+          startupProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - curl --fail --max-time 5 http://localhost:8036/api/v1/system/readiness
+            failureThreshold: 90
+            initialDelaySeconds: 30
+            periodSeconds: 5
+            successThreshold: 1
+            timeoutSeconds: 5
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+            - mountPath: /var/opt/jfrog/artifactory
+              name: artifactory-volume
+        - command:
+            - /bin/bash
+            - -c
+            - |
+              set -e; if [ -d /artifactory_extra_conf ] && [ -d /artifactory_bootstrap ]; then
+                echo "Copying bootstrap config from /artifactory_extra_conf to /artifactory_bootstrap";
+                cp -Lrfv /artifactory_extra_conf/ /artifactory_bootstrap/;
+              fi; exec /entrypoint-artifactory.sh
+          env:
+            - name: JF_ROUTER_ENABLED
+              value: 'true'
+            - name: JF_ROUTER_SERVICE_ENABLED
+              value: 'false'
+            - name: JF_EVENT_ENABLED
+              value: 'false'
+            - name: JF_METADATA_ENABLED
+              value: 'false'
+            - name: JF_FRONTEND_ENABLED
+              value: 'false'
+            - name: JF_REPLICATOR_ENABLED
+              value: 'true'
+            - name: JF_REPLICATOR_SERVICE_ENABLED
+              value: 'false'
+            - name: JF_FEDERATION_ENABLED
+              value: 'false'
+            - name: JF_OBSERVABILITY_ENABLED
+              value: 'false'
+            - name: JF_JFCONNECT_SERVICE_ENABLED
+              value: 'false'
+            - name: JF_SHARED_DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: postgresql-password
+                  name: artifactory-postgresql
+          image: releases-docker.jfrog.io/jfrog/artifactory-pro:7.77.5
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - curl -s -k --fail --max-time 5 http://localhost:8091/artifactory/api/v1/system/liveness
+            failureThreshold: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 5
+          name: artifactory
+          ports:
+            - containerPort: 8082
+              name: http
+              protocol: TCP
+            - containerPort: 8081
+              name: http-internal
+              protocol: TCP
+            - containerPort: 8025
+              name: http-rtfs
+              protocol: TCP
+          resources: {}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
+            runAsNonRoot: true
+            seccompProfile:
+              type: RuntimeDefault
+          startupProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - curl -s -k --fail --max-time 5 http://localhost:8091/artifactory/api/v1/system/readiness
+            failureThreshold: 90
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            successThreshold: 1
+            timeoutSeconds: 5
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+            - mountPath: /var/opt/jfrog/artifactory
+              name: artifactory-volume
+            - mountPath: /tmp/etc/artifactory/binarystore.xml
+              name: binarystore-xml
+              subPath: binarystore.xml
+            - mountPath: /artifactory_bootstrap/info/installer-info.json
+              name: installer-info
+              subPath: installer-info.json
+      dnsPolicy: ClusterFirst
+      initContainers:
+        - command:
+            - bash
+            - -c
+            - rm -fv /var/opt/jfrog/artifactory/etc/db.properties
+          image: releases-docker.jfrog.io/ubi9/ubi-minimal:9.3.1475
+          imagePullPolicy: IfNotPresent
+          name: delete-db-properties
+          resources:
+            limits:
+              cpu: '1'
+              memory: 1Gi
+            requests:
+              cpu: 10m
+              memory: 50Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
+            runAsNonRoot: true
+            seccompProfile:
+              type: RuntimeDefault
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+            - mountPath: /var/opt/jfrog/artifactory
+              name: artifactory-volume
+        - command:
+            - /bin/bash
+            - -c
+            - |
+              if [[ -e "/var/opt/jfrog/artifactory/etc/filebeat.yaml" ]]; then chmod 644 /var/opt/jfrog/artifactory/etc/filebeat.yaml; fi; echo "Copy system.yaml to /var/opt/jfrog/artifactory/etc"; mkdir -p /var/opt/jfrog/artifactory/etc; mkdir -p /var/opt/jfrog/artifactory/etc/access/keys/trusted; cp -fv /tmp/etc/system.yaml /var/opt/jfrog/artifactory/etc/system.yaml; echo "Copy binarystore.xml file"; mkdir -p /var/opt/jfrog/artifactory/etc/artifactory; cp -fv /tmp/etc/artifactory/binarystore.xml /var/opt/jfrog/artifactory/etc/artifactory/binarystore.xml; echo "Copy access.config.patch.yml to /var/opt/jfrog/artifactory/etc/access"; mkdir -p /var/opt/jfrog/artifactory/etc/access; cp -fv /tmp/etc/access.config.patch.yml /var/opt/jfrog/artifactory/etc/access/access.config.patch.yml;
+          image: releases-docker.jfrog.io/ubi9/ubi-minimal:9.3.1475
+          imagePullPolicy: IfNotPresent
+          name: copy-system-configurations
+          resources:
+            limits:
+              cpu: '1'
+              memory: 1Gi
+            requests:
+              cpu: 10m
+              memory: 50Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
+            runAsNonRoot: true
+            seccompProfile:
+              type: RuntimeDefault
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+            - mountPath: /var/opt/jfrog/artifactory
+              name: artifactory-volume
+            - mountPath: /tmp/etc/system.yaml
+              name: systemyaml
+              subPath: system.yaml
+            - mountPath: /tmp/etc/artifactory/binarystore.xml
+              name: binarystore-xml
+              subPath: binarystore.xml
+            - mountPath: /tmp/etc/access.config.patch.yml
+              name: access-config
+              subPath: access.config.patch.yml
+        - command:
+            - /bin/bash
+            - -c
+            - |
+              echo "Waiting for postgresql to come up"
+              ready=false;
+              while ! $ready; do echo waiting;
+                timeout 2s bash -c "</dev/tcp/artifactory-postgresql/5432"; exit_status=$?;
+                if [[ $exit_status -eq 0 ]]; then ready=true; echo "database ok"; fi; sleep 1;
+              done
+          image: releases-docker.jfrog.io/ubi9/ubi-minimal:9.3.1475
+          imagePullPolicy: IfNotPresent
+          name: wait-for-db
+          resources:
+            limits:
+              cpu: '1'
+              memory: 1Gi
+            requests:
+              cpu: 10m
+              memory: 50Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
+            runAsNonRoot: true
+            seccompProfile:
+              type: RuntimeDefault
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+        - command:
+            - /bin/bash
+            - -c
+            - |
+              scriptsPath="/opt/jfrog/artifactory/app/bin"; mkdir -p $scriptsPath; echo "Copy migration scripts and Run migration"; cp -fv /tmp/migrate.sh $scriptsPath/migrate.sh; cp -fv /tmp/migrationHelmInfo.yaml $scriptsPath/migrationHelmInfo.yaml; cp -fv /tmp/migrationStatus.sh $scriptsPath/migrationStatus.sh; mkdir -p /var/opt/jfrog/artifactory/log; bash $scriptsPath/migrationStatus.sh 7.77.5 3600 > >(tee /var/opt/jfrog/artifactory/log/helm-migration.log) 2>&1;
+          env:
+            - name: JF_SHARED_DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: postgresql-password
+                  name: artifactory-postgresql
+          image: releases-docker.jfrog.io/jfrog/artifactory-pro:7.77.5
+          imagePullPolicy: IfNotPresent
+          name: migration-artifactory
+          resources: {}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
+            runAsNonRoot: true
+            seccompProfile:
+              type: RuntimeDefault
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+            - mountPath: /tmp/migrate.sh
+              name: migration-scripts
+              subPath: migrate.sh
+            - mountPath: /tmp/migrationHelmInfo.yaml
+              name: migration-scripts
+              subPath: migrationHelmInfo.yaml
+            - mountPath: /tmp/migrationStatus.sh
+              name: migration-scripts
+              subPath: migrationStatus.sh
+            - mountPath: /var/opt/jfrog/artifactory
+              name: artifactory-volume
+            - mountPath: /tmp/etc/artifactory/binarystore.xml
+              name: binarystore-xml
+              subPath: binarystore.xml
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext:
+        fsGroup: 1030
+        runAsGroup: 1030
+        runAsNonRoot: true
+        runAsUser: 1030
+      serviceAccount: default
+      serviceAccountName: default
+      terminationGracePeriodSeconds: 40
+      volumes:
+        - configMap:
+            defaultMode: 420
+            name: artifactory-migration-scripts
+          name: migration-scripts
+        - configMap:
+            defaultMode: 420
+            name: artifactory-installer-info
+          name: installer-info
+        - name: systemyaml
+          secret:
+            defaultMode: 420
+            secretName: artifactory-systemyaml
+        - name: access-config
+          secret:
+            defaultMode: 420
+            secretName: artifactory-access-config
+        - name: binarystore-xml
+          secret:
+            defaultMode: 420
+            secretName: artifactory-binarystore
+  updateStrategy:
+    type: RollingUpdate
+  volumeClaimTemplates:
+    - apiVersion: v1
+      kind: PersistentVolumeClaim
+      metadata:
+        creationTimestamp:
+        name: artifactory-volume
+      spec:
+        accessModes: [ReadWriteOnce]
+        resources:
+          requests:
+            storage: 20Gi
+        volumeMode: Filesystem
+      status:
+        phase: Pending

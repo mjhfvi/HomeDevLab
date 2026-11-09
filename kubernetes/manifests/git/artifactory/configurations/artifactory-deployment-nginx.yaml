@@ -1,0 +1,179 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    deployment.kubernetes.io/revision: '1'
+    meta.helm.sh/release-name: artifactory
+    meta.helm.sh/release-namespace: artifactory
+  creationTimestamp: '2024-02-15T22:46:27Z'
+  generation: 1
+  labels:
+    app: artifactory
+    app.kubernetes.io/managed-by: Helm
+    chart: artifactory-107.77.5
+    component: nginx
+    heritage: Helm
+    release: artifactory
+  name: artifactory-artifactory-nginx
+  namespace: artifactory
+  resourceVersion: '273308'
+  uid: cbcd229d-dc0d-441b-8357-de230c1dbad4
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 0
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: artifactory
+      component: nginx
+      release: artifactory
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      # annotations:
+        # checksum/nginx-artifactory-conf:
+        # checksum/nginx-conf:
+      # creationTimestamp:
+      labels:
+        app: artifactory
+        chart: artifactory-107.77.5
+        component: nginx
+        heritage: Helm
+        release: artifactory
+    spec:
+      containers:
+        - image: releases-docker.jfrog.io/jfrog/nginx-artifactory-pro:7.77.5
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - curl -s -k --fail --max-time 5 http://localhost:8080/
+            failureThreshold: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 5
+          name: nginx
+          ports:
+            - containerPort: 8080
+              name: http
+              protocol: TCP
+            - containerPort: 8443
+              name: https
+              protocol: TCP
+          readinessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - curl -s -k --fail --max-time 5 http://localhost:8080/router/api/v1/system/readiness
+            failureThreshold: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 5
+          resources: {}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
+            privileged: false
+            readOnlyRootFilesystem: false
+            runAsNonRoot: true
+            seccompProfile:
+              type: RuntimeDefault
+          startupProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - curl -s -k --fail --max-time 5 http://localhost:8080/router/api/v1/system/readiness
+            failureThreshold: 90
+            initialDelaySeconds: 3
+            periodSeconds: 5
+            successThreshold: 1
+            timeoutSeconds: 5
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+            - mountPath: /etc/nginx/nginx.conf
+              name: nginx-conf
+              subPath: nginx.conf
+            - mountPath: /var/opt/jfrog/nginx/conf.d/
+              name: nginx-artifactory-conf
+            - mountPath: /var/opt/jfrog/nginx
+              name: nginx-volume
+            - mountPath: /var/opt/jfrog/nginx/ssl
+              name: ssl-certificates
+      dnsPolicy: ClusterFirst
+      initContainers:
+        - command:
+            - /bin/sh
+            - -c
+            - |
+              rm -rfv /var/opt/jfrog/nginx/lost+found; mkdir -p /var/opt/jfrog/nginx/logs;
+          image: releases-docker.jfrog.io/ubi9/ubi-minimal:9.3.1475
+          imagePullPolicy: IfNotPresent
+          name: setup
+          resources: {}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
+            runAsNonRoot: true
+            seccompProfile:
+              type: RuntimeDefault
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+            - mountPath: /var/opt/jfrog/nginx
+              name: nginx-volume
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext:
+        fsGroup: 107
+        runAsGroup: 107
+        runAsUser: 104
+      serviceAccount: default
+      serviceAccountName: default
+      terminationGracePeriodSeconds: 30
+      volumes:
+        - configMap:
+            defaultMode: 420
+            name: artifactory-nginx-conf
+          name: nginx-conf
+        - configMap:
+            defaultMode: 420
+            name: artifactory-nginx-artifactory-conf
+          name: nginx-artifactory-conf
+        - emptyDir: {}
+          name: nginx-volume
+        - name: ssl-certificates
+          secret:
+            defaultMode: 420
+            secretName: artifactory-nginx-certificate   # pragma: allowlist secret
+status:
+  availableReplicas: 1
+  conditions:
+    - lastTransitionTime: '2024-02-15T22:58:33Z'
+      lastUpdateTime: '2024-02-15T22:58:33Z'
+      message: ReplicaSet "artifactory-artifactory-nginx-8457df9796" has successfully
+        progressed.
+      reason: NewReplicaSetAvailable
+      status: 'True'
+      type: Progressing
+    - lastTransitionTime: '2024-02-19T15:12:57Z'
+      lastUpdateTime: '2024-02-19T15:12:57Z'
+      message: Deployment has minimum availability.
+      reason: MinimumReplicasAvailable
+      status: 'True'
+      type: Available
+  observedGeneration: 1
+  readyReplicas: 1
+  replicas: 1
+  updatedReplicas: 1

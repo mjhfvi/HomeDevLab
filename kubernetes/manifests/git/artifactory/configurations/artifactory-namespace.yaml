@@ -1,0 +1,14 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  creationTimestamp: '2024-02-15T22:46:20Z'
+  labels:
+    kubernetes.io/metadata.name: artifactory
+  name: artifactory
+  resourceVersion: '108099'
+  uid: 819a8c14-0f2c-40ce-bc3f-2accd842ac53
+spec:
+  finalizers: [kubernetes]
+status:
+  phase: Active

@@ -1,0 +1,11 @@
+---
+resources:
+  - jfrog-namespace.yml
+  - jfrog-service.yml
+# - jfrog-configmap.yml
+  - jfrog-configmap-environment-variables.yml
+  - jfrog-configmap-login-information.yml
+# - jfrog-deployment.yml
+
+# kubectl kustomize <kustomization_directory>
+# kubectl apply -k <kustomization_directory>
