@@ -27,6 +27,6 @@ releases:
   - name: pgadmin4
     namespace: tools
     chart: '{{ .Release.Name }}/{{ .Release.Name }}'
-    version: 15.4.2
+    version: 1.70.4
     values:
       - ../../../manifests/{{ .Release.Namespace }}/{{ .Release.Name }}/values.yaml
