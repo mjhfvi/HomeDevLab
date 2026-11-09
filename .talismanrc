@@ -1,5 +1,5 @@
 ---
 fileignoreconfig:
-- filename: kubernetes/manifests/database/mssql/configurations/credentials.yaml
-  checksum: ec48ca71d1387d10828bcf33d91c3f82b2b07e17aa165906302952a2c7d9cef0
+- filename: .github/workflows/workflow_code_unittest_helmfile.yaml
+  checksum: d58e8ae0eb320263f7943e9cf8eff71a5d501ed74ff95a17ce831a40be74b014
 version: "1.0"
