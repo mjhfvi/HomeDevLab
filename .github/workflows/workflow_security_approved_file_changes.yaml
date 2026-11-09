@@ -1,5 +1,5 @@
 ---
-name: Workflow Approved File Changes
+name: Workflow Security Approved File Changes
 on:  # yamllint disable-line rule:truthy
   push:  # Triggers on any push event
     branches: [main]

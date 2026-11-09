@@ -26,7 +26,7 @@ repositories:
 releases:
   - name: redis
     namespace: database
-    chart: '{{ .Release.Name }}/{{ .Release.Name }}'
+    chart: helmforge/{{ .Release.Name }}
     version: 3.1.0
     values:
       - ../../../manifests/{{ .Release.Namespace }}/{{ .Release.Name }}/values.yaml

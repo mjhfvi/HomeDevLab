@@ -1,5 +1,5 @@
 ---
-name: Workflow Super Linter
+name: Workflow Code Super Linter
 on:  # yamllint disable-line rule:truthy
   push:  # Triggers on any push event
     branches: [main]

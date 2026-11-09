@@ -1,5 +1,5 @@
 ---
-name: Workflow CRLF Line Endings
+name: Workflow Code CRLF Line Endings
 on:  # yamllint disable-line rule:truthy
   # push:  # Triggers on any push event
   #   branches: [main]

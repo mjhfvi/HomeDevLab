@@ -1,5 +1,5 @@
 ---
-name: Workflow Python Ruff Linter
+name: Workflow Code Python Ruff Linter
 on:  # yamllint disable-line rule:truthy
   # push:  # Triggers on any push event
   #   branches: [main]

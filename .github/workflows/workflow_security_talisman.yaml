@@ -1,5 +1,5 @@
 ---
-name: Workflow Talisman
+name: Workflow Security Talisman
 on:  # yamllint disable-line rule:truthy
   # push:  # Triggers on any push event
   #   branches: [main]
