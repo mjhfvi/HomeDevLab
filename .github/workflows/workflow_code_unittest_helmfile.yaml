@@ -31,6 +31,7 @@ jobs:
         id: changed-files
         uses: tj-actions/changed-files@9426d40962ed5378910ee2e21d5f8c6fcbf2dd96
       - name: List All Modified Files
+        id: list-modified-files
         run: |
           for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
             echo "Modified file: $file"
@@ -40,5 +41,5 @@ jobs:
         run: |-
           # Find all files strictly matching 'helmfile.yaml'
           # This excludes 'helmfile.d/' configs or sub-files unless they are named exactly 'helmfile.yaml'
-          FILES=${{ steps.changed-files.outputs.MODIFIED-FILES }}
+          FILES=${{ steps.list-modified-files.outputs.MODIFIED-FILES }}
           echo $FILES
