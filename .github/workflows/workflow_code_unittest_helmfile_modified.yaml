@@ -1,13 +1,13 @@
 ---
 name: Workflow Helmfile Unit Test Modified Files
-on:
+on:  # yamllint disable-line rule:truthy
   push:
     branches: [main]
-    paths: ['**/helmfile']
+    paths: ['**/helmfile/**']
   pull_request:
     branches: [main]
-    paths: ['**/helmfile']
-  workflow_dispatch:  # Adds a "Run workflow" button in the GitHub Actions UI
+    paths: ['**/helmfile/**']
+  workflow_dispatch:
   workflow_call:  # Allows this workflow to be called and reused by other workflows
 jobs:
   unittest:
