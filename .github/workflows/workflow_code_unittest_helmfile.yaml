@@ -26,7 +26,7 @@ jobs:
         uses: helmfile/helmfile-action@614b4cd063ada10b87f668f6ffd35485bce0cac5
       - name: Install helm-unittest Plugin
         run: |
-          helm plugin install https://github.com/helm-unittest/helm-unittest
+          helm plugin install https://github.com/helm-unittest/helm-unittest --verify=false
       - name: Find and Test helmfile.yaml Files
         run: |-
           # Find all files strictly matching 'helmfile.yaml'
