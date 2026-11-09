@@ -18,15 +18,15 @@ helmDefaults:
 commonLabels:
   app.helmfile.io/build-by: helmfile
   app.helmfile.io/chart: '{{ .Release.Name }}'
-  # app.helmfile.io/version: '{{ .Release.ChartVersion }}'
-# repositories:
-#   - name: prefect
-#     url: local-chart
-#     oci: false
+  app.helmfile.io/version: '{{ .Release.ChartVersion }}'
+repositories:
+  - name: helmforge
+    url: https://repo.helmforge.dev
+    oci: false
 releases:
-  - name: prefect
-    namespace: automation
-    chart: ../../../manifests/{{ .Release.Namespace }}/{{ .Release.Name }}/templates
-    # version: 0.0.0
+  - name: promptfoo
+    namespace: security
+    chart: helmforge/generic
+    version: 3.2.1
     values:
       - ../../../manifests/{{ .Release.Namespace }}/{{ .Release.Name }}/values.yaml

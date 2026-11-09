@@ -1,5 +1,5 @@
 ---
 fileignoreconfig:
-- filename: .github/workflows/workflow_code_unittest_helmfile.yaml
-  checksum: d58e8ae0eb320263f7943e9cf8eff71a5d501ed74ff95a17ce831a40be74b014
+- filename: kubernetes/manifests/security/promptfoo/values.yaml
+  checksum: b43c01588079ccded44747518501c6e8f4ee5fa3c4d3db811570355378bb965f
 version: "1.0"
