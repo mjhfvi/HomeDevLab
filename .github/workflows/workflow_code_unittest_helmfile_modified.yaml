@@ -41,7 +41,10 @@ jobs:
           done
       - name: Find and Test helmfile.yaml Files
         run: |-
-          # Loop through each found helmfile.yaml and run unit tests
+          if [ -z ${{ steps.changed-files.outputs.modified_files }} ]; then
+            echo "No helmfile.yaml files found in this repository."
+            exit 0
+          fi
           for file in ${{ steps.changed-files.outputs.modified_files }}; do
             echo "Processing: $file"
 
