@@ -1,5 +1,9 @@
 ---
 fileignoreconfig:
-- filename: kubernetes/manifests/security/promptfoo/values.yaml
-  checksum: b43c01588079ccded44747518501c6e8f4ee5fa3c4d3db811570355378bb965f
+- filename: kubernetes/manifests/tools/hoppscotch/Chart.yaml
+  checksum: 0ace9a1249a1ee03b94c5003046a22f1af746c7e91c3e6734568a774004d693c
+- filename: kubernetes/manifests/tools/hoppscotch/values.example.yaml
+  checksum: f7f25b76952ca22b28877b80962ed358e0d0d23fd2af6ff6144720b86a969f3f
+- filename: kubernetes/manifests/tools/hoppscotch/values.yaml
+  checksum: 7f87ff0680d890d362583d5a51347d297ce9aa60b5b3f5816c192071ed12ed3a
 version: "1.0"

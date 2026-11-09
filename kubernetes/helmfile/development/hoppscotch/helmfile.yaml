@@ -27,6 +27,6 @@ releases:
   - name: hoppscotch
     namespace: tools
     chart: helmforge/{{ .Release.Name }}
-    version: 2.1.1
+    version: 1.1.17
     values:
       - ../../../manifests/{{ .Release.Namespace }}/{{ .Release.Name }}/values.yaml

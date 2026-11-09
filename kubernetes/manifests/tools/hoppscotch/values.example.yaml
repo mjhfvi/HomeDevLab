@@ -1,2128 +1,465 @@
----
-# @section -- Global Parameters
-global:
-  # -- Global Docker image registry
-  # @section -- Global Parameters
-  imageRegistry: ''
-  # -- Global Docker registry secret names as an array
-  # @section -- Global Parameters
-  imagePullSecrets: []
-  # -- Global default storage class for persistent volumes
-  # @section -- Global Parameters
-  defaultStorageClass: ''
-  security:
-    # -- Allows skipping image verification
-    # @section -- Global Parameters
-    allowInsecureImages: false
-  compatibility:
-    openshift:
-      # -- Adapt the securityContext sections of Hoppscotch and its dependencies to be compatible with OpenShift restricted-v2 SCC: removes `runAsUser`, `runAsGroup` and `fsGroup` so the platform assigns IDs from the namespace's allowed range. Possible values: `auto` (apply only if an OpenShift cluster is detected), `force` (always apply), `disabled` (never apply)
-      # @section -- Global Parameters
-      adaptSecurityContext: auto
-# @section -- Common Parameters
+# SPDX-License-Identifier: Apache-2.0
+# =============================================================================
+# Hoppscotch Helm Chart - Default Values
+# =============================================================================
+# Supported modes:
+# - dev        Single replica, PostgreSQL subchart, EMAIL auth, minimal resources
+# - production Requires hostname + database, full auth support
 
-# -- String to override the chart name
-# @section -- Common Parameters
-nameOverride: ''
-# -- String to override the fully qualified name
-# @section -- Common Parameters
-fullnameOverride: ''
-# -- String to override the namespace
-# @section -- Common Parameters
-namespaceOverride: ''
-# -- Labels to add to all deployed objects
-# @section -- Common Parameters
+# -- Chart mode: dev | production
+mode: dev
+
+# -- Override chart name
+nameOverride: ""
+# -- Override full release name
+fullnameOverride: ""
+
+# -- Override the namespace used by chart-managed namespaced resources. Use with an external database; the bundled PostgreSQL subchart stays in the Helm release namespace.
+namespaceOverride: ""
+
+# -- Labels added to all resources
 commonLabels: {}
-# -- Annotations to add to all deployed objects
-# @section -- Common Parameters
-commonAnnotations: {}
-# -- Kubernetes cluster domain name
-# @section -- Common Parameters
+
+# -- Kubernetes cluster domain
 clusterDomain: cluster.local
-# -- Array of extra objects to deploy with the release
-# @section -- Common Parameters
-extraDeploy: []
 
-# @section -- Hoppscotch Common Parameters
-
-# -- Deployment mode for Hoppscotch (aio (all-in-one) or distributed)
-# @section -- Hoppscotch Common Parameters
-deploymentMode: aio
-
-# -- Name of existing secret containing Hoppscotch secrets
-# @section -- Hoppscotch Common Parameters
-existingSecret: ''
-# @section -- Hoppscotch Application Parameters
-hoppscotch:
-  frontend:
-    # -- Base URL where the Hoppscotch frontend will be accessible from
-    # @section -- Hoppscotch Application Parameters
-    baseUrl: ''
-    # -- URL used to generate shortcodes for sharing, can be the same as baseUrl
-    # @section -- Hoppscotch Application Parameters
-    shortcodeBaseUrl: ''
-    # -- URL where the Hoppscotch admin dashboard will be accessible from
-    # @section -- Hoppscotch Application Parameters
-    adminUrl: ''
-
-    # -- URL for GraphQL endpoint within the Hoppscotch instance
-    # @section -- Hoppscotch Application Parameters
-    backendGqlUrl: ''
-    # -- URL for WebSocket endpoint within the Hoppscotch instance
-    # @section -- Hoppscotch Application Parameters
-    backendWsUrl: ''
-    # -- URL for REST API endpoint within the Hoppscotch instance
-    # @section -- Hoppscotch Application Parameters
-    backendApiUrl: ''
-
-    # -- Link to Terms of Service page (optional)
-    # @section -- Hoppscotch Application Parameters
-    appTosLink: ''
-    # -- Link to Privacy Policy page (optional)
-    # @section -- Hoppscotch Application Parameters
-    appPrivacyPolicyLink: ''
-
-    # -- Enable subpath based access in `aio` deployment mode (required for desktop app support)
-    # @section -- Hoppscotch Application Parameters
-    enableSubpathBasedAccess: true
-
-    # -- Enable subpath based access in `distributed` deployment mode (required for desktop app support). Serves the
-    # frontend, its web app server, the backend and the admin dashboard from a single hostname as `/`,
-    # `/desktop-app-server`, `/backend` and `/admin`. The backend container does not strip the `/backend` prefix itself,
-    # so the ingress controller or Route must rewrite it.
-    # @section -- Hoppscotch Application Parameters
-    enableSubpathBasedAccessInDistributedMode: false
-
-    # -- Enable local proxy server for routing API requests (requires subpath access). Enterprise Edition required.
-    # @section -- Hoppscotch Application Parameters
-    localProxyServerEnabled: false
-    # -- URL of proxy server for routing API requests (optional). Enterprise Edition required.
-    # @section -- Hoppscotch Application Parameters
-    proxyAppUrl: ''
-  backend:
-    # -- Alternate port for AIO container endpoint when using subpath access mode
-    # @section -- Hoppscotch Application Parameters
-    aioAlternatePort: 80
-    authToken:
-      # -- Secret key for JWT token generation and validation (auto-generated if empty)
-      # @section -- Hoppscotch Application Parameters
-      jwtSecret: ''
-      # -- Complexity of the SALT used for hashing (higher = more secure)
-      # @section -- Hoppscotch Application Parameters
-      tokenSaltComplexity: 10
-      # -- Duration of magic link token validity for sign-in (in days)
-      # @section -- Hoppscotch Application Parameters
-      magicLinkTokenValidity: 3
-      # -- Validity of refresh token for authentication (in milliseconds)
-      # @section -- Hoppscotch Application Parameters
-      refreshTokenValidity: '604800000'
-      # -- Validity of access token for authentication (in milliseconds)
-      # @section -- Hoppscotch Application Parameters
-      accessTokenValidity: '86400000'
-      # -- Secret key for session management (auto-generated if empty)
-      # @section -- Hoppscotch Application Parameters
-      sessionSecret: ''
-
-    # -- Allow secure cookies (recommended for HTTPS deployments)
-    # @section -- Hoppscotch Application Parameters
-    allowSecureCookies: true
-    # -- 32-character key for encrypting sensitive data stored in database (auto-generated if empty)
-    # @section -- Hoppscotch Application Parameters
-    dataEncryptionKey: ''
-
-    # -- Fallback URL for debugging when redirects fail
-    # @section -- Hoppscotch Application Parameters
-    redirectUrl: ''
-
-    # -- List of origins allowed to interact with the app through cross-origin requests
-    # @section -- Hoppscotch Application Parameters
-    whitelistedOrigins: []
-    auth:
-      # -- List of allowed authentication providers (email, google, github, microsoft, oidc, saml)
-      # @section -- Hoppscotch Application Parameters
-      allowedProviders: [email]
-      google:
-        # -- Google OAuth client ID
-        # @section -- Hoppscotch Application Parameters
-        clientId: ''
-        # -- Google OAuth client secret
-        # @section -- Hoppscotch Application Parameters
-        clientSecret: ''
-        # -- Google OAuth callback URL
-        # @section -- Hoppscotch Application Parameters
-        callbackUrl: ''
-        # -- Google OAuth scopes to request
-        # @section -- Hoppscotch Application Parameters
-        scope: [email, profile]
-      github:
-        # -- GitHub OAuth client ID
-        # @section -- Hoppscotch Application Parameters
-        clientId: ''
-        # -- GitHub OAuth client secret
-        # @section -- Hoppscotch Application Parameters
-        clientSecret: ''
-        # -- GitHub OAuth callback URL
-        # @section -- Hoppscotch Application Parameters
-        callbackUrl: ''
-        # -- GitHub OAuth scopes to request
-        # @section -- Hoppscotch Application Parameters
-        scope: [user:email]
-      githubEnterprise:
-        # -- Enable GitHub Enterprise authentication. Enterprise Edition required.
-        # @section -- Hoppscotch Application Parameters
-        enabled: false
-        # -- GitHub Enterprise authorization URL
-        # @section -- Hoppscotch Application Parameters
-        authorizationUrl: ''
-        # -- GitHub Enterprise token URL
-        # @section -- Hoppscotch Application Parameters
-        tokenUrl: ''
-        # -- GitHub Enterprise user profile URL
-        # @section -- Hoppscotch Application Parameters
-        userProfileUrl: ''
-        # -- GitHub Enterprise user email URL
-        # @section -- Hoppscotch Application Parameters
-        userEmailUrl: ''
-      microsoft:
-        # -- Microsoft OAuth client ID
-        # @section -- Hoppscotch Application Parameters
-        clientId: ''
-        # -- Microsoft OAuth client secret
-        # @section -- Hoppscotch Application Parameters
-        clientSecret: ''
-        # -- Microsoft OAuth callback URL
-        # @section -- Hoppscotch Application Parameters
-        callbackUrl: ''
-        # -- Microsoft OAuth scopes to request
-        # @section -- Hoppscotch Application Parameters
-        scope: user.read
-        # -- Microsoft OAuth tenant ID (common for multi-tenant apps)
-        # @section -- Hoppscotch Application Parameters
-        tenant: ''
-      oidc:
-        # -- OIDC provider display name
-        # @section -- Hoppscotch Application Parameters
-        providerName: ''
-        # -- OIDC issuer URL
-        # @section -- Hoppscotch Application Parameters
-        issuer: ''
-        # -- OIDC authorization URL
-        # @section -- Hoppscotch Application Parameters
-        authorizationUrl: ''
-        # -- OIDC token URL
-        # @section -- Hoppscotch Application Parameters
-        tokenUrl: ''
-        # -- OIDC user info URL
-        # @section -- Hoppscotch Application Parameters
-        userInfoUrl: ''
-        # -- OIDC client ID
-        # @section -- Hoppscotch Application Parameters
-        clientId: ''
-        # -- OIDC client secret
-        # @section -- Hoppscotch Application Parameters
-        clientSecret: ''
-        # -- OIDC callback URL
-        # @section -- Hoppscotch Application Parameters
-        callbackUrl: ''
-        # -- OIDC scopes to request
-        # @section -- Hoppscotch Application Parameters
-        scope: [openid, profile, email]
-      saml:
-        # -- SAML issuer identifier. Enterprise Edition required.
-        # @section -- Hoppscotch Application Parameters
-        issuer: ''
-        # -- SAML audience identifier
-        # @section -- Hoppscotch Application Parameters
-        audience: ''
-        # -- SAML callback URL
-        # @section -- Hoppscotch Application Parameters
-        callbackUrl: ''
-        # -- SAML certificate for signature verification
-        # @section -- Hoppscotch Application Parameters
-        cert: ''
-        # -- SAML identity provider entry point URL
-        # @section -- Hoppscotch Application Parameters
-        entryPoint: ''
-        # -- Require signed SAML assertions
-        # @section -- Hoppscotch Application Parameters
-        wantAssertionsSigned: true
-        # -- Require signed SAML responses
-        # @section -- Hoppscotch Application Parameters
-        wantResponseSigned: false
-    mailer:
-      # -- Enable SMTP mailer for email delivery
-      # @section -- Hoppscotch Application Parameters
-      smtpEnabled: true
-      # -- Use custom SMTP configuration instead of SMTP URL
-      # @section -- Hoppscotch Application Parameters
-      useCustomConfigs: false
-      # -- Email address to use as sender
-      # @section -- Hoppscotch Application Parameters
-      addressFrom: no-reply@example.com
-      # -- SMTP URL for email delivery (used when useCustomConfigs is false)
-      # @section -- Hoppscotch Application Parameters
-      smtpUrl: smtps://user:pass@smtp.example.com  # pragma: allowlist secret
-      # -- SMTP host (used when useCustomConfigs is true)
-      # @section -- Hoppscotch Application Parameters
-      smtpHost: ''
-      # -- SMTP port (used when useCustomConfigs is true)
-      # @section -- Hoppscotch Application Parameters
-      smtpPort: 587
-      # -- Use secure connection for SMTP (used when useCustomConfigs is true)
-      # @section -- Hoppscotch Application Parameters
-      smtpSecure: true
-      # -- SMTP username (used when useCustomConfigs is true)
-      # @section -- Hoppscotch Application Parameters
-      smtpUser: ''
-      # -- SMTP password (used when useCustomConfigs is true)
-      # @section -- Hoppscotch Application Parameters
-      smtpPassword: ''
-      # -- Reject unauthorized TLS connections
-      # @section -- Hoppscotch Application Parameters
-      tlsRejectUnauthorized: true
-    rateLimit:
-      # -- Time window for rate limiting (in seconds)
-      # @section -- Hoppscotch Application Parameters
-      ttl: 60
-      # -- Maximum number of requests per IP within TTL window
-      # @section -- Hoppscotch Application Parameters
-      max: 100
-
-    # -- Enterprise license key for Hoppscotch Enterprise features
-    # @section -- Hoppscotch Application Parameters
-    enterpriseLicenseKey: ''
-
-    # -- Enable audit logs collection to ClickHouse. Enterprise Edition required.
-    # @section -- Hoppscotch Application Parameters
-    allowAuditLogs: false
-
-    # @ignored
-    clickhouse:
-      # -- Enable audit logs collection to ClickHouse. Enterprise Edition required. Deprecated: use `hoppscotch.backend.allowAuditLogs` instead.
-      # @section -- Hoppscotch Application Parameters
-      allowAuditLogs: false
-
-    # -- Enable horizontal scaling with Redis for state management. Enterprise Edition required.
-    # @section -- Hoppscotch Application Parameters
-    horizontalScalingEnabled: false
-# @section -- Hoppscotch AIO Container Parameters
-aio:
-  image:
-    # -- Hoppscotch image repository
-    # @section -- Hoppscotch AIO Container Parameters
-    repository: hoppscotch/hoppscotch
-    # -- Hoppscotch image pull policy
-    # @section -- Hoppscotch AIO Container Parameters
-    pullPolicy: IfNotPresent
-    # -- Hoppscotch image tag
-    # @section -- Hoppscotch AIO Container Parameters
-    tag: ''
-
-  # -- Number of Hoppscotch replicas
-  # @section -- Hoppscotch AIO Container Parameters
-  replicaCount: 1
-  containerPorts:
-    # -- Hoppscotch HTTP container port
-    # @section -- Hoppscotch AIO Container Parameters
-    http: 80
-    # -- Hoppscotch HTTPS container port
-    # @section -- Hoppscotch AIO Container Parameters
-    https: 443
-    # -- Hoppscotch frontend container port (for multiport access mode)
-    # @section -- Hoppscotch AIO Container Parameters
-    frontend: 3000
-    # -- Hoppscotch desktop container port (for multiport access mode)
-    # @section -- Hoppscotch AIO Container Parameters
-    desktop: 3200
-    # -- Hoppscotch backend container port (for multiport access mode)
-    # @section -- Hoppscotch AIO Container Parameters
-    backend: 3170
-    # -- Hoppscotch admin container port (for multiport access mode)
-    # @section -- Hoppscotch AIO Container Parameters
-    admin: 3100
-  readinessProbe:
-    # -- Enable readiness probe
-    # @section -- Hoppscotch AIO Container Parameters
-    enabled: true
-    # -- Initial delay seconds for readiness probe
-    # @section -- Hoppscotch AIO Container Parameters
-    initialDelaySeconds: 0
-    # -- Period seconds for readiness probe
-    # @section -- Hoppscotch AIO Container Parameters
-    periodSeconds: 10
-    # -- Timeout seconds for readiness probe
-    # @section -- Hoppscotch AIO Container Parameters
-    timeoutSeconds: 1
-    # -- Failure threshold for readiness probe
-    # @section -- Hoppscotch AIO Container Parameters
-    failureThreshold: 3
-    # -- Success threshold for readiness probe
-    # @section -- Hoppscotch AIO Container Parameters
-    successThreshold: 1
-
-  # -- Custom liveness probe that overrides the default one
-  # @section -- Hoppscotch AIO Container Parameters
-  customLivenessProbe: {}
-
-  # -- Custom readiness probe that overrides the default one
-  # @section -- Hoppscotch AIO Container Parameters
-  customReadinessProbe: {}
-
-  # -- Custom startup probe that overrides the default one
-  # @section -- Hoppscotch AIO Container Parameters
-  customStartupProbe: {}
-
-  # -- Array of extra environment variables to be added to Hoppscotch containers
-  # @section -- Hoppscotch AIO Container Parameters
-  extraEnvVars: []
-  # -- Name of existing ConfigMap containing extra environment variables
-  # @section -- Hoppscotch AIO Container Parameters
-  extraEnvVarsCM: ''
-  # -- Name of existing Secret containing extra environment variables
-  # @section -- Hoppscotch AIO Container Parameters
-  extraEnvVarsSecret: ''
-
-  # -- Set container resources according to one common preset (allowed values: nano, micro, small, medium, large, xlarge, 2xlarge)
-  # @section -- Hoppscotch AIO Container Parameters
-  resourcesPreset: small
-  # -- Set container resources for Hoppscotch (overrides resourcesPreset)
-  # @section -- Hoppscotch AIO Container Parameters
-  resources: {}
-
-  # -- Annotations to add to Hoppscotch pods
-  # @section -- Hoppscotch AIO Container Parameters
-  podAnnotations: {}
-  # -- Labels to add to Hoppscotch pods
-  # @section -- Hoppscotch AIO Container Parameters
-  podLabels: {}
-
-  # -- Security context for Hoppscotch pods
-  # @section -- Hoppscotch AIO Container Parameters
-  podSecurityContext: {}
-  # -- Security context for Hoppscotch containers
-  # @section -- Hoppscotch AIO Container Parameters
-  securityContext: {}
-  updateStrategy:
-    # -- Deployment update strategy type (RollingUpdate or Recreate)
-    # @section -- Hoppscotch AIO Container Parameters
-    type: RollingUpdate
-  pdb:
-    # -- Create PodDisruptionBudget for Hoppscotch deployment
-    # @section -- Hoppscotch AIO Container Parameters
-    create: false
-    # -- Minimum number of available pods during disruptions
-    # @section -- Hoppscotch AIO Container Parameters
-    minAvailable: ''
-    # -- Maximum number of unavailable pods during disruptions
-    # @section -- Hoppscotch AIO Container Parameters
-    maxUnavailable: ''
-  autoscaling:
-    # -- Enable autoscaling for Hoppscotch deployment
-    # @section -- Hoppscotch AIO Container Parameters
-    enabled: false
-    # -- Minimum number of Hoppscotch replicas
-    # @section -- Hoppscotch AIO Container Parameters
-    minReplicas: 1
-    # -- Maximum number of Hoppscotch replicas
-    # @section -- Hoppscotch AIO Container Parameters
-    maxReplicas: 100
-    # -- Target CPU utilization percentage for autoscaling
-    # @section -- Hoppscotch AIO Container Parameters
-    targetCPUUtilizationPercentage: 80
-    # -- Target memory utilization percentage for autoscaling
-    # @section -- Hoppscotch AIO Container Parameters
-    targetMemoryUtilizationPercentage: 80
-
-  # -- Node labels for Hoppscotch pods assignment
-  # @section -- Hoppscotch AIO Container Parameters
-  nodeSelector: {}
-
-  # -- Tolerations for Hoppscotch pods assignment
-  # @section -- Hoppscotch AIO Container Parameters
-  tolerations: []
-
-  # -- Affinity for Hoppscotch pods assignment
-  # @section -- Hoppscotch AIO Container Parameters
-  affinity: {}
-
-  # -- Topology spread constraints for Hoppscotch pods assignment
-  # @section -- Hoppscotch AIO Container Parameters
-  topologySpreadConstraints: []
-
-  # -- Extra volumes to add to Hoppscotch deployment
-  # @section -- Hoppscotch AIO Container Parameters
-  volumes: []
-
-  # -- Extra volume mounts to add to Hoppscotch containers
-  # @section -- Hoppscotch AIO Container Parameters
-  volumeMounts: []
-  service:
-    # -- Kubernetes service type
-    # @section -- Hoppscotch AIO Container Parameters
-    type: ClusterIP
-    ports:
-      # -- Service HTTP port
-      # @section -- Hoppscotch AIO Container Parameters
-      http: 80
-      # -- Service HTTPS port
-      # @section -- Hoppscotch AIO Container Parameters
-      https: 443
-      # -- Frontend service HTTP port (when multiport access is enabled)
-      # @section -- Hoppscotch AIO Container Parameters
-      frontend: 3000
-      # -- Desktop service HTTP port (when multiport access is enabled)
-      # @section -- Hoppscotch AIO Container Parameters
-      desktop: 3200
-      # -- Backend service HTTP port (when multiport access is enabled)
-      # @section -- Hoppscotch AIO Container Parameters
-      backend: 3170
-      # -- Admin service HTTP port (when multiport access is enabled)
-      # @section -- Hoppscotch AIO Container Parameters
-      admin: 3100
-    # -- Static cluster IP address (optional)
-    # @section -- Hoppscotch AIO Container Parameters
-    clusterIP: ''
-    nodePorts:
-      # -- NodePort for HTTP (when service type is NodePort)
-      # @section -- Hoppscotch AIO Container Parameters
-      http: ''
-      # -- NodePort for HTTPS (when service type is NodePort)
-      # @section -- Hoppscotch AIO Container Parameters
-      https: ''
-      # -- NodePort for frontend (when service type is NodePort and multiport access is enabled)
-      # @section -- Hoppscotch AIO Container Parameters
-      frontend: ''
-      # -- NodePort for desktop (when service type is NodePort and multiport access is enabled)
-      # @section -- Hoppscotch AIO Container Parameters
-      desktop: ''
-      # -- NodePort for backend (when service type is NodePort and multiport access is enabled)
-      # @section -- Hoppscotch AIO Container Parameters
-      backend: ''
-      # -- NodePort for admin (when service type is NodePort and multiport access is enabled)
-      # @section -- Hoppscotch AIO Container Parameters
-      admin: ''
-    # -- Load balancer IP address (when service type is LoadBalancer)
-    # @section -- Hoppscotch AIO Container Parameters
-    loadBalancerIP: ''
-    # -- Load balancer source IP ranges (when service type is LoadBalancer)
-    # @section -- Hoppscotch AIO Container Parameters
-    loadBalancerSourceRanges: []
-    # -- External traffic policy (Cluster or Local)
-    # @section -- Hoppscotch AIO Container Parameters
-    externalTrafficPolicy: Cluster
-    # -- Service annotations
-    # @section -- Hoppscotch AIO Container Parameters
-    annotations: {}
-    # -- Session affinity (None or ClientIP)
-    # @section -- Hoppscotch AIO Container Parameters
-    sessionAffinity: None
-    # -- Session affinity configuration
-    # @section -- Hoppscotch AIO Container Parameters
-    sessionAffinityConfig: {}
-    # -- Extra service ports
-    # @section -- Hoppscotch AIO Container Parameters
-    extraPorts: []
-  networkPolicy:
-    # -- Enable NetworkPolicy for Hoppscotch pods
-    # @section -- Hoppscotch AIO Container Parameters
-    enabled: false
-    # -- Allow external traffic to Hoppscotch pods
-    # @section -- Hoppscotch AIO Container Parameters
-    allowExternal: true
-    # -- Allow external egress traffic from Hoppscotch pods
-    # @section -- Hoppscotch AIO Container Parameters
-    allowExternalEgress: true
-    # -- Add external client access to NetworkPolicy
-    # @section -- Hoppscotch AIO Container Parameters
-    addExternalClientAccess: true
-    # -- Extra ingress rules for NetworkPolicy
-    # @section -- Hoppscotch AIO Container Parameters
-    extraIngress: []
-    # -- Extra egress rules for NetworkPolicy
-    # @section -- Hoppscotch AIO Container Parameters
-    extraEgress: []
-    # -- Pod selector labels for ingress rules
-    # @section -- Hoppscotch AIO Container Parameters
-    ingressPodMatchLabels: {}
-    # -- Namespace selector labels for ingress rules
-    # @section -- Hoppscotch AIO Container Parameters
-    ingressNSMatchLabels: {}
-    # -- Namespace pod selector labels for ingress rules
-    # @section -- Hoppscotch AIO Container Parameters
-    ingressNSPodMatchLabels: {}
-  ingress:
-    # -- Enable ingress for Hoppscotch
-    # @section -- Hoppscotch AIO Container Parameters
-    enabled: false
-    # -- Ingress class name
-    # @section -- Hoppscotch AIO Container Parameters
-    ingressClassName: ''
-    # -- Ingress hostname
-    # @section -- Hoppscotch AIO Container Parameters
-    hostname: hoppscotch.local
-    # -- Ingress path
-    # @section -- Hoppscotch AIO Container Parameters
-    path: /
-    # -- Ingress path type
-    # @section -- Hoppscotch AIO Container Parameters
-    pathType: ImplementationSpecific
-    # -- Ingress API version
-    # @section -- Hoppscotch AIO Container Parameters
-    apiVersion: ''
-    # -- Ingress annotations
-    # @section -- Hoppscotch AIO Container Parameters
-    annotations: {}
-    # -- Enable TLS for ingress
-    # @section -- Hoppscotch AIO Container Parameters
-    tls: false
-    # -- Create self-signed TLS certificates
-    # @section -- Hoppscotch AIO Container Parameters
-    selfSigned: false
-    # -- Extra hostnames for ingress
-    # @section -- Hoppscotch AIO Container Parameters
-    extraHosts: []
-    # -- Extra paths for ingress
-    # @section -- Hoppscotch AIO Container Parameters
-    extraPaths: []
-    # -- Extra TLS configurations for ingress
-    # @section -- Hoppscotch AIO Container Parameters
-    extraTls: []
-    # -- TLS secrets for ingress
-    # @section -- Hoppscotch AIO Container Parameters
-    secrets: []
-    # -- Extra ingress rules
-    # @section -- Hoppscotch AIO Container Parameters
-    extraRules: []
-  route:
-    # -- Enable OpenShift Route for Hoppscotch (OpenShift only, alternative to ingress)
-    # @section -- Hoppscotch AIO Container Parameters
-    enabled: false
-    # -- Route hostname (auto-assigned by OpenShift when left empty)
-    # @section -- Hoppscotch AIO Container Parameters
-    host: ''
-    # -- Route path
-    # @section -- Hoppscotch AIO Container Parameters
-    path: ''
-    # -- Service target port name or number the Route forwards to
-    # @section -- Hoppscotch AIO Container Parameters
-    targetPort: http
-    # -- Route wildcard policy (None or Subdomain)
-    # @section -- Hoppscotch AIO Container Parameters
-    wildcardPolicy: None
-    # -- Route annotations
-    # @section -- Hoppscotch AIO Container Parameters
-    annotations: {}
-    tls:
-      # -- Enable TLS for the Route
-      # @section -- Hoppscotch AIO Container Parameters
-      enabled: true
-      # -- TLS termination type (edge, passthrough or reencrypt)
-      # @section -- Hoppscotch AIO Container Parameters
-      termination: edge
-      # -- Insecure traffic policy (None, Allow or Redirect)
-      # @section -- Hoppscotch AIO Container Parameters
-      insecureEdgeTerminationPolicy: Redirect
-  persistence:
-    # -- Enable persistent storage for Hoppscotch
-    # @section -- Hoppscotch AIO Container Parameters
-    enabled: false
-    # -- Storage class for persistent volume
-    # @section -- Hoppscotch AIO Container Parameters
-    storageClass: ''
-    # -- Access modes for persistent volume
-    # @section -- Hoppscotch AIO Container Parameters
-    accessModes:
-      - ReadWriteOnce
-    # -- Size of persistent volume
-    # @section -- Hoppscotch AIO Container Parameters
-    size: 8Gi
-    # -- Mount path for persistent volume
-    # @section -- Hoppscotch AIO Container Parameters
-    mountPath: /hoppscotch/data
-    # -- Subpath within persistent volume
-    # @section -- Hoppscotch AIO Container Parameters
-    subPath: ''
-    # -- Annotations for persistent volume claim
-    # @section -- Hoppscotch AIO Container Parameters
-    annotations: {}
-    # -- Data source for persistent volume
-    # @section -- Hoppscotch AIO Container Parameters
-    dataSource: {}
-    # -- Use existing persistent volume claim
-    # @section -- Hoppscotch AIO Container Parameters
-    existingClaim: ''
-    # -- Selector for persistent volume
-    # @section -- Hoppscotch AIO Container Parameters
-    selector: {}
-  metrics:
-    # -- Enable metrics collection for Hoppscotch
-    # @section -- Hoppscotch AIO Container Parameters
-    enabled: false
-    serviceMonitor:
-      # -- Enable ServiceMonitor for Prometheus monitoring
-      # @section -- Hoppscotch AIO Container Parameters
-      enabled: false
-      # -- Namespace for ServiceMonitor (defaults to release namespace)
-      # @section -- Hoppscotch AIO Container Parameters
-      namespace: ''
-      # -- ServiceMonitor annotations
-      # @section -- Hoppscotch AIO Container Parameters
-      annotations: {}
-      # -- ServiceMonitor labels
-      # @section -- Hoppscotch AIO Container Parameters
-      labels: {}
-      # -- ServiceMonitor job label
-      # @section -- Hoppscotch AIO Container Parameters
-      jobLabel: ''
-      # -- Honor labels from target
-      # @section -- Hoppscotch AIO Container Parameters
-      honorLabels: false
-      # -- ServiceMonitor scrape interval
-      # @section -- Hoppscotch AIO Container Parameters
-      interval: ''
-      # -- ServiceMonitor scrape timeout
-      # @section -- Hoppscotch AIO Container Parameters
-      scrapeTimeout: ''
-      # -- ServiceMonitor TLS configuration
-      # @section -- Hoppscotch AIO Container Parameters
-      tlsConfig: {}
-      # -- ServiceMonitor metrics relabelings
-      # @section -- Hoppscotch AIO Container Parameters
-      metricsRelabelings: []
-      # -- ServiceMonitor relabelings
-      # @section -- Hoppscotch AIO Container Parameters
-      relabelings: []
-      # -- ServiceMonitor selector
-      # @section -- Hoppscotch AIO Container Parameters
-      selector: {}
-# @section -- Hoppscotch Frontend Container Parameters
-frontend:
-  image:
-    # -- Hoppscotch image repository
-    # @section -- Hoppscotch Frontend Container Parameters
-    repository: hoppscotch/hoppscotch-frontend
-    # -- Hoppscotch image pull policy
-    # @section -- Hoppscotch Frontend Container Parameters
-    pullPolicy: IfNotPresent
-    # -- Hoppscotch image tag
-    # @section -- Hoppscotch Frontend Container Parameters
-    tag: ''
-
-  # -- Number of Hoppscotch replicas
-  # @section -- Hoppscotch Frontend Container Parameters
-  replicaCount: 1
-  containerPorts:
-    # -- Hoppscotch HTTP container port
-    # @section -- Hoppscotch Frontend Container Parameters
-    http: 80
-    # -- Hoppscotch HTTPS container port
-    # @section -- Hoppscotch Frontend Container Parameters
-    https: 443
-    # -- Hoppscotch web app server container port (used by the desktop app when subpath based access is disabled)
-    # @section -- Hoppscotch Frontend Container Parameters
-    desktop: 3200
-  readinessProbe:
-    # -- Enable readiness probe
-    # @section -- Hoppscotch Frontend Container Parameters
-    enabled: true
-    # -- Initial delay seconds for readiness probe
-    # @section -- Hoppscotch Frontend Container Parameters
-    initialDelaySeconds: 0
-    # -- Period seconds for readiness probe
-    # @section -- Hoppscotch Frontend Container Parameters
-    periodSeconds: 10
-    # -- Timeout seconds for readiness probe
-    # @section -- Hoppscotch Frontend Container Parameters
-    timeoutSeconds: 1
-    # -- Failure threshold for readiness probe
-    # @section -- Hoppscotch Frontend Container Parameters
-    failureThreshold: 3
-    # -- Success threshold for readiness probe
-    # @section -- Hoppscotch Frontend Container Parameters
-    successThreshold: 1
-
-  # -- Custom liveness probe that overrides the default one
-  # @section -- Hoppscotch Frontend Container Parameters
-  customLivenessProbe: {}
-
-  # -- Custom readiness probe that overrides the default one
-  # @section -- Hoppscotch Frontend Container Parameters
-  customReadinessProbe: {}
-
-  # -- Custom startup probe that overrides the default one
-  # @section -- Hoppscotch Frontend Container Parameters
-  customStartupProbe: {}
-
-  # -- Array of extra environment variables to be added to Hoppscotch containers
-  # @section -- Hoppscotch Frontend Container Parameters
-  extraEnvVars: []
-  # -- Name of existing ConfigMap containing extra environment variables
-  # @section -- Hoppscotch Frontend Container Parameters
-  extraEnvVarsCM: ''
-  # -- Name of existing Secret containing extra environment variables
-  # @section -- Hoppscotch Frontend Container Parameters
-  extraEnvVarsSecret: ''
-
-  # -- Set container resources according to one common preset (allowed values: nano, micro, small, medium, large, xlarge, 2xlarge)
-  # @section -- Hoppscotch Frontend Container Parameters
-  resourcesPreset: small
-  # -- Set container resources for Hoppscotch (overrides resourcesPreset)
-  # @section -- Hoppscotch Frontend Container Parameters
-  resources: {}
-
-  # -- Annotations to add to Hoppscotch pods
-  # @section -- Hoppscotch Frontend Container Parameters
-  podAnnotations: {}
-  # -- Labels to add to Hoppscotch pods
-  # @section -- Hoppscotch Frontend Container Parameters
-  podLabels: {}
-
-  # -- Security context for Hoppscotch pods
-  # @section -- Hoppscotch Frontend Container Parameters
-  podSecurityContext: {}
-  # -- Security context for Hoppscotch containers
-  # @section -- Hoppscotch Frontend Container Parameters
-  securityContext: {}
-  updateStrategy:
-    # -- Deployment update strategy type (RollingUpdate or Recreate)
-    # @section -- Hoppscotch Frontend Container Parameters
-    type: RollingUpdate
-  pdb:
-    # -- Create PodDisruptionBudget for Hoppscotch deployment
-    # @section -- Hoppscotch Frontend Container Parameters
-    create: false
-    # -- Minimum number of available pods during disruptions
-    # @section -- Hoppscotch Frontend Container Parameters
-    minAvailable: ''
-    # -- Maximum number of unavailable pods during disruptions
-    # @section -- Hoppscotch Frontend Container Parameters
-    maxUnavailable: ''
-  autoscaling:
-    # -- Enable autoscaling for Hoppscotch deployment
-    # @section -- Hoppscotch Frontend Container Parameters
-    enabled: false
-    # -- Minimum number of Hoppscotch replicas
-    # @section -- Hoppscotch Frontend Container Parameters
-    minReplicas: 1
-    # -- Maximum number of Hoppscotch replicas
-    # @section -- Hoppscotch Frontend Container Parameters
-    maxReplicas: 100
-    # -- Target CPU utilization percentage for autoscaling
-    # @section -- Hoppscotch Frontend Container Parameters
-    targetCPUUtilizationPercentage: 80
-    # -- Target memory utilization percentage for autoscaling
-    # @section -- Hoppscotch Frontend Container Parameters
-    targetMemoryUtilizationPercentage: 80
-
-  # -- Node labels for Hoppscotch pods assignment
-  # @section -- Hoppscotch Frontend Container Parameters
-  nodeSelector: {}
-
-  # -- Tolerations for Hoppscotch pods assignment
-  # @section -- Hoppscotch Frontend Container Parameters
-  tolerations: []
-
-  # -- Affinity for Hoppscotch pods assignment
-  # @section -- Hoppscotch Frontend Container Parameters
-  affinity: {}
-
-  # -- Topology spread constraints for Hoppscotch pods assignment
-  # @section -- Hoppscotch Frontend Container Parameters
-  topologySpreadConstraints: []
-
-  # -- Extra volumes to add to Hoppscotch deployment
-  # @section -- Hoppscotch Frontend Container Parameters
-  volumes: []
-
-  # -- Extra volume mounts to add to Hoppscotch containers
-  # @section -- Hoppscotch Frontend Container Parameters
-  volumeMounts: []
-  service:
-    # -- Kubernetes service type
-    # @section -- Hoppscotch Frontend Container Parameters
-    type: ClusterIP
-    ports:
-      # -- Service HTTP port
-      # @section -- Hoppscotch Frontend Container Parameters
-      http: 80
-      # -- Service HTTPS port
-      # @section -- Hoppscotch Frontend Container Parameters
-      https: 443
-      # -- Web app server service port (when subpath based access is disabled)
-      # @section -- Hoppscotch Frontend Container Parameters
-      desktop: 3200
-    # -- Static cluster IP address (optional)
-    # @section -- Hoppscotch Frontend Container Parameters
-    clusterIP: ''
-    nodePorts:
-      # -- NodePort for HTTP (when service type is NodePort)
-      # @section -- Hoppscotch Frontend Container Parameters
-      http: ''
-      # -- NodePort for HTTPS (when service type is NodePort)
-      # @section -- Hoppscotch Frontend Container Parameters
-      https: ''
-      # -- NodePort for the web app server (when service type is NodePort and subpath based access is disabled)
-      # @section -- Hoppscotch Frontend Container Parameters
-      desktop: ''
-    # -- Load balancer IP address (when service type is LoadBalancer)
-    # @section -- Hoppscotch Frontend Container Parameters
-    loadBalancerIP: ''
-    # -- Load balancer source IP ranges (when service type is LoadBalancer)
-    # @section -- Hoppscotch Frontend Container Parameters
-    loadBalancerSourceRanges: []
-    # -- External traffic policy (Cluster or Local)
-    # @section -- Hoppscotch Frontend Container Parameters
-    externalTrafficPolicy: Cluster
-    # -- Service annotations
-    # @section -- Hoppscotch Frontend Container Parameters
-    annotations: {}
-    # -- Session affinity (None or ClientIP)
-    # @section -- Hoppscotch Frontend Container Parameters
-    sessionAffinity: None
-    # -- Session affinity configuration
-    # @section -- Hoppscotch Frontend Container Parameters
-    sessionAffinityConfig: {}
-    # -- Extra service ports
-    # @section -- Hoppscotch Frontend Container Parameters
-    extraPorts: []
-  networkPolicy:
-    # -- Enable NetworkPolicy for Hoppscotch pods
-    # @section -- Hoppscotch Frontend Container Parameters
-    enabled: false
-    # -- Allow external traffic to Hoppscotch pods
-    # @section -- Hoppscotch Frontend Container Parameters
-    allowExternal: true
-    # -- Allow external egress traffic from Hoppscotch pods
-    # @section -- Hoppscotch Frontend Container Parameters
-    allowExternalEgress: true
-    # -- Add external client access to NetworkPolicy
-    # @section -- Hoppscotch Frontend Container Parameters
-    addExternalClientAccess: true
-    # -- Extra ingress rules for NetworkPolicy
-    # @section -- Hoppscotch Frontend Container Parameters
-    extraIngress: []
-    # -- Extra egress rules for NetworkPolicy
-    # @section -- Hoppscotch Frontend Container Parameters
-    extraEgress: []
-    # -- Pod selector labels for ingress rules
-    # @section -- Hoppscotch Frontend Container Parameters
-    ingressPodMatchLabels: {}
-    # -- Namespace selector labels for ingress rules
-    # @section -- Hoppscotch Frontend Container Parameters
-    ingressNSMatchLabels: {}
-    # -- Namespace pod selector labels for ingress rules
-    # @section -- Hoppscotch Frontend Container Parameters
-    ingressNSPodMatchLabels: {}
-  ingress:
-    # -- Enable ingress for Hoppscotch
-    # @section -- Hoppscotch Frontend Container Parameters
-    enabled: false
-    # -- Ingress class name
-    # @section -- Hoppscotch Frontend Container Parameters
-    ingressClassName: ''
-    # -- Ingress hostname
-    # @section -- Hoppscotch Frontend Container Parameters
-    hostname: hoppscotch-frontend.local
-    # -- Ingress path
-    # @section -- Hoppscotch Frontend Container Parameters
-    path: /
-    # -- Ingress path type
-    # @section -- Hoppscotch Frontend Container Parameters
-    pathType: ImplementationSpecific
-    # -- Ingress API version
-    # @section -- Hoppscotch Frontend Container Parameters
-    apiVersion: ''
-    # -- Ingress annotations
-    # @section -- Hoppscotch Frontend Container Parameters
-    annotations: {}
-    # -- Enable TLS for ingress
-    # @section -- Hoppscotch Frontend Container Parameters
-    tls: false
-    # -- Create self-signed TLS certificates
-    # @section -- Hoppscotch Frontend Container Parameters
-    selfSigned: false
-    # -- Extra hostnames for ingress
-    # @section -- Hoppscotch Frontend Container Parameters
-    extraHosts: []
-    # -- Extra paths for ingress
-    # @section -- Hoppscotch Frontend Container Parameters
-    extraPaths: []
-    # -- Extra TLS configurations for ingress
-    # @section -- Hoppscotch Frontend Container Parameters
-    extraTls: []
-    # -- TLS secrets for ingress
-    # @section -- Hoppscotch Frontend Container Parameters
-    secrets: []
-    # -- Extra ingress rules
-    # @section -- Hoppscotch Frontend Container Parameters
-    extraRules: []
-  route:
-    # -- Enable OpenShift Route for Hoppscotch (OpenShift only, alternative to ingress)
-    # @section -- Hoppscotch Frontend Container Parameters
-    enabled: false
-    # -- Route hostname (auto-assigned by OpenShift when left empty)
-    # @section -- Hoppscotch Frontend Container Parameters
-    host: ''
-    # -- Route path
-    # @section -- Hoppscotch Frontend Container Parameters
-    path: ''
-    # -- Service target port name or number the Route forwards to
-    # @section -- Hoppscotch Frontend Container Parameters
-    targetPort: http
-    # -- Route wildcard policy (None or Subdomain)
-    # @section -- Hoppscotch Frontend Container Parameters
-    wildcardPolicy: None
-    # -- Route annotations
-    # @section -- Hoppscotch Frontend Container Parameters
-    annotations: {}
-    tls:
-      # -- Enable TLS for the Route
-      # @section -- Hoppscotch Frontend Container Parameters
-      enabled: true
-      # -- TLS termination type (edge, passthrough or reencrypt)
-      # @section -- Hoppscotch Frontend Container Parameters
-      termination: edge
-      # -- Insecure traffic policy (None, Allow or Redirect)
-      # @section -- Hoppscotch Frontend Container Parameters
-      insecureEdgeTerminationPolicy: Redirect
-  persistence:
-    # -- Enable persistent storage for Hoppscotch
-    # @section -- Hoppscotch Frontend Container Parameters
-    enabled: false
-    # -- Storage class for persistent volume
-    # @section -- Hoppscotch Frontend Container Parameters
-    storageClass: ''
-    # -- Access modes for persistent volume
-    # @section -- Hoppscotch Frontend Container Parameters
-    accessModes:
-      - ReadWriteOnce
-    # -- Size of persistent volume
-    # @section -- Hoppscotch Frontend Container Parameters
-    size: 8Gi
-    # -- Mount path for persistent volume
-    # @section -- Hoppscotch Frontend Container Parameters
-    mountPath: /hoppscotch/data
-    # -- Subpath within persistent volume
-    # @section -- Hoppscotch Frontend Container Parameters
-    subPath: ''
-    # -- Annotations for persistent volume claim
-    # @section -- Hoppscotch Frontend Container Parameters
-    annotations: {}
-    # -- Data source for persistent volume
-    # @section -- Hoppscotch Frontend Container Parameters
-    dataSource: {}
-    # -- Use existing persistent volume claim
-    # @section -- Hoppscotch Frontend Container Parameters
-    existingClaim: ''
-    # -- Selector for persistent volume
-    # @section -- Hoppscotch Frontend Container Parameters
-    selector: {}
-  metrics:
-    # -- Enable metrics collection for Hoppscotch
-    # @section -- Hoppscotch Frontend Container Parameters
-    enabled: false
-    serviceMonitor:
-      # -- Enable ServiceMonitor for Prometheus monitoring
-      # @section -- Hoppscotch Frontend Container Parameters
-      enabled: false
-      # -- Namespace for ServiceMonitor (defaults to release namespace)
-      # @section -- Hoppscotch Frontend Container Parameters
-      namespace: ''
-      # -- ServiceMonitor annotations
-      # @section -- Hoppscotch Frontend Container Parameters
-      annotations: {}
-      # -- ServiceMonitor labels
-      # @section -- Hoppscotch Frontend Container Parameters
-      labels: {}
-      # -- ServiceMonitor job label
-      # @section -- Hoppscotch Frontend Container Parameters
-      jobLabel: ''
-      # -- Honor labels from target
-      # @section -- Hoppscotch Frontend Container Parameters
-      honorLabels: false
-      # -- ServiceMonitor scrape interval
-      # @section -- Hoppscotch Frontend Container Parameters
-      interval: ''
-      # -- ServiceMonitor scrape timeout
-      # @section -- Hoppscotch Frontend Container Parameters
-      scrapeTimeout: ''
-      # -- ServiceMonitor TLS configuration
-      # @section -- Hoppscotch Frontend Container Parameters
-      tlsConfig: {}
-      # -- ServiceMonitor metrics relabelings
-      # @section -- Hoppscotch Frontend Container Parameters
-      metricsRelabelings: []
-      # -- ServiceMonitor relabelings
-      # @section -- Hoppscotch Frontend Container Parameters
-      relabelings: []
-      # -- ServiceMonitor selector
-      # @section -- Hoppscotch Frontend Container Parameters
-      selector: {}
-# @section -- Hoppscotch Backend Container Parameters
-backend:
-  image:
-    # -- Hoppscotch image repository
-    # @section -- Hoppscotch Backend Container Parameters
-    repository: hoppscotch/hoppscotch-backend
-    # -- Hoppscotch image pull policy
-    # @section -- Hoppscotch Backend Container Parameters
-    pullPolicy: IfNotPresent
-    # -- Hoppscotch image tag
-    # @section -- Hoppscotch Backend Container Parameters
-    tag: ''
-
-  # -- Number of Hoppscotch replicas
-  # @section -- Hoppscotch Backend Container Parameters
-  replicaCount: 1
-  containerPorts:
-    # -- Hoppscotch HTTP container port
-    # @section -- Hoppscotch Backend Container Parameters
-    http: 80
-    # -- Hoppscotch HTTPS container port
-    # @section -- Hoppscotch Backend Container Parameters
-    https: 443
-  readinessProbe:
-    # -- Enable readiness probe
-    # @section -- Hoppscotch Backend Container Parameters
-    enabled: true
-    # -- Initial delay seconds for readiness probe
-    # @section -- Hoppscotch Backend Container Parameters
-    initialDelaySeconds: 0
-    # -- Period seconds for readiness probe
-    # @section -- Hoppscotch Backend Container Parameters
-    periodSeconds: 10
-    # -- Timeout seconds for readiness probe
-    # @section -- Hoppscotch Backend Container Parameters
-    timeoutSeconds: 1
-    # -- Failure threshold for readiness probe
-    # @section -- Hoppscotch Backend Container Parameters
-    failureThreshold: 3
-    # -- Success threshold for readiness probe
-    # @section -- Hoppscotch Backend Container Parameters
-    successThreshold: 1
-
-  # -- Custom liveness probe that overrides the default one
-  # @section -- Hoppscotch Backend Container Parameters
-  customLivenessProbe: {}
-
-  # -- Custom readiness probe that overrides the default one
-  # @section -- Hoppscotch Backend Container Parameters
-  customReadinessProbe: {}
-
-  # -- Custom startup probe that overrides the default one
-  # @section -- Hoppscotch Backend Container Parameters
-  customStartupProbe: {}
-
-  # -- Array of extra environment variables to be added to Hoppscotch containers
-  # @section -- Hoppscotch Backend Container Parameters
-  extraEnvVars: []
-  # -- Name of existing ConfigMap containing extra environment variables
-  # @section -- Hoppscotch Backend Container Parameters
-  extraEnvVarsCM: ''
-  # -- Name of existing Secret containing extra environment variables
-  # @section -- Hoppscotch Backend Container Parameters
-  extraEnvVarsSecret: ''
-
-  # -- Set container resources according to one common preset (allowed values: nano, micro, small, medium, large, xlarge, 2xlarge)
-  # @section -- Hoppscotch Backend Container Parameters
-  resourcesPreset: small
-  # -- Set container resources for Hoppscotch (overrides resourcesPreset)
-  # @section -- Hoppscotch Backend Container Parameters
-  resources: {}
-
-  # -- Annotations to add to Hoppscotch pods
-  # @section -- Hoppscotch Backend Container Parameters
-  podAnnotations: {}
-  # -- Labels to add to Hoppscotch pods
-  # @section -- Hoppscotch Backend Container Parameters
-  podLabels: {}
-
-  # -- Security context for Hoppscotch pods
-  # @section -- Hoppscotch Backend Container Parameters
-  podSecurityContext: {}
-  # -- Security context for Hoppscotch containers
-  # @section -- Hoppscotch Backend Container Parameters
-  securityContext: {}
-  updateStrategy:
-    # -- Deployment update strategy type (RollingUpdate or Recreate)
-    # @section -- Hoppscotch Backend Container Parameters
-    type: RollingUpdate
-  pdb:
-    # -- Create PodDisruptionBudget for Hoppscotch deployment
-    # @section -- Hoppscotch Backend Container Parameters
-    create: false
-    # -- Minimum number of available pods during disruptions
-    # @section -- Hoppscotch Backend Container Parameters
-    minAvailable: ''
-    # -- Maximum number of unavailable pods during disruptions
-    # @section -- Hoppscotch Backend Container Parameters
-    maxUnavailable: ''
-  autoscaling:
-    # -- Enable autoscaling for Hoppscotch deployment
-    # @section -- Hoppscotch Backend Container Parameters
-    enabled: false
-    # -- Minimum number of Hoppscotch replicas
-    # @section -- Hoppscotch Backend Container Parameters
-    minReplicas: 1
-    # -- Maximum number of Hoppscotch replicas
-    # @section -- Hoppscotch Backend Container Parameters
-    maxReplicas: 100
-    # -- Target CPU utilization percentage for autoscaling
-    # @section -- Hoppscotch Backend Container Parameters
-    targetCPUUtilizationPercentage: 80
-    # -- Target memory utilization percentage for autoscaling
-    # @section -- Hoppscotch Backend Container Parameters
-    targetMemoryUtilizationPercentage: 80
-
-  # -- Node labels for Hoppscotch pods assignment
-  # @section -- Hoppscotch Backend Container Parameters
-  nodeSelector: {}
-
-  # -- Tolerations for Hoppscotch pods assignment
-  # @section -- Hoppscotch Backend Container Parameters
-  tolerations: []
-
-  # -- Affinity for Hoppscotch pods assignment
-  # @section -- Hoppscotch Backend Container Parameters
-  affinity: {}
-
-  # -- Topology spread constraints for Hoppscotch pods assignment
-  # @section -- Hoppscotch Backend Container Parameters
-  topologySpreadConstraints: []
-
-  # -- Extra volumes to add to Hoppscotch deployment
-  # @section -- Hoppscotch Backend Container Parameters
-  volumes: []
-
-  # -- Extra volume mounts to add to Hoppscotch containers
-  # @section -- Hoppscotch Backend Container Parameters
-  volumeMounts: []
-  service:
-    # -- Kubernetes service type
-    # @section -- Hoppscotch Backend Container Parameters
-    type: ClusterIP
-    ports:
-      # -- Service HTTP port
-      # @section -- Hoppscotch Backend Container Parameters
-      http: 80
-      # -- Service HTTPS port
-      # @section -- Hoppscotch Backend Container Parameters
-      https: 443
-    # -- Static cluster IP address (optional)
-    # @section -- Hoppscotch Backend Container Parameters
-    clusterIP: ''
-    nodePorts:
-      # -- NodePort for HTTP (when service type is NodePort)
-      # @section -- Hoppscotch Backend Container Parameters
-      http: ''
-      # -- NodePort for HTTPS (when service type is NodePort)
-      # @section -- Hoppscotch Backend Container Parameters
-      https: ''
-    # -- Load balancer IP address (when service type is LoadBalancer)
-    # @section -- Hoppscotch Backend Container Parameters
-    loadBalancerIP: ''
-    # -- Load balancer source IP ranges (when service type is LoadBalancer)
-    # @section -- Hoppscotch Backend Container Parameters
-    loadBalancerSourceRanges: []
-    # -- External traffic policy (Cluster or Local)
-    # @section -- Hoppscotch Backend Container Parameters
-    externalTrafficPolicy: Cluster
-    # -- Service annotations
-    # @section -- Hoppscotch Backend Container Parameters
-    annotations: {}
-    # -- Session affinity (None or ClientIP)
-    # @section -- Hoppscotch Backend Container Parameters
-    sessionAffinity: None
-    # -- Session affinity configuration
-    # @section -- Hoppscotch Backend Container Parameters
-    sessionAffinityConfig: {}
-    # -- Extra service ports
-    # @section -- Hoppscotch Backend Container Parameters
-    extraPorts: []
-  networkPolicy:
-    # -- Enable NetworkPolicy for Hoppscotch pods
-    # @section -- Hoppscotch Backend Container Parameters
-    enabled: false
-    # -- Allow external traffic to Hoppscotch pods
-    # @section -- Hoppscotch Backend Container Parameters
-    allowExternal: true
-    # -- Allow external egress traffic from Hoppscotch pods
-    # @section -- Hoppscotch Backend Container Parameters
-    allowExternalEgress: true
-    # -- Add external client access to NetworkPolicy
-    # @section -- Hoppscotch Backend Container Parameters
-    addExternalClientAccess: true
-    # -- Extra ingress rules for NetworkPolicy
-    # @section -- Hoppscotch Backend Container Parameters
-    extraIngress: []
-    # -- Extra egress rules for NetworkPolicy
-    # @section -- Hoppscotch Backend Container Parameters
-    extraEgress: []
-    # -- Pod selector labels for ingress rules
-    # @section -- Hoppscotch Backend Container Parameters
-    ingressPodMatchLabels: {}
-    # -- Namespace selector labels for ingress rules
-    # @section -- Hoppscotch Backend Container Parameters
-    ingressNSMatchLabels: {}
-    # -- Namespace pod selector labels for ingress rules
-    # @section -- Hoppscotch Backend Container Parameters
-    ingressNSPodMatchLabels: {}
-  ingress:
-    # -- Enable ingress for Hoppscotch
-    # @section -- Hoppscotch Backend Container Parameters
-    enabled: false
-    # -- Ingress class name
-    # @section -- Hoppscotch Backend Container Parameters
-    ingressClassName: ''
-    # -- Ingress hostname
-    # @section -- Hoppscotch Backend Container Parameters
-    hostname: hoppscotch-frontend.local
-    # -- Ingress path
-    # @section -- Hoppscotch Backend Container Parameters
-    path: /
-    # -- Ingress path type
-    # @section -- Hoppscotch Backend Container Parameters
-    pathType: ImplementationSpecific
-    # -- Ingress API version
-    # @section -- Hoppscotch Backend Container Parameters
-    apiVersion: ''
-    # -- Ingress annotations
-    # @section -- Hoppscotch Backend Container Parameters
-    annotations: {}
-    # -- Enable TLS for ingress
-    # @section -- Hoppscotch Backend Container Parameters
-    tls: false
-    # -- Create self-signed TLS certificates
-    # @section -- Hoppscotch Backend Container Parameters
-    selfSigned: false
-    # -- Extra hostnames for ingress
-    # @section -- Hoppscotch Backend Container Parameters
-    extraHosts: []
-    # -- Extra paths for ingress
-    # @section -- Hoppscotch Backend Container Parameters
-    extraPaths: []
-    # -- Extra TLS configurations for ingress
-    # @section -- Hoppscotch Backend Container Parameters
-    extraTls: []
-    # -- TLS secrets for ingress
-    # @section -- Hoppscotch Backend Container Parameters
-    secrets: []
-    # -- Extra ingress rules
-    # @section -- Hoppscotch Backend Container Parameters
-    extraRules: []
-  route:
-    # -- Enable OpenShift Route for Hoppscotch (OpenShift only, alternative to ingress)
-    # @section -- Hoppscotch Backend Container Parameters
-    enabled: false
-    # -- Route hostname (auto-assigned by OpenShift when left empty)
-    # @section -- Hoppscotch Backend Container Parameters
-    host: ''
-    # -- Route path
-    # @section -- Hoppscotch Backend Container Parameters
-    path: ''
-    # -- Service target port name or number the Route forwards to
-    # @section -- Hoppscotch Backend Container Parameters
-    targetPort: http
-    # -- Route wildcard policy (None or Subdomain)
-    # @section -- Hoppscotch Backend Container Parameters
-    wildcardPolicy: None
-    # -- Route annotations
-    # @section -- Hoppscotch Backend Container Parameters
-    annotations: {}
-    tls:
-      # -- Enable TLS for the Route
-      # @section -- Hoppscotch Backend Container Parameters
-      enabled: true
-      # -- TLS termination type (edge, passthrough or reencrypt)
-      # @section -- Hoppscotch Backend Container Parameters
-      termination: edge
-      # -- Insecure traffic policy (None, Allow or Redirect)
-      # @section -- Hoppscotch Backend Container Parameters
-      insecureEdgeTerminationPolicy: Redirect
-  persistence:
-    # -- Enable persistent storage for Hoppscotch
-    # @section -- Hoppscotch Backend Container Parameters
-    enabled: false
-    # -- Storage class for persistent volume
-    # @section -- Hoppscotch Backend Container Parameters
-    storageClass: ''
-    # -- Access modes for persistent volume
-    # @section -- Hoppscotch Backend Container Parameters
-    accessModes:
-      - ReadWriteOnce
-    # -- Size of persistent volume
-    # @section -- Hoppscotch Backend Container Parameters
-    size: 8Gi
-    # -- Mount path for persistent volume
-    # @section -- Hoppscotch Backend Container Parameters
-    mountPath: /hoppscotch/data
-    # -- Subpath within persistent volume
-    # @section -- Hoppscotch Backend Container Parameters
-    subPath: ''
-    # -- Annotations for persistent volume claim
-    # @section -- Hoppscotch Backend Container Parameters
-    annotations: {}
-    # -- Data source for persistent volume
-    # @section -- Hoppscotch Backend Container Parameters
-    dataSource: {}
-    # -- Use existing persistent volume claim
-    # @section -- Hoppscotch Backend Container Parameters
-    existingClaim: ''
-    # -- Selector for persistent volume
-    # @section -- Hoppscotch Backend Container Parameters
-    selector: {}
-  metrics:
-    # -- Enable metrics collection for Hoppscotch
-    # @section -- Hoppscotch Backend Container Parameters
-    enabled: false
-    serviceMonitor:
-      # -- Enable ServiceMonitor for Prometheus monitoring
-      # @section -- Hoppscotch Backend Container Parameters
-      enabled: false
-      # -- Namespace for ServiceMonitor (defaults to release namespace)
-      # @section -- Hoppscotch Backend Container Parameters
-      namespace: ''
-      # -- ServiceMonitor annotations
-      # @section -- Hoppscotch Backend Container Parameters
-      annotations: {}
-      # -- ServiceMonitor labels
-      # @section -- Hoppscotch Backend Container Parameters
-      labels: {}
-      # -- ServiceMonitor job label
-      # @section -- Hoppscotch Backend Container Parameters
-      jobLabel: ''
-      # -- Honor labels from target
-      # @section -- Hoppscotch Backend Container Parameters
-      honorLabels: false
-      # -- ServiceMonitor scrape interval
-      # @section -- Hoppscotch Backend Container Parameters
-      interval: ''
-      # -- ServiceMonitor scrape timeout
-      # @section -- Hoppscotch Backend Container Parameters
-      scrapeTimeout: ''
-      # -- ServiceMonitor TLS configuration
-      # @section -- Hoppscotch Backend Container Parameters
-      tlsConfig: {}
-      # -- ServiceMonitor metrics relabelings
-      # @section -- Hoppscotch Backend Container Parameters
-      metricsRelabelings: []
-      # -- ServiceMonitor relabelings
-      # @section -- Hoppscotch Backend Container Parameters
-      relabelings: []
-      # -- ServiceMonitor selector
-      # @section -- Hoppscotch Backend Container Parameters
-      selector: {}
-# @section -- Hoppscotch Admin Container Parameters
-admin:
-  image:
-    # -- Hoppscotch image repository
-    # @section -- Hoppscotch Admin Container Parameters
-    repository: hoppscotch/hoppscotch-admin
-    # -- Hoppscotch image pull policy
-    # @section -- Hoppscotch Admin Container Parameters
-    pullPolicy: IfNotPresent
-    # -- Hoppscotch image tag
-    # @section -- Hoppscotch Admin Container Parameters
-    tag: ''
-
-  # -- Number of Hoppscotch replicas
-  # @section -- Hoppscotch Admin Container Parameters
-  replicaCount: 1
-  containerPorts:
-    # -- Hoppscotch HTTP container port
-    # @section -- Hoppscotch Admin Container Parameters
-    http: 80
-    # -- Hoppscotch HTTPS container port
-    # @section -- Hoppscotch Admin Container Parameters
-    https: 443
-  readinessProbe:
-    # -- Enable readiness probe
-    # @section -- Hoppscotch Admin Container Parameters
-    enabled: true
-    # -- Initial delay seconds for readiness probe
-    # @section -- Hoppscotch Admin Container Parameters
-    initialDelaySeconds: 0
-    # -- Period seconds for readiness probe
-    # @section -- Hoppscotch Admin Container Parameters
-    periodSeconds: 10
-    # -- Timeout seconds for readiness probe
-    # @section -- Hoppscotch Admin Container Parameters
-    timeoutSeconds: 1
-    # -- Failure threshold for readiness probe
-    # @section -- Hoppscotch Admin Container Parameters
-    failureThreshold: 3
-    # -- Success threshold for readiness probe
-    # @section -- Hoppscotch Admin Container Parameters
-    successThreshold: 1
-
-  # -- Custom liveness probe that overrides the default one
-  # @section -- Hoppscotch Admin Container Parameters
-  customLivenessProbe: {}
-
-  # -- Custom readiness probe that overrides the default one
-  # @section -- Hoppscotch Admin Container Parameters
-  customReadinessProbe: {}
-
-  # -- Custom startup probe that overrides the default one
-  # @section -- Hoppscotch Admin Container Parameters
-  customStartupProbe: {}
-
-  # -- Array of extra environment variables to be added to Hoppscotch containers
-  # @section -- Hoppscotch Admin Container Parameters
-  extraEnvVars: []
-  # -- Name of existing ConfigMap containing extra environment variables
-  # @section -- Hoppscotch Admin Container Parameters
-  extraEnvVarsCM: ''
-  # -- Name of existing Secret containing extra environment variables
-  # @section -- Hoppscotch Admin Container Parameters
-  extraEnvVarsSecret: ''
-
-  # -- Set container resources according to one common preset (allowed values: nano, micro, small, medium, large, xlarge, 2xlarge)
-  # @section -- Hoppscotch Admin Container Parameters
-  resourcesPreset: small
-  # -- Set container resources for Hoppscotch (overrides resourcesPreset)
-  # @section -- Hoppscotch Admin Container Parameters
-  resources: {}
-
-  # -- Annotations to add to Hoppscotch pods
-  # @section -- Hoppscotch Admin Container Parameters
-  podAnnotations: {}
-  # -- Labels to add to Hoppscotch pods
-  # @section -- Hoppscotch Admin Container Parameters
-  podLabels: {}
-
-  # -- Security context for Hoppscotch pods
-  # @section -- Hoppscotch Admin Container Parameters
-  podSecurityContext: {}
-  # -- Security context for Hoppscotch containers
-  # @section -- Hoppscotch Admin Container Parameters
-  securityContext: {}
-  updateStrategy:
-    # -- Deployment update strategy type (RollingUpdate or Recreate)
-    # @section -- Hoppscotch Admin Container Parameters
-    type: RollingUpdate
-  pdb:
-    # -- Create PodDisruptionBudget for Hoppscotch deployment
-    # @section -- Hoppscotch Admin Container Parameters
-    create: false
-    # -- Minimum number of available pods during disruptions
-    # @section -- Hoppscotch Admin Container Parameters
-    minAvailable: ''
-    # -- Maximum number of unavailable pods during disruptions
-    # @section -- Hoppscotch Admin Container Parameters
-    maxUnavailable: ''
-  autoscaling:
-    # -- Enable autoscaling for Hoppscotch deployment
-    # @section -- Hoppscotch Admin Container Parameters
-    enabled: false
-    # -- Minimum number of Hoppscotch replicas
-    # @section -- Hoppscotch Admin Container Parameters
-    minReplicas: 1
-    # -- Maximum number of Hoppscotch replicas
-    # @section -- Hoppscotch Admin Container Parameters
-    maxReplicas: 100
-    # -- Target CPU utilization percentage for autoscaling
-    # @section -- Hoppscotch Admin Container Parameters
-    targetCPUUtilizationPercentage: 80
-    # -- Target memory utilization percentage for autoscaling
-    # @section -- Hoppscotch Admin Container Parameters
-    targetMemoryUtilizationPercentage: 80
-
-  # -- Node labels for Hoppscotch pods assignment
-  # @section -- Hoppscotch Admin Container Parameters
-  nodeSelector: {}
-
-  # -- Tolerations for Hoppscotch pods assignment
-  # @section -- Hoppscotch Admin Container Parameters
-  tolerations: []
-
-  # -- Affinity for Hoppscotch pods assignment
-  # @section -- Hoppscotch Admin Container Parameters
-  affinity: {}
-
-  # -- Topology spread constraints for Hoppscotch pods assignment
-  # @section -- Hoppscotch Admin Container Parameters
-  topologySpreadConstraints: []
-
-  # -- Extra volumes to add to Hoppscotch deployment
-  # @section -- Hoppscotch Admin Container Parameters
-  volumes: []
-
-  # -- Extra volume mounts to add to Hoppscotch containers
-  # @section -- Hoppscotch Admin Container Parameters
-  volumeMounts: []
-  service:
-    # -- Kubernetes service type
-    # @section -- Hoppscotch Admin Container Parameters
-    type: ClusterIP
-    ports:
-      # -- Service HTTP port
-      # @section -- Hoppscotch Admin Container Parameters
-      http: 80
-      # -- Service HTTPS port
-      # @section -- Hoppscotch Admin Container Parameters
-      https: 443
-    # -- Static cluster IP address (optional)
-    # @section -- Hoppscotch Admin Container Parameters
-    clusterIP: ''
-    nodePorts:
-      # -- NodePort for HTTP (when service type is NodePort)
-      # @section -- Hoppscotch Admin Container Parameters
-      http: ''
-      # -- NodePort for HTTPS (when service type is NodePort)
-      # @section -- Hoppscotch Admin Container Parameters
-      https: ''
-    # -- Load balancer IP address (when service type is LoadBalancer)
-    # @section -- Hoppscotch Admin Container Parameters
-    loadBalancerIP: ''
-    # -- Load balancer source IP ranges (when service type is LoadBalancer)
-    # @section -- Hoppscotch Admin Container Parameters
-    loadBalancerSourceRanges: []
-    # -- External traffic policy (Cluster or Local)
-    # @section -- Hoppscotch Admin Container Parameters
-    externalTrafficPolicy: Cluster
-    # -- Service annotations
-    # @section -- Hoppscotch Admin Container Parameters
-    annotations: {}
-    # -- Session affinity (None or ClientIP)
-    # @section -- Hoppscotch Admin Container Parameters
-    sessionAffinity: None
-    # -- Session affinity configuration
-    # @section -- Hoppscotch Admin Container Parameters
-    sessionAffinityConfig: {}
-    # -- Extra service ports
-    # @section -- Hoppscotch Admin Container Parameters
-    extraPorts: []
-  networkPolicy:
-    # -- Enable NetworkPolicy for Hoppscotch pods
-    # @section -- Hoppscotch Admin Container Parameters
-    enabled: false
-    # -- Allow external traffic to Hoppscotch pods
-    # @section -- Hoppscotch Admin Container Parameters
-    allowExternal: true
-    # -- Allow external egress traffic from Hoppscotch pods
-    # @section -- Hoppscotch Admin Container Parameters
-    allowExternalEgress: true
-    # -- Add external client access to NetworkPolicy
-    # @section -- Hoppscotch Admin Container Parameters
-    addExternalClientAccess: true
-    # -- Extra ingress rules for NetworkPolicy
-    # @section -- Hoppscotch Admin Container Parameters
-    extraIngress: []
-    # -- Extra egress rules for NetworkPolicy
-    # @section -- Hoppscotch Admin Container Parameters
-    extraEgress: []
-    # -- Pod selector labels for ingress rules
-    # @section -- Hoppscotch Admin Container Parameters
-    ingressPodMatchLabels: {}
-    # -- Namespace selector labels for ingress rules
-    # @section -- Hoppscotch Admin Container Parameters
-    ingressNSMatchLabels: {}
-    # -- Namespace pod selector labels for ingress rules
-    # @section -- Hoppscotch Admin Container Parameters
-    ingressNSPodMatchLabels: {}
-  ingress:
-    # -- Enable ingress for Hoppscotch
-    # @section -- Hoppscotch Admin Container Parameters
-    enabled: false
-    # -- Ingress class name
-    # @section -- Hoppscotch Admin Container Parameters
-    ingressClassName: ''
-    # -- Ingress hostname
-    # @section -- Hoppscotch Admin Container Parameters
-    hostname: hoppscotch-admin.local
-    # -- Ingress path
-    # @section -- Hoppscotch Admin Container Parameters
-    path: /
-    # -- Ingress path type
-    # @section -- Hoppscotch Admin Container Parameters
-    pathType: ImplementationSpecific
-    # -- Ingress API version
-    # @section -- Hoppscotch Admin Container Parameters
-    apiVersion: ''
-    # -- Ingress annotations
-    # @section -- Hoppscotch Admin Container Parameters
-    annotations: {}
-    # -- Enable TLS for ingress
-    # @section -- Hoppscotch Admin Container Parameters
-    tls: false
-    # -- Create self-signed TLS certificates
-    # @section -- Hoppscotch Admin Container Parameters
-    selfSigned: false
-    # -- Extra hostnames for ingress
-    # @section -- Hoppscotch Admin Container Parameters
-    extraHosts: []
-    # -- Extra paths for ingress
-    # @section -- Hoppscotch Admin Container Parameters
-    extraPaths: []
-    # -- Extra TLS configurations for ingress
-    # @section -- Hoppscotch Admin Container Parameters
-    extraTls: []
-    # -- TLS secrets for ingress
-    # @section -- Hoppscotch Admin Container Parameters
-    secrets: []
-    # -- Extra ingress rules
-    # @section -- Hoppscotch Admin Container Parameters
-    extraRules: []
-  route:
-    # -- Enable OpenShift Route for Hoppscotch (OpenShift only, alternative to ingress)
-    # @section -- Hoppscotch Admin Container Parameters
-    enabled: false
-    # -- Route hostname (auto-assigned by OpenShift when left empty)
-    # @section -- Hoppscotch Admin Container Parameters
-    host: ''
-    # -- Route path
-    # @section -- Hoppscotch Admin Container Parameters
-    path: ''
-    # -- Service target port name or number the Route forwards to
-    # @section -- Hoppscotch Admin Container Parameters
-    targetPort: http
-    # -- Route wildcard policy (None or Subdomain)
-    # @section -- Hoppscotch Admin Container Parameters
-    wildcardPolicy: None
-    # -- Route annotations
-    # @section -- Hoppscotch Admin Container Parameters
-    annotations: {}
-    tls:
-      # -- Enable TLS for the Route
-      # @section -- Hoppscotch Admin Container Parameters
-      enabled: true
-      # -- TLS termination type (edge, passthrough or reencrypt)
-      # @section -- Hoppscotch Admin Container Parameters
-      termination: edge
-      # -- Insecure traffic policy (None, Allow or Redirect)
-      # @section -- Hoppscotch Admin Container Parameters
-      insecureEdgeTerminationPolicy: Redirect
-  persistence:
-    # -- Enable persistent storage for Hoppscotch
-    # @section -- Hoppscotch Admin Container Parameters
-    enabled: false
-    # -- Storage class for persistent volume
-    # @section -- Hoppscotch Admin Container Parameters
-    storageClass: ''
-    # -- Access modes for persistent volume
-    # @section -- Hoppscotch Admin Container Parameters
-    accessModes:
-      - ReadWriteOnce
-    # -- Size of persistent volume
-    # @section -- Hoppscotch Admin Container Parameters
-    size: 8Gi
-    # -- Mount path for persistent volume
-    # @section -- Hoppscotch Admin Container Parameters
-    mountPath: /hoppscotch/data
-    # -- Subpath within persistent volume
-    # @section -- Hoppscotch Admin Container Parameters
-    subPath: ''
-    # -- Annotations for persistent volume claim
-    # @section -- Hoppscotch Admin Container Parameters
-    annotations: {}
-    # -- Data source for persistent volume
-    # @section -- Hoppscotch Admin Container Parameters
-    dataSource: {}
-    # -- Use existing persistent volume claim
-    # @section -- Hoppscotch Admin Container Parameters
-    existingClaim: ''
-    # -- Selector for persistent volume
-    # @section -- Hoppscotch Admin Container Parameters
-    selector: {}
-  metrics:
-    # -- Enable metrics collection for Hoppscotch
-    # @section -- Hoppscotch Admin Container Parameters
-    enabled: false
-    serviceMonitor:
-      # -- Enable ServiceMonitor for Prometheus monitoring
-      # @section -- Hoppscotch Admin Container Parameters
-      enabled: false
-      # -- Namespace for ServiceMonitor (defaults to release namespace)
-      # @section -- Hoppscotch Admin Container Parameters
-      namespace: ''
-      # -- ServiceMonitor annotations
-      # @section -- Hoppscotch Admin Container Parameters
-      annotations: {}
-      # -- ServiceMonitor labels
-      # @section -- Hoppscotch Admin Container Parameters
-      labels: {}
-      # -- ServiceMonitor job label
-      # @section -- Hoppscotch Admin Container Parameters
-      jobLabel: ''
-      # -- Honor labels from target
-      # @section -- Hoppscotch Admin Container Parameters
-      honorLabels: false
-      # -- ServiceMonitor scrape interval
-      # @section -- Hoppscotch Admin Container Parameters
-      interval: ''
-      # -- ServiceMonitor scrape timeout
-      # @section -- Hoppscotch Admin Container Parameters
-      scrapeTimeout: ''
-      # -- ServiceMonitor TLS configuration
-      # @section -- Hoppscotch Admin Container Parameters
-      tlsConfig: {}
-      # -- ServiceMonitor metrics relabelings
-      # @section -- Hoppscotch Admin Container Parameters
-      metricsRelabelings: []
-      # -- ServiceMonitor relabelings
-      # @section -- Hoppscotch Admin Container Parameters
-      relabelings: []
-      # -- ServiceMonitor selector
-      # @section -- Hoppscotch Admin Container Parameters
-      selector: {}
-# @section -- Hoppscotch Migrations Container Parameters
-migrations:
-  # -- Enable database migrations job
-  # @section -- Hoppscotch Migrations Container Parameters
-  enabled: true
-
-  # -- Array of extra environment variables to be added to Hoppscotch containers
-  # @section -- Hoppscotch Migrations Container Parameters
-  extraEnvVars: []
-  # -- Name of existing ConfigMap containing extra environment variables
-  # @section -- Hoppscotch Migrations Container Parameters
-  extraEnvVarsCM: ''
-  # -- Name of existing Secret containing extra environment variables
-  # @section -- Hoppscotch Migrations Container Parameters
-  extraEnvVarsSecret: ''
-
-  # -- Set container resources according to one common preset (allowed values: nano, micro, small, medium, large, xlarge, 2xlarge)
-  # @section -- Hoppscotch Migrations Container Parameters
-  resourcesPreset: small
-  # -- Set container resources for Hoppscotch (overrides resourcesPreset)
-  # @section -- Hoppscotch Migrations Container Parameters
-  resources: {}
-
-  # -- Node labels for Hoppscotch pods assignment
-  # @section -- Hoppscotch Migrations Container Parameters
-  nodeSelector: {}
-
-  # -- Tolerations for Hoppscotch pods assignment
-  # @section -- Hoppscotch Migrations Container Parameters
-  tolerations: []
-
-  # -- Affinity for Hoppscotch pods assignment
-  # @section -- Hoppscotch Migrations Container Parameters
-  affinity: {}
-
-  # -- Topology spread constraints for Hoppscotch pods assignment
-  # @section -- Hoppscotch Migrations Container Parameters
-  topologySpreadConstraints: []
-# @section -- Default Init Containers Parameters
-defaultInitContainers:
-  waitForDatabase:
-    # -- Enable init container that waits for database to be ready
-    # @section -- Default Init Containers Parameters
-    enabled: true
-    image:
-      # -- Wait for database image repository
-      # @section -- Default Init Containers Parameters
-      repository: postgres
-      # -- Wait for database image pull policy
-      # @section -- Default Init Containers Parameters
-      pullPolicy: IfNotPresent
-      # -- Wait for database image tag
-      # @section -- Default Init Containers Parameters
-      tag: 16-alpine
-
-    # -- Array of extra environment variables to be added to wait for database containers
-    # @section -- Default Init Containers Parameters
-    extraEnvVars: []
-    # -- Name of the existing ConfigMap containing extra environment variables to be added to wait for database containers
-    # @section -- Default Init Containers Parameters
-    extraEnvVarsCM: ''
-    # -- Name of existing Secret containing extra environment variables to be added to wait for database containers
-    # @section -- Default Init Containers Parameters
-    extraEnvVarsSecret: ''
-
-    # -- Set container resources according to one common preset (allowed values: nano, micro, small, medium, large, xlarge, 2xlarge)
-    # @section -- Default Init Containers Parameters
-    resourcesPreset: nano
-    # -- Set container resources for the wait-for-database init container (overrides resourcesPreset)
-    # @section -- Default Init Containers Parameters
-    resources: {}
-  waitForMigrations:
-    # -- Enable init container that waits for migrations to complete
-    # @section -- Default Init Containers Parameters
-    enabled: true
-
-    # -- Array of extra environment variables to be added to wait for migrations containers
-    # @section -- Default Init Containers Parameters
-    extraEnvVars: []
-    # -- Name of the existing ConfigMap containing extra environment variables to be added to wait for migrations containers
-    # @section -- Default Init Containers Parameters
-    extraEnvVarsCM: ''
-    # -- Name of existing Secret containing extra environment variables to be added to wait for migrations containers
-    # @section -- Default Init Containers Parameters
-    extraEnvVarsSecret: ''
-
-    # -- Set container resources according to one common preset (allowed values: nano, micro, small, medium, large, xlarge, 2xlarge)
-    # @section -- Default Init Containers Parameters
-    resourcesPreset: small
-    # -- Set container resources for the wait-for-migrations init container (overrides resourcesPreset)
-    # @section -- Default Init Containers Parameters
-    resources: {}
-# @section -- Mock Server Parameters
-mockServer:
-  ingress:
-    # -- Enable wildcard ingress for the mock server
-    # @section -- Mock Server Parameters
-    enabled: false
-    # -- Ingress controller type (nginx, traefik, or alb)
-    # @section -- Mock Server Parameters
-    controllerType: nginx
-    # -- Ingress class name
-    # @section -- Mock Server Parameters
-    ingressClassName: ''
-    # -- Wildcard hostname for mock server ingress (wildcard will be *.<hostname>)
-    # @section -- Mock Server Parameters
-    hostname: mock.hoppscotch.local
-    # -- Ingress path
-    # @section -- Mock Server Parameters
-    path: /
-    # -- Ingress path type
-    # @section -- Mock Server Parameters
-    pathType: ImplementationSpecific
-    # -- Additional annotations for the mock server ingress
-    # @section -- Mock Server Parameters
-    annotations: {}
-    # -- Enable TLS for mock server ingress
-    # @section -- Mock Server Parameters
-    tls: false
-    # -- Create self-signed TLS certificates for mock server ingress
-    # @section -- Mock Server Parameters
-    selfSigned: false
-    # -- Existing TLS secret name for mock server ingress (auto-generated if empty)
-    # @section -- Mock Server Parameters
-    tlsSecret: ''
-    # -- Extra TLS configurations for mock server ingress
-    # @section -- Mock Server Parameters
-    extraTls: []
-    # -- Extra ingress rules for mock server ingress
-    # @section -- Mock Server Parameters
-    extraRules: []
-# @section -- Other Parameters
-serviceAccount:
-  # -- Create service account for Hoppscotch
-  # @section -- Other Parameters
-  create: false
-  # -- Service account name (auto-generated if not specified)
-  # @section -- Other Parameters
-  name: ''
-  # -- Service account annotations
-  # @section -- Other Parameters
-  annotations: {}
-  # -- Auto-mount service account token
-  # @section -- Other Parameters
-  automountServiceAccountToken: true
-rbac:
-  # -- Create RBAC resources for Hoppscotch
-  # @section -- Other Parameters
-  create: false
-  # -- RBAC rules for Hoppscotch
-  # @section -- Other Parameters
-  rules: []
-# @section -- Database Parameters
+# =============================================================================
+# Image
+# =============================================================================
+
+image:
+  # -- Hoppscotch AIO image repository
+  repository: docker.io/hoppscotch/hoppscotch
+  # -- Hoppscotch image tag
+  tag: "2026.9.0"
+  # -- Image pull policy
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+
+# =============================================================================
+# URLs
+# =============================================================================
+# All URL values are auto-derived from ingress.host when left empty.
+# Override individually if needed.
+
+# -- Public URL where the frontend is accessible (VITE_BASE_URL).
+# Auto-derived as https://<ingress.host> when empty.
+baseUrl: ""
+
+# -- URL for the admin dashboard (VITE_ADMIN_URL).
+# Auto-derived as https://<ingress.host>/admin when empty.
+adminUrl: ""
+
+# -- Backend GraphQL URL (VITE_BACKEND_GQL_URL).
+# Auto-derived as https://<ingress.host>/backend/graphql when empty.
+backendGqlUrl: ""
+
+# -- Backend WebSocket URL (VITE_BACKEND_WS_URL). Must use wss:// in production.
+# Auto-derived as wss://<ingress.host>/backend/graphql when empty.
+backendWsUrl: ""
+
+# -- Backend REST API URL (VITE_BACKEND_API_URL).
+# Auto-derived as https://<ingress.host>/backend/v1 when empty.
+backendApiUrl: ""
+
+# -- Shortcode base URL (VITE_SHORTCODE_BASE_URL). Defaults to baseUrl.
+shortcodeBaseUrl: ""
+
+# -- Optional Terms of Service URL (VITE_APP_TOS_LINK).
+tosLink: ""
+
+# -- Optional Privacy Policy URL (VITE_APP_PRIVACY_POLICY_LINK).
+privacyPolicyLink: ""
+
+proxy:
+  # -- Default Hoppscotch proxy URL (PROXY_APP_URL). Leave empty to configure it from the Admin Dashboard.
+  appUrl: ""
+
+# =============================================================================
+# Encryption
+# =============================================================================
+
+encryption:
+  # -- Exactly 32-character key for encrypting sensitive data in the database.
+  # Auto-generated on first install if empty and no existingSecret is set.
+  # WARNING: changing this key after first install will corrupt all existing
+  # encrypted data in the database. Treat this key as immutable after first use.
+  key: ""
+  # -- Existing secret containing the DATA_ENCRYPTION_KEY.
+  existingSecret: ""
+  # -- Key within existingSecret that holds the encryption key.
+  existingSecretKey: data-encryption-key
+
+signingKey:
+  # -- Existing secret containing WEBAPP_SERVER_SIGNING_KEY. Useful with ExternalSecret-managed secrets.
+  existingSecret: ""
+  # -- Key within existingSecret that holds WEBAPP_SERVER_SIGNING_KEY.
+  existingSecretKey: webapp-server-signing-key
+
+# =============================================================================
+# Database
+# =============================================================================
+
+# PostgreSQL subchart - enabled by default for dev mode.
+# Disable and configure database.external for production with an external DB.
 postgresql:
-  # -- Enable PostgreSQL subchart
-  # @section -- Database Parameters
-  enabled: false
-  image:
-    # -- PostgreSQL image repository
-    # @section -- Database Parameters
-    repository: bitnamilegacy/postgresql
+  enabled: true
   auth:
-    # -- Enable PostgreSQL default postgres user
-    # @section -- Database Parameters
-    enablePostgresUser: true
-    # -- PostgreSQL application username
-    # @section -- Database Parameters
-    username: ''
-    # -- PostgreSQL application password
-    # @section -- Database Parameters
-    password: ''
-    # -- PostgreSQL application database name
-    # @section -- Database Parameters
-    database: ''
-    # -- Existing secret containing PostgreSQL credentials
-    # @section -- Database Parameters
-    existingSecret: ''
-    secretKeys:
-      # -- Key in existing secret containing username
-      # @section -- Database Parameters
-      userPasswordKey: ''
-  # -- PostgreSQL architecture (standalone or replication)
-  # @section -- Database Parameters
-  architecture: standalone
-  primary:
-    # -- PostgreSQL primary resource preset
-    # @section -- Database Parameters
-    resourcesPreset: small
-    # -- PostgreSQL primary resource limits/requests
-    # @section -- Database Parameters
-    resources: {}
-  volumePermissions:
-    image:
-      # -- Volume Permissions image repository
-      # @section -- Database Parameters
-      repository: bitnamilegacy/os-shell
-  metrics:
-    image:
-      # -- PostgreSQL Prometheus Exporter image repository
-      # @section -- Database Parameters
-      repository: bitnamilegacy/postgres-exporter
-externalDatabase:
-  # -- External PostgreSQL host
-  # @section -- Database Parameters
-  host: ''
-  # -- External PostgreSQL port
-  # @section -- Database Parameters
-  port: 5432
-  # -- External PostgreSQL username
-  # @section -- Database Parameters
-  user: ''
-  # -- External PostgreSQL database name
-  # @section -- Database Parameters
-  database: ''
-  # -- External PostgreSQL password
-  # @section -- Database Parameters
-  password: ''
-  # -- External PostgreSQL full connection string (overrides other settings)
-  # @section -- Database Parameters
-  sqlConnection: ''
-  # -- Existing secret containing external PostgreSQL credentials
-  # @section -- Database Parameters
-  existingSecret: ''
-  # -- Key in existing secret containing password
-  # @section -- Database Parameters
-  existingSecretPasswordKey: ''
-  # -- Key in existing secret containing SQL connection string
-  # @section -- Database Parameters
-  existingSecretSqlConnectionKey: ''
-# @section -- Redis Parameters
-redis:
-  # -- Enable Redis subchart
-  # @section -- Redis Parameters
-  enabled: false
+    database: hoppscotch
+    username: hoppscotch
+    # -- PostgreSQL password. Auto-generated if empty.
+    password: ""
+  standalone:
+    persistence:
+      enabled: true
+      size: 10Gi
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+  initdb:
+    scripts:
+      02-hoppscotch-extensions.sh: |
+        #!/bin/bash
+        set -euo pipefail
+        export PGPASSWORD="${POSTGRES_PASSWORD}"
+        psql --username "${POSTGRES_USER}" --dbname "${APP_DATABASE}" \
+          -c 'CREATE EXTENSION IF NOT EXISTS pg_trgm;'
+
+postgresqlExtensionsJob:
+  # -- Run a pre-upgrade hook that ensures pg_trgm exists on bundled PostgreSQL databases with existing PVCs.
+  enabled: true
+  # -- Only run the hook when the bundled PostgreSQL Secret and Service already exist. Set to false only for controlled migrations where PostgreSQL is created before the upgrade hook runs.
+  requireExistingResources: true
   image:
-    # -- Redis image repository
-    # @section -- Redis Parameters
-    repository: bitnamilegacy/redis
-  auth:
-    # -- Enable Redis authentication
-    # @section -- Redis Parameters
-    enabled: true
-    # -- Redis password
-    # @section -- Redis Parameters
-    password: ''
-    # -- Existing secret containing Redis credentials
-    # @section -- Redis Parameters
-    existingSecret: ''
-    # -- Key in existing secret containing password
-    # @section -- Redis Parameters
-    existingSecretPasswordKey: ''
-  # -- Redis architecture (standalone or replication)
-  # @section -- Redis Parameters
-  architecture: standalone
-  master:
-    # -- Redis master resource preset
-    # @section -- Redis Parameters
-    resourcesPreset: small
-    # -- Redis master resource limits/requests
-    # @section -- Redis Parameters
-    resources: {}
-  sentinel:
-    image:
-      # -- Redis Sentinel image repository
-      # @section -- Redis Parameters
-      repository: bitnamilegacy/redis-sentinel
-  metrics:
-    image:
-      # -- Redis Exporter image repository
-      # @section -- Redis Parameters
-      repository: bitnamilegacy/redis-exporter
-  volumePermissions:
-    image:
-      # -- Volume Permissions image repository
-      # @section -- Redis Parameters
-      repository: bitnamilegacy/os-shell
-  kubectl:
-    image:
-      # -- Kubectl image repository
-      # @section -- Redis Parameters
-      repository: bitnamilegacy/kubectl
-  sysctl:
-    image:
-      # -- Sysctl image repository
-      # @section -- Redis Parameters
-      repository: bitnamilegacy/os-shell
-externalRedis:
-  # -- External Redis host
-  # @section -- Redis Parameters
-  host: ''
-  # -- External Redis port
-  # @section -- Redis Parameters
-  port: 6379
-  # -- External Redis password
-  # @section -- Redis Parameters
-  password: ''
-  # -- Existing secret containing external Redis credentials
-  # @section -- Redis Parameters
-  existingSecret: ''
-  # -- Key in existing secret containing password
-  # @section -- Redis Parameters
-  existingSecretPasswordKey: ''
-## ClickHouse Parameters
-clickhouse:
-  # -- Enable ClickHouse subchart
-  # @section -- ClickHouse Parameters
+    # -- PostgreSQL client image used by the extension hook
+    repository: docker.io/library/postgres
+    # -- PostgreSQL client image tag
+    tag: "18.3-trixie"
+    pullPolicy: IfNotPresent
+  # -- Job retry limit
+  backoffLimit: 6
+  # -- Maximum seconds for the hook job
+  activeDeadlineSeconds: 300
+  # -- Pod annotations for the hook job
+  podAnnotations: {}
+  # -- Pod security context for the hook job
+  podSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 999
+    fsGroup: 999
+    seccompProfile:
+      type: RuntimeDefault
+  # -- Container security context for the hook job
+  securityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
+    readOnlyRootFilesystem: true
+    runAsNonRoot: true
+    runAsUser: 999
+  resources:
+    requests:
+      cpu: 10m
+      memory: 32Mi
+    limits:
+      cpu: 100m
+      memory: 128Mi
+
+database:
+  # -- Use an external PostgreSQL instance instead of the bundled subchart.
+  external:
+    enabled: false
+    # -- External PostgreSQL host
+    host: ""
+    # -- External PostgreSQL port
+    port: 5432
+    # -- Database name
+    name: hoppscotch
+    # -- Database username
+    username: hoppscotch
+    # -- Database password (inline; use existingSecret for production)
+    password: ""
+    # -- Existing secret containing the database password.
+    existingSecret: ""
+    # -- Key within existingSecret that holds the password.
+    existingSecretPasswordKey: postgres-password
+    # -- Full DATABASE_URL override. Takes precedence over individual fields.
+    # Format: postgresql://user:pass@host:5432/db
+    url: ""
+    # -- Key within existingSecret that holds the full DATABASE_URL.
+    # Set this when the external secret contains a complete DATABASE_URL string.
+    # Leave empty when the secret only contains the password (existingSecretPasswordKey).
+    existingSecretUrlKey: ""
+
+# =============================================================================
+# Authentication Providers
+# =============================================================================
+
+auth:
+  # -- Comma-separated list of enabled authentication providers.
+  # Valid values: GOOGLE, GITHUB, MICROSOFT, EMAIL
+  providers: "EMAIL"
+
+  github:
+    # -- Enable GitHub OAuth authentication
+    enabled: false
+    # -- GitHub OAuth App client ID
+    clientId: ""
+    # -- GitHub OAuth App client secret
+    clientSecret: ""
+    # -- Existing secret with GitHub credentials (keys: github-client-id, github-client-secret)
+    existingSecret: ""
+    existingSecretClientIdKey: github-client-id
+    existingSecretClientSecretKey: github-client-secret
+    # -- GitHub OAuth scope
+    scope: "user:email"
+    # -- Callback URL. Auto-derived from backendApiUrl when empty.
+    callbackUrl: ""
+
+  google:
+    # -- Enable Google OAuth authentication
+    enabled: false
+    # -- Google OAuth client ID
+    clientId: ""
+    # -- Google OAuth client secret
+    clientSecret: ""
+    # -- Existing secret with Google credentials
+    existingSecret: ""
+    existingSecretClientIdKey: google-client-id
+    existingSecretClientSecretKey: google-client-secret
+    # -- Google OAuth scope
+    scope: "email,profile"
+    # -- Callback URL. Auto-derived from backendApiUrl when empty.
+    callbackUrl: ""
+
+  microsoft:
+    # -- Enable Microsoft OAuth authentication
+    enabled: false
+    # -- Microsoft/Azure AD app client ID
+    clientId: ""
+    # -- Microsoft/Azure AD app client secret
+    clientSecret: ""
+    # -- Existing secret with Microsoft credentials
+    existingSecret: ""
+    existingSecretClientIdKey: microsoft-client-id
+    existingSecretClientSecretKey: microsoft-client-secret
+    # -- Microsoft OAuth scope
+    scope: "user.read"
+    # -- Callback URL. Auto-derived from backendApiUrl when empty.
+    callbackUrl: ""
+
+# =============================================================================
+# SMTP / Email
+# =============================================================================
+
+mailer:
+  # -- Enable SMTP email delivery
   enabled: false
-  defaultInitContainers:
-    volumePermissions:
-      image:
-        # -- Volume Permissions image repository
-        # @section -- ClickHouse Parameters
-        repository: bitnamilegacy/os-shell
-  image:
-    # -- ClickHouse image repository
-    # @section -- ClickHouse Parameters
-    repository: bitnamilegacy/clickhouse
-  auth:
-    # -- ClickHouse username
-    # @section -- ClickHouse Parameters
-    username: ''
-    # -- ClickHouse password
-    # @section -- ClickHouse Parameters
-    password: ''
-    # -- Existing secret containing ClickHouse credentials
-    # @section -- ClickHouse Parameters
-    existingSecret: ''
-    # -- Key in existing secret containing password
-    # @section -- ClickHouse Parameters
-    existingSecretKey: ''
-  # -- ClickHouse resource preset
-  # @section -- ClickHouse Parameters
-  resourcesPreset: small
-  # -- ClickHouse resource limits/requests
-  # @section -- ClickHouse Parameters
-  resources: {}
-  keeper:
-    image:
-      # -- ClickHouse Keeper image repository
-      # @section -- ClickHouse Parameters
-      repository: bitnamilegacy/clickhouse-keeper
-externalClickhouse:
-  # -- External ClickHouse host
-  # @section -- ClickHouse Parameters
-  host: ''
-  # -- External ClickHouse port
-  # @section -- ClickHouse Parameters
-  port: 8123
-  # -- External ClickHouse username
-  # @section -- ClickHouse Parameters
-  user: ''
-  # -- External ClickHouse password
-  # @section -- ClickHouse Parameters
-  password: ''
-  # -- Existing secret containing external ClickHouse credentials
-  # @section -- ClickHouse Parameters
-  existingSecret: ''
-  # -- Key in existing secret containing password
-  # @section -- ClickHouse Parameters
-  existingSecretPasswordKey: ''
+  # -- From address for outgoing emails
+  from: ""
+  # -- Use custom field-by-field SMTP config instead of a URL
+  useCustomConfigs: false
+  # -- Full SMTP URL (used when useCustomConfigs=false)
+  # Format: smtps://user@domain.com:pass@smtp.domain.com
+  smtpUrl: ""
+  # -- SMTP host (used when useCustomConfigs=true)
+  host: ""
+  # -- SMTP port (used when useCustomConfigs=true)
+  port: 587
+  # -- Enable TLS/SSL (used when useCustomConfigs=true)
+  secure: true
+  # -- SMTP username (used when useCustomConfigs=true)
+  user: ""
+  # -- SMTP password (used when useCustomConfigs=true)
+  password: ""
+  # -- Reject unauthorized TLS certificates
+  tlsRejectUnauthorized: true
+  # -- Existing secret with SMTP credentials
+  existingSecret: ""
+  existingSecretSmtpUrlKey: smtp-url
+  existingSecretPasswordKey: smtp-password
+
+# =============================================================================
+# Deployment
+# =============================================================================
+
+# -- Number of Hoppscotch replicas. App is stateless - horizontal scaling is safe.
+replicaCount: 1
+
+deployment:
+  strategy:
+    # -- Rollout strategy type
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+
+# =============================================================================
+# Service Account
+# =============================================================================
+
+serviceAccount:
+  # -- Create a ServiceAccount
+  create: true
+  # -- ServiceAccount name override
+  name: ""
+  # -- Mount the Kubernetes API token into Hoppscotch pods
+  automountServiceAccountToken: false
+  # -- Annotations for the ServiceAccount
+  annotations: {}
+
+# =============================================================================
+# Security Context
+# =============================================================================
+
+podSecurityContext:
+  fsGroup: 1000
+  runAsNonRoot: true
+
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: false
+  runAsNonRoot: true
+  runAsUser: 1000
+
+# =============================================================================
+# Resources
+# =============================================================================
+
+resources:
+  requests:
+    cpu: 200m
+    memory: 256Mi
+  limits:
+    cpu: 1000m
+    memory: 512Mi
+
+# =============================================================================
+# Service
+# =============================================================================
+
+service:
+  type: ClusterIP
+  port: 80
+  # -- Internal non-root HTTP port used by the Hoppscotch AIO Caddy server.
+  # The AIO image keeps the backend on localhost:8080, so Caddy must use a different non-root port.
+  containerPort: 8081
+  # -- Service IP family policy (GR-058 dual-stack)
+  # @default -- null (cluster default)
+  ipFamilyPolicy: null
+  # -- Service IP families (GR-058 dual-stack)
+  # @default -- [] (cluster default)
+  ipFamilies: []
+
+# =============================================================================
+# Ingress
+# =============================================================================
+
+ingress:
+  # -- Enable Ingress
+  enabled: false
+  # -- IngressClass name
+  ingressClassName: ""
+  # -- Primary hostname. Used to auto-derive VITE_* URLs when set.
+  host: ""
+  # -- Additional annotations
+  # Note: WebSocket requires proxy-read-timeout and upgrade annotations - see NOTES.txt
+  annotations: {}
+  # -- TLS configuration
+  tls: []
+
+# =============================================================================
+# Gateway API
+# =============================================================================
+
+gateway:
+  # -- Enable Gateway API HTTPRoute
+  enabled: false
+  # -- References to Gateway listeners (required when enabled)
+  parentRefs: []
+  # -- Hostnames for the HTTPRoute
+  hostnames: []
+  # -- HTTPRoute path
+  path: /
+  # -- HTTPRoute path match type
+  pathType: PathPrefix
+  annotations: {}
+
+# =============================================================================
+# External Secrets Operator (GR-061)
+# =============================================================================
+
+externalSecrets:
+  # -- Enable ExternalSecret resource
+  enabled: false
+  # -- ExternalSecret apiVersion
+  apiVersion: external-secrets.io/v1
+  secretStoreRef:
+    # -- Name of the SecretStore or ClusterSecretStore (required when enabled)
+    name: ""
+    kind: SecretStore
+  refreshInterval: "1h"
+  data: []
+  dataFrom: []
+  annotations: {}
+
+# =============================================================================
+# Monitoring
+# =============================================================================
+
+metrics:
+  enabled: false
+  serviceMonitor:
+    enabled: false
+    interval: 30s
+    labels: {}
+
+# =============================================================================
+# Network Policy
+# =============================================================================
+
+networkPolicy:
+  enabled: false
+  ingress: []
+  egress: []
+  extraEgress: []
+
+# =============================================================================
+# Pod Disruption Budget
+# =============================================================================
+
+podDisruptionBudget:
+  enabled: false
+  minAvailable: 1
+
+# =============================================================================
+# Extras
+# =============================================================================
+
+podAnnotations: {}
+podLabels: {}
+nodeSelector: {}
+tolerations: []
+affinity: {}
+topologySpreadConstraints: []
+
+# -- Extra init containers (appended after wait-for-db and migrate)
+initContainers: []
+
+# -- Extra environment variables injected into the main container
+extraEnv: []
+
+# -- Extra envFrom entries (ConfigMaps, Secrets)
+extraEnvFrom: []
+
+# -- Additional Kubernetes manifests rendered with the release
+extraManifests: []

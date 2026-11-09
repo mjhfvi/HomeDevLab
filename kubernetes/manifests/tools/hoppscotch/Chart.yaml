@@ -1,25 +1,57 @@
+# SPDX-License-Identifier: Apache-2.0
 apiVersion: v2
 name: hoppscotch
-description: |-
-  Hoppscotch is a lightweight, web-based API development suite. It was built from the ground up with ease of use and
-  accessibility in mind providing all the functionality needed for developers with minimalist, unobtrusive UI.
+description: Hoppscotch Community Edition for Kubernetes — open-source API development platform with REST, GraphQL, and WebSocket support
+home: https://helmforge.dev/docs/charts/hoppscotch
+icon: https://helmforge.dev/icons/charts/hoppscotch.png
 type: application
-icon: https://avatars.githubusercontent.com/u/56705483?s=200&v=4
-home: https://docs.hoppscotch.io
-version: 0.7.1
-appVersion: 2026.10.0
-sources:
-  - https://github.com/hoppscotch/helm-charts/tree/main/charts/hoppscotch
+version: 1.1.17
+appVersion: "2026.9.0"
+kubeVersion: ">=1.26.0-0"
+
+keywords:
+  - hoppscotch
+  - api
+  - rest
+  - graphql
+  - websocket
+  - developer-tools
+
+maintainers:
+  - name: helmforgedev
+  - name: mberlofa
+
 dependencies:
   - name: postgresql
-    version: 16.x.x
+    version: 2.1.2
+    repository: oci://ghcr.io/helmforgedev/helm
     condition: postgresql.enabled
-    repository: oci://registry-1.docker.io/bitnamicharts
-  - name: redis
-    version: 22.x.x
-    condition: redis.enabled
-    repository: oci://registry-1.docker.io/bitnamicharts
-  - name: clickhouse
-    version: 9.x.x
-    condition: clickhouse.enabled
-    repository: oci://registry-1.docker.io/bitnamicharts
+
+annotations:
+  artifacthub.io/changes: |
+    - kind: changed
+      description: "bump HelmForge subchart dependencies to latest minor/patch (#1961)"
+  artifacthub.io/maintainers: |
+    - name: HelmForge
+      email: berlofa@helmforge.dev
+    - name: Maicon Berlofa
+      email: maicon.berloffa@gmail.com
+  artifacthub.io/license: Apache-2.0
+  artifacthub.io/category: integration-delivery
+  helmforge.dev/maturity: stable
+  helmforge.dev/signed: gpg+cosign
+  helmforge.dev/repository: https://repo.helmforge.dev
+  artifacthub.io/signKey: |
+    fingerprint: 6748042FBAD8C2E11C65E564170D55148EB88A9D
+    url: https://repo.helmforge.dev/pgp-public-key.asc
+  artifacthub.io/links: |
+    - name: Official Website
+      url: https://hoppscotch.io
+    - name: Documentation
+      url: https://helmforge.dev/docs/charts/hoppscotch
+    - name: Source
+      url: https://github.com/helmforgedev/charts/tree/main/charts/hoppscotch
+    - name: support
+      url: https://github.com/helmforgedev/charts/issues
+  artifacthub.io/recommendations: |
+    - url: https://artifacthub.io/packages/helm/helmforge/postgresql
