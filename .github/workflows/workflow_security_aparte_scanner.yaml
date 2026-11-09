@@ -1,10 +1,10 @@
 ---
 name: Workflow Security Aparte Secrets Scanner
 on:  # yamllint disable-line rule:truthy
-  push:  # Triggers on any push event
-    branches: [main]
-  pull_request:
-    branches: [main]
+  # push:  # Triggers on any push event
+  #   branches: [main]
+  # pull_request:
+  #   branches: [main]
   workflow_dispatch:  # Adds a "Run workflow" button in the GitHub Actions UI
   workflow_call:  # Allows this workflow to be called and reused by other workflows
   # schedule:

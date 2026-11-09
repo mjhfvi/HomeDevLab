@@ -26,7 +26,7 @@ repositories:
 releases:
   - name: netshoot
     namespace: tools
-    chart: helmforge/{{ .Release.Name }}
-    version: 1.10.3
+    chart: helmforge/generic
+    version: 3.2.1
     values:
       - ../../../manifests/{{ .Release.Namespace }}/{{ .Release.Name }}/values.yaml

@@ -1,77 +1,507 @@
-# Default values for netshoot.
-# This is a YAML-formatted file.
-# Declare variables to be passed into your templates.
+# SPDX-License-Identifier: Apache-2.0
+# =============================================================================
+# Generic Helm Chart - Default Values
+# =============================================================================
+# Supports Deployments, StatefulSets, DaemonSets, Jobs, and CronJobs
+# with multi-container pods, envFrom, initContainers, extraManifests, and more.
 
+# -- Number of pod replicas. Omitted from Deployment/StatefulSet when HPA is enabled; not used by DaemonSet/Job/CronJob.
 replicaCount: 1
 
-image:
-  registry: apecloud-registry.cn-zhangjiakou.cr.aliyuncs.com
-  repository: apecloud/netshoot
-  pullPolicy: IfNotPresent
-  # Overrides the image tag whose default is the chart appVersion.
-  tag: "0.13"
+# -- Seconds a Deployment, StatefulSet, or DaemonSet Pod must stay Ready before it is considered available. Deployments use a compatible progress deadline for values of 600 or more. Zero preserves Kubernetes defaults; not used by Jobs/CronJobs.
+minReadySeconds: 0
 
-imagePullSecrets: []
+# -- Override the release name
 nameOverride: ""
+# -- Override the fully qualified release name
 fullnameOverride: ""
 
+# -- Labels added to all resources
+commonLabels: {}
+
+# =============================================================================
+# Workload
+# =============================================================================
+# type: Deployment | StatefulSet | DaemonSet
+# Set enabled: false for Jobs/CronJobs-only releases (no long-running workload).
+
+workload:
+  enabled: true
+  type: Deployment
+
+  # -- StatefulSet specific
+  # podManagementPolicy: OrderedReady
+  # volumeClaimTemplates:
+  #   - metadata:
+  #       name: data
+  #     spec:
+  #       accessModes: ["ReadWriteOnce"]
+  #       storageClassName: standard
+  #       resources:
+  #         requests:
+  #           storage: 10Gi
+
+  # -- StatefulSet / DaemonSet specific
+  # updateStrategy:
+  #   type: RollingUpdate
+
+# =============================================================================
+# Image
+# =============================================================================
+
+global:
+  # -- Optional registry prefix applied to image repositories without a registry
+  imageRegistry: ""
+
+image:
+  repository: docker.io/library/nginx
+  tag: "1.31.7"
+  digest: ""
+  pullPolicy: IfNotPresent
+
+
+imagePullSecrets: []
+  # - name: registry-secret
+
+# =============================================================================
+# Containers
+# =============================================================================
+# Each container supports: image, command, args, env, envFrom, ports,
+# livenessProbe, readinessProbe, startupProbe, resources, securityContext,
+# volumeMounts, lifecycle, workingDir.
+
+containers:
+  - name: app
+    image: {}
+    ports:
+      - containerPort: 80
+    env: []
+    envFrom: []
+    # envFrom:
+    #   - configMapRef:
+    #       name: my-config
+    #   - secretRef:
+    #       name: my-secret
+
+# -- Init containers (same spec as containers)
+initContainers: []
+  # - name: init-db
+  #   image:
+  #     repository: docker.io/library/busybox
+  #     tag: "1.36"
+  #   command: ["sh", "-c", "echo init"]
+
+# =============================================================================
+# Global environment
+# =============================================================================
+# Applied to ALL containers (deployment, job, cronjob).
+
+env: []
+  # - name: APP_ENV
+  #   value: "production"
+  # - name: SECRET_KEY
+  #   valueFrom:
+  #     secretKeyRef:
+  #       name: my-secret
+  #       key: secret-key
+
+# -- envFrom applied to ALL containers
+envFrom: []
+  # - configMapRef:
+  #     name: global-config
+  # - secretRef:
+  #     name: global-secret
+
+# =============================================================================
+# Service Account
+# =============================================================================
+
 serviceAccount:
-  # Specifies whether a service account should be created
-  create: true
-  # Annotations to add to the service account
+  create: false
+  # name: ""
+  automountServiceAccountToken: false
   annotations: {}
-  # The name of the service account to use.
-  # If not set and create is true, a name is generated using the fullname template
-  name: ""
 
-podAnnotations: {}
-
-podSecurityContext: {}
-  # fsGroup: 2000
-
-securityContext:
-  privileged: true
-  # capabilities:
-  #   drop:
-  #   - ALL
-  # readOnlyRootFilesystem: true
-  # runAsNonRoot: true
-  # runAsUser: 1000
-
-service:
-  type: ClusterIP
-  port: 80
-
-ingress:
-  enabled: false
-  className: ""
-  annotations: {}
-    # kubernetes.io/ingress.class: nginx
-    # kubernetes.io/tls-acme: "true"
-  hosts:
-    - host: chart-example.local
-      paths:
-        - path: /
-          pathType: ImplementationSpecific
-  tls: []
-  #  - secretName: chart-example-tls
-  #    hosts:
-  #      - chart-example.local
+# =============================================================================
+# Resources (default for all containers that don't specify their own)
+# =============================================================================
 
 resources: {}
-  # We usually recommend not to specify default resources and to leave this as a conscious
-  # choice for the user. This also increases chances charts run on environments with little
-  # resources, such as Minikube. If you do want to specify resources, uncomment the following
-  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
   # limits:
-  #   cpu: 100m
-  #   memory: 128Mi
+  #   cpu: 500m
+  #   memory: 512Mi
   # requests:
   #   cpu: 100m
   #   memory: 128Mi
 
+# =============================================================================
+# Probes (applied to first container only if not set per-container)
+# =============================================================================
+
+livenessProbe: {}
+readinessProbe: {}
+startupProbe: {}
+
+# =============================================================================
+# Security
+# =============================================================================
+
+podSecurityContext: {}
+  # fsGroup: 1000
+  # runAsNonRoot: true
+
+securityContext: {}
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+# -- Optional security preset. Empty leaves contexts unchanged.
+# baseline sets non-root/seccomp and drops Linux capabilities when not overridden.
+# restricted also sets read-only root filesystem and default UID/GID/fsGroup.
+securityPreset: ""
+  # "" | baseline | restricted
+
+# =============================================================================
+# Service
+# =============================================================================
+
+service:
+  enabled: true
+  type: ClusterIP
+  port: 80
+  targetPort: 80
+  nameOverride: ""
+  # clusterIP: ""
+  # loadBalancerIP: ""
+  # loadBalancerClass: ""
+  # externalIPs: []
+  # externalTrafficPolicy: Cluster
+  # internalTrafficPolicy: Cluster
+  # sessionAffinity: None
+  # ipFamilyPolicy: SingleStack
+  # ipFamilies: []
+  # annotations: {}
+  # labels: {}
+  # headless:
+  #   enabled: false
+  # extraPorts:
+  #   - name: metrics
+  #     port: 9090
+  #     targetPort: 9090
+  #     appProtocol: http
+
+services: []
+  # - name: metrics
+  #   type: ClusterIP
+  #   # Defaults to service.ipFamilyPolicy / service.ipFamilies when omitted.
+  #   ipFamilyPolicy: PreferDualStack
+  #   ipFamilies:
+  #     - IPv4
+  #     - IPv6
+  #   ports:
+  #     - name: metrics
+  #       port: 9090
+  #       targetPort: 9090
+
+# =============================================================================
+# Ingress
+# =============================================================================
+
+ingress:
+  enabled: false
+  # -- Ingress class name (for example: traefik, nginx)
+  ingressClassName: traefik
+  annotations:
+    {}
+    # cert-manager.io/cluster-issuer: letsencrypt
+  hosts: []
+    # - host: app.example.com
+    #   paths:
+    #     - path: /
+    #       pathType: Prefix
+    #       backend:
+    #         service:
+    #           name: custom-service
+    #           port:
+    #             number: 8080
+  # defaultBackend: {}
+  tls: []
+    # - hosts:
+    #     - app.example.com
+    #   secretName: app-tls
+
+# =============================================================================
+# Update Strategy (Deployment only)
+# =============================================================================
+# Controls how pods are replaced during a rolling update.
+# - maxSurge: max number of pods created above the desired count (% or absolute)
+# - maxUnavailable: max number of pods unavailable during the update (% or absolute)
+# Example: with 4 replicas and 25%/25%, Kubernetes keeps 3-5 pods running at all times.
+
+updateStrategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxSurge: 25%
+    maxUnavailable: 25%
+
+# =============================================================================
+# Pod scheduling
+# =============================================================================
+
 nodeSelector: {}
-
-affinity: {}
-
 tolerations: []
+affinity: {}
+topologySpreadConstraints: []
+priorityClassName: ""
+preemptionPolicy: ""
+terminationGracePeriodSeconds: 30
+runtimeClassName: ""
+schedulerName: ""
+hostNetwork: false
+hostPID: false
+hostIPC: false
+shareProcessNamespace: false
+enableServiceLinks: true
+dnsPolicy: ""
+dnsConfig: {}
+hostAliases: []
+terminationMessagePath: ""
+terminationMessagePolicy: ""
+
+# -- Extra labels on pods only
+podLabels: {}
+# -- Extra annotations on pods only
+podAnnotations: {}
+# -- Annotations on the workload resource itself
+annotations: {}
+
+# =============================================================================
+# Rollout
+# =============================================================================
+# Set restartAt to a new value when you intentionally want a rollout.
+
+rollout:
+  restartAt: ""
+  podAnnotations: {}
+  checksum:
+    enabled: true
+    configMaps: true
+    secrets: true
+
+# =============================================================================
+# Autoscaling (not available for DaemonSet)
+# =============================================================================
+
+hpa:
+  enabled: false
+  # minReplicas: 1
+  # maxReplicas: 5
+  # -- Scaling metrics accept native autoscaling/v2 objects or Resource shorthand.
+  # metrics:
+  #   - type: Resource
+  #     resource:
+  #       name: cpu
+  #       target:
+  #         type: AverageValue
+  #         averageValue: 500m
+  #   - resource: memory
+  #     type: Utilization
+  #     target: 80
+  # behavior:
+  #   scaleDown:
+  #     stabilizationWindowSeconds: 300
+
+vpa:
+  enabled: false
+  # -- Update mode: Off, Initial, Recreate, InPlaceOrRecreate, or Auto.
+  # InPlaceOrRecreate requires a compatible VPA installation and Kubernetes in-place resource resizing.
+  # updateMode: "Off"
+  # resourcePolicy:
+  #   containerPolicies:
+  #     - containerName: app
+  #       minAllowed:
+  #         cpu: 100m
+  #         memory: 128Mi
+
+# =============================================================================
+# Pod Disruption Budget
+# =============================================================================
+
+pdb:
+  enabled: false
+  # minAvailable: 1
+  # maxUnavailable: 1
+
+# =============================================================================
+# Persistence
+# =============================================================================
+
+persistence:
+  volumes: []
+    # - name: data
+    #   emptyDir: {}
+    # - name: config
+    #   configMap:
+    #     name: my-config
+
+  mounts: []
+    # - name: data
+    #   mountPath: /data
+    # - name: config
+    #   mountPath: /etc/config
+    #   readOnly: true
+
+  storage: []
+    # - name: data
+    #   capacity: 10Gi
+    #   accessMode: ReadWriteOnce
+    #   storageClassName: standard
+    #   # existingPVName: my-pv
+    #   # nfs:
+    #   #   server: 10.0.0.1
+    #   #   path: /exports/data
+
+  persistentVolumeClaims: []
+    # - name: data
+    #   storage: 10Gi
+    #   accessModes: ["ReadWriteOnce"]
+    #   storageClassName: standard
+    #   keep: true
+
+  persistentVolumes: []
+    # - name: data
+    #   create: false
+    #   storage: 10Gi
+    #   accessModes: ["ReadWriteOnce"]
+    #   reclaimPolicy: Retain
+    #   nfs:
+    #     server: 10.0.0.1
+    #     path: /exports/data
+
+# =============================================================================
+# ConfigMaps
+# =============================================================================
+
+configMaps: []
+  # - name: app-config
+  #   data:
+    #     config.yaml: |
+  #       key: value
+  #     settings.json: |
+  #       {"debug": false}
+
+secrets: []
+  # - name: app-secret
+  #   type: Opaque
+  #   stringData:
+  #     password: change-me
+
+externalSecrets:
+  enabled: false
+  items: []
+
+sealedSecrets:
+  enabled: false
+  items: []
+
+rbac:
+  create: false
+  rules: []
+  clusterRole:
+    create: false
+    rules: []
+
+networkPolicy:
+  enabled: false
+  defaultDeny: false
+  podSelector: {}
+  policyTypes: []
+  ingress: []
+  egress: []
+  # -- Additional egress rules appended after `networkPolicy.egress`.
+  extraEgress: []
+
+# =============================================================================
+# ServiceMonitor (Prometheus Operator)
+# =============================================================================
+
+serviceMonitor:
+  enabled: false
+  # labels: {}
+  # endpoints:
+  #   - port: http
+  #     path: /metrics
+  #     interval: 30s
+
+podMonitor:
+  enabled: false
+  labels: {}
+  podMetricsEndpoints: []
+  # namespaceSelector: {}
+
+prometheusRule:
+  enabled: false
+  labels: {}
+  groups: []
+
+# =============================================================================
+# Jobs
+# =============================================================================
+
+jobs: []
+  # - name: db-migrate
+  #   image:
+  #     repository: my-app
+  #     tag: "1.0.0"
+  #   command: ["npm", "run", "migrate"]
+  #   backoffLimit: 3
+  #   activeDeadlineSeconds: 600
+  #   hooks:
+  #     enabled: false
+  #     events: ["pre-install", "pre-upgrade"]
+  #     weight: 0
+  #     deletePolicy: before-hook-creation,hook-succeeded
+
+# =============================================================================
+# CronJobs
+# =============================================================================
+
+cronjobs: []
+  # - name: cleanup
+  #   schedule: "0 2 * * *"
+  #   timeZone: America/Sao_Paulo
+  #   image:
+  #     repository: my-app
+  #     tag: "1.0.0"
+  #   command: ["npm", "run", "cleanup"]
+  #   concurrencyPolicy: Forbid
+  #   suspend: false
+
+keda:
+  enabled: false
+  scaledObject:
+    enabled: false
+    pollingInterval: 30
+    cooldownPeriod: 300
+    minReplicaCount: 0
+    maxReplicaCount: 10
+    triggers: []
+  scaledJobs: []
+
+gatewayApi:
+  enabled: false
+  httpRoutes: []
+
+# =============================================================================
+# Extra Manifests
+# =============================================================================
+# Inject arbitrary Kubernetes manifests. Supports Helm templating via tpl.
+
+extraManifests: []
+  # - apiVersion: v1
+  #   kind: Secret
+  #   metadata:
+  #     name: '{{ include "chart.fullname" . }}-extra'
+  #   type: Opaque
+  #   data:
+  #     key: dmFsdWU=
