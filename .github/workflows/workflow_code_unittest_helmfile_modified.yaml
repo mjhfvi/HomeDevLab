@@ -32,8 +32,8 @@ jobs:
         uses: tj-actions/changed-files@9426d40962ed5378910ee2e21d5f8c6fcbf2dd96
         with:
           files: |
-            helmfile.yaml
-            helmfile.yml
+            **/helmfile.yaml
+            **/helmfile.yml
       - name: List All Modified Files
         run: |
           for file in ${{ steps.changed-files.outputs.modified_files }}; do
