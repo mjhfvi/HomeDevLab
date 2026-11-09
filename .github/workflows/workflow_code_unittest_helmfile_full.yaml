@@ -9,7 +9,7 @@ on:
   #   branches: [ main ]
   #   paths:
   #     - '**/helmfile.yaml'
-  workflow_dispatch:  # Adds a "Run workflow" button in the GitHub Actions UI
+  workflow_dispatch:
   workflow_call:  # Allows this workflow to be called and reused by other workflows
 jobs:
   unittest:

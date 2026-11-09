@@ -1,5 +1,5 @@
 ---
 fileignoreconfig:
-- filename: .github/workflows/workflow_code_unittest_helmfile_modified.yaml
-  checksum: c884ea996abbd370c683f7913a90656c72bf6fd6ce708aec794b00b7c5bfc95e
+- filename: .github/workflows/workflow_code_super_linter_full.yaml
+  checksum: 4f93fece3d45784ddae8d8bd6d5040c2e6e0f0d47ab2181dc901c44873e17265
 version: "1.0"

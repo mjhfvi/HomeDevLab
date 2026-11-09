@@ -1,0 +1,48 @@
+---
+name: Workflow Code Super Linter Modified
+on:  # yamllint disable-line rule:truthy
+  push:
+    branches: [main]
+    paths-ignore: [.vscode/**, documentation/**]
+  pull_request:
+    branches: [main]
+    paths-ignore:
+      - .vscode/**
+      - documentation/**
+  # workflow_dispatch:
+  workflow_call:  # Allows this workflow to be called and reused by other workflows
+permissions: {}
+jobs:
+  build:
+    name: super-linter-modified
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+      issues: write
+      pull-requests: write
+      statuses: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Get Changed Files
+        id: changed-files
+        uses: tj-actions/changed-files@9426d40962ed5378910ee2e21d5f8c6fcbf2dd96
+      - name: List All Modified Files
+        run: |
+          for file in ${{ steps.changed-files.outputs.modified_files }}; do
+            echo "Modified: $file"
+          done
+      - name: Super-linter
+        uses: super-linter/super-linter@2da136927bd4a73596db63044b504547c62cb854
+        continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DEFAULT_BRANCH: main
+          VALIDATE_ALL_CODEBASE: 'false'
+          SAVE_SUPER_LINTER_SUMMARY: 'false'
+          ENABLE_GITHUB_ACTIONS_STEP_SUMMARY: 'false'
+          ENABLE_GITHUB_PULL_REQUEST_SUMMARY_COMMENT: 'false'
