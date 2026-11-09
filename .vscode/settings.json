@@ -36,7 +36,7 @@
   // ========== Extensions ==========
   "extensions.autoRestart": false,
   // ========== Files ==========
-  "files.autoSave": "afterDelay", // Automatically save modified files after a short delay
+  "files.autoSave": "onWindowChange", // Automatically save modified files after a short delay
   "files.trimTrailingWhitespace": true,
   "files.eol": "\n",
   "files.insertFinalNewline": true,

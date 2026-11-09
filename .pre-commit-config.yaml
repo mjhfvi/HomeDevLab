@@ -37,7 +37,7 @@ repos:
       - id: check-yaml
         verbose: true
         args: [--allow-multiple-documents]
-        exclude: kubernetes/manifests/
+        exclude: kubernetes/manifests/|kubernetes/template
       # - id: check-json
       #   verbose: true
       - id: detect-aws-credentials
@@ -88,13 +88,13 @@ repos:
         # - id: typos-docker
         name: typos (Finds and corrects spelling mistakes)
         args: ["--config", ".typos.toml", "-v"]
-        exclude: kubernetes/manifests/
+        exclude: kubernetes/manifests/|kubernetes/template
 
   - repo: https://github.com/lyz-code/yamlfix/
     rev: 1.19.1
     hooks:
       - id: yamlfix
-        exclude: .pre-commit-config.yaml|kubernetes/manifests/
+        exclude: .pre-commit-config.yaml|kubernetes/manifests/|kubernetes/template
 
   # - repo: https://github.com/adrienverge/yamllint
   #   rev: v1.38.0

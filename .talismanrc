@@ -1,5 +1,12 @@
 ---
 fileignoreconfig:
-- filename: kubernetes/argocd/development/traefik/application.yaml
-  checksum: f77b8e8a2eaeb1f82d0b1f6129184e4bc0260ad055b1d3b2976b1d5fa3bd8206
+
+- filename: kubernetes/template/helm/templates/ingress.yaml
+  checksum: 2a5a4b8982f17aa75414651ac818dda45bf180e30c8b1f95691d390aa0f37565
+- filename: kubernetes/template/helmfile/helmfileExample.yaml
+  checksum: 3e5b5a154981fc56d292ee862f6c42c3334fba4edde0607117e1da111cdf2e7e
+- filename: kubernetes/template/helmfile/helmfile-nginx.yaml
+  checksum: 0052f683b28eef69b3f7736c7e9dda0117e1da276caae0edc86027ce9349ccea
+- filename: kubernetes/template/helm/values.yaml
+  checksum: 2d635ae71e466b26c92d082577433dfc21faa9689380baa974599b9abab815c1
 version: "1.0"
