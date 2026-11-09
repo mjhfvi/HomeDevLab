@@ -42,4 +42,3 @@ jobs:
           # This excludes 'helmfile.d/' configs or sub-files unless they are named exactly 'helmfile.yaml'
           FILES=${{ steps.changed-files.outputs.MODIFIED-FILES }}
           echo $FILES
-          done
