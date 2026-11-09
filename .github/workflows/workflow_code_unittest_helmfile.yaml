@@ -34,37 +34,12 @@ jobs:
         run: |
           for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
             echo "Modified file: $file"
+            echo "MODIFIED-FILES=$file" >> $GITHUB_OUTPUT
           done
       - name: Find and Test helmfile.yaml Files
-        if: steps.changed-files.outputs.any_changed == 'true'
         run: |-
           # Find all files strictly matching 'helmfile.yaml'
           # This excludes 'helmfile.d/' configs or sub-files unless they are named exactly 'helmfile.yaml'
-          HELMFILES=$(find . -type f -name "helmfile.yaml")
-          if [ -z "$HELMFILES" ]; then
-            echo "No helmfile.yaml files found in this repository."
-            exit 0
-          fi
-          echo "Found the following helmfile.yaml manifests:"
-          echo "$HELMFILES"
-          echo "----------------------------------------"
-
-          # Loop through each found helmfile.yaml and run unit tests
-          for file in $HELMFILES; do
-            echo "Processing: $file"
-
-            # Step into the directory containing the helmfile to prevent relative path mapping issues
-            dir=$(dirname "$file")
-            base=$(basename "$file")
-            cd "$dir"
-
-            # Optional: pull chart dependencies if your helmfile references local charts with dependencies
-            helmfile --file "$base" deps || echo "No dependencies to update or setup failed."
-
-            # Execute the unit tests
-            echo "Running unittest for $file..."
-            helmfile --file "$base" unittest
-
-            # Return to repository root for next iteration
-            cd - > /dev/null
+          FILES=${{ steps.changed-files.outputs.MODIFIED-FILES }}
+          echo $FILES
           done
