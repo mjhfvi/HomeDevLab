@@ -1,32 +1,5 @@
 ---
-
 fileignoreconfig:
-- filename: .github/examples/workflows/dotnet/reusable_dotnet_nuget_multiple_and_push.yaml
-  checksum: 3e0d8169f61630e6b338c3b6784d2cb9b49f78a229ea0930bdc2dab77a491523
-- filename: .github/examples/workflows/dotnet/reusable_dotnet_nuget_and_push.yaml
-  checksum: 3afb2fb65fdd1b064602e656f3e3f9a9c9fbdb206b66c4f35399d2fc4176847b
-- filename: .github/examples/workflows/dotnet/reusable_dotnet_build_artifacts_push_webapp.yaml
-  checksum: c4ed4ce1daf8acc4795965258719ee9dbb3aaf7ddbc64fbf8831a17b04644f3f
-- filename: .github/examples/workflows/dotnet/reusable_dotnet_build_release_zip_sfx_file.yaml
-  checksum: 6cfdd6d7793b472f0a24160405fba26da37793633fee220cdd4fb5ee8734788f
-- filename: .github/examples/workflows/dotnet/reusable_dotnet_build_release_zip_sfx_file_ui.yaml
-  checksum: d15b87b346051d756b119c2cb113cb49137f093b9309d596a2e4735ac98153b5
-- filename: .github/examples/workflows/dotnet/reusable_dotnet_build_release_zip_sfx_file_ui_reactor.yaml
-  checksum: 9b9c12b674f976e156db708a2ef72e5edba2d99cb84fdf90ba0d2fbcba889c11
-- filename: .github/examples/workflows/dotnet/reusable_docker_build_image.yaml
-  checksum: 7680baa9d3fcc111359560036ca0c8d360c51a5d6e6847d1553d57b2ed998e4a
-- filename: .github/examples/workflows/dotnet/reusable_dotnet_build_release_zip_file.yaml
-  checksum: ec008921f03d6752e0f2e4627760b0f1805c155168dc8fd9140c888130da0de9
-- filename: .github/examples/workflows/dotnet/reusable_dotnet_build_release_zip_sfx_file_framowrk.yaml
-  checksum: 034b4a2cfa88bf4307634f98ffe02e3fecd0947d5b74057bdc2626e663377ead
-- filename: .github/examples/workflows/dotnet/reusable_dotnet_build_release_zip_file_testing.yaml
-  checksum: 499d1ce1353703f371d01cf0253299ea2561ba9c4fd1c460e11c093bde0436bb
-- filename: .github/examples/workflows/dotnet/reusable_dotnet_build_artifacts_push_webapp_ui_api.yaml
-  checksum: 77aa1413784fe535071987ca0a647d6ed88aa9f05e894e1ef42a866e76c528c4
-- filename: .github/examples/workflows/dotnet/reusable_dotnet_build_artifacts.yaml
-  checksum: cf0c9182467e0e1f33d5a673103636b0fcf1a12f62f72a3e7fad8e3b26c528a5
-- filename: .github/examples/workflows/dotnet/reusable_docker_build_image_dotnet.yaml
-  checksum: f0dd56873fff910fc5609798113bc79b99b40da6511824c34b789c8b61a10bb7
-- filename: .github/examples/workflows/dotnet/reusable_docker_build_image_dotnet_slnx.yaml
-  checksum: 7b0f04c88851c44fed908d9f923555e46b7f4bf41e269cdf2a91e5d40be83858
+- filename: kubernetes/argocd/development/traefik/application.yaml
+  checksum: f77b8e8a2eaeb1f82d0b1f6129184e4bc0260ad055b1d3b2976b1d5fa3bd8206
 version: "1.0"
