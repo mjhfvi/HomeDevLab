@@ -16,13 +16,13 @@ Working Branch == 'main'
 
 ### Build Production Environment
 
-Add Profile 'octopusapp_dev', get aws_access_key_id, aws_secret_access_key, aws_session_token
+Add Profile 'app_dev', get aws_access_key_id, aws_secret_access_key, aws_session_token
 
 ```bash
-aws configure set --profile octopusapp_dev region us-east-1
-aws configure set --profile octopusapp_dev aws_access_key_id xxxxxxxxxxx
-aws configure set --profile octopusapp_dev aws_secret_access_key xxxxxxxxxxx
-aws configure set --profile octopusapp_dev aws_session_token xxxxxxxxxxx
+aws configure set --profile app_dev region us-east-1
+aws configure set --profile app_dev aws_access_key_id xxxxxxxxxxx
+aws configure set --profile app_dev aws_secret_access_key xxxxxxxxxxx
+aws configure set --profile app_dev aws_session_token xxxxxxxxxxx
 ```
 
 ### Check Whether the Configuration files are Valid
@@ -83,14 +83,14 @@ Before you begin, make sure you have the following installed:
 - Terraform
 - Terraformer
 - AWS CLI configured with your credentials
-- An AWS profile (e.g., `octopus_prod`) set up in your `~/.aws/credentials` file
+- An AWS profile (e.g., `_prod`) set up in your `~/.aws/credentials` file
 
 ### 🚀 Basic Usage
 
 Here’s a simple command to import EC2 instances from AWS using Terraformer:
 
 ```bash
-terraformer import aws --resources=ec2_instance --regions=us-east-1 --profile=octopus_prod
+terraformer import aws --resources=ec2_instance --regions=us-east-1 --profile=_prod
 ```
 
 ### 🔍 Command Breakdown
@@ -98,7 +98,7 @@ terraformer import aws --resources=ec2_instance --regions=us-east-1 --profile=oc
 - `terraformer import aws`: Tells Terraformer to use AWS as the provider.
 - `--resources=ec2_instance`: Specifies the resource type to import (you can import multiple types).
 - `--regions=us-east-1`: Defines the AWS region to scan.
-- `--profile=octopus_prod`: Uses the named AWS profile for authentication.
+- `--profile=_prod`: Uses the named AWS profile for authentication.
 
 ---
 
@@ -125,7 +125,7 @@ add a block to your 'tf' file
 
 ```bash
 import {
-  to = reource.name (the resource in your terraform code)
+  to = resource.name (the resource in your terraform code)
   id = "aws-id" (the resource id number in AWS)
 }
 ```

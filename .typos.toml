@@ -18,6 +18,7 @@ fo = "fo"
 Fo = "Fo"
 ba = "ba"
 aks = "aks"
+exportfs = "exportfs"
 
 [default.extend-identifiers]
 #datas = "datas"

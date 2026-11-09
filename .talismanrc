@@ -1,12 +1,14 @@
 ---
 fileignoreconfig:
 
-- filename: kubernetes/template/helm/templates/ingress.yaml
-  checksum: 2a5a4b8982f17aa75414651ac818dda45bf180e30c8b1f95691d390aa0f37565
-- filename: kubernetes/template/helmfile/helmfileExample.yaml
-  checksum: 3e5b5a154981fc56d292ee862f6c42c3334fba4edde0607117e1da111cdf2e7e
-- filename: kubernetes/template/helmfile/helmfile-nginx.yaml
-  checksum: 0052f683b28eef69b3f7736c7e9dda0117e1da276caae0edc86027ce9349ccea
-- filename: kubernetes/template/helm/values.yaml
-  checksum: 2d635ae71e466b26c92d082577433dfc21faa9689380baa974599b9abab815c1
+- filename: terragrunt/README.md
+  checksum: 7cb7cf5320e04151907e1a92c699f97cbb9ab2bc28d983b7b42447a772d67399
+- filename: documentation/docker/DOCKER.md
+  checksum: 08fc717b0f166f5df1d575f7432c85ab1128640c4076dd96da1fc97f5af6e280
+- filename: documentation/certificates/GitHub/Build_Certificate.md
+  checksum: 04d954c2aabf98beef6acceb76783c26fdbfe1278e65e57101ef5036d919ba5a
+- filename: documentation/kubernetes/TROUBLESHOOTING.md
+  checksum: 4d93fd4f769b9d4b7dce6d0710ecf1d27ded308a11a41047b467067058fec279
+- filename: documentation/kubernetes/CLUSTER.md
+  checksum: fae820632db17d2114ecc29fcf08d0e2192c4d3a204fde2ebc0bbc5e12210b37
 version: "1.0"
