@@ -36,7 +36,7 @@ jobs:
         with:
           node-version: 24.x  # use LTS version of Node.js
           registry-url: https://npm.pkg.github.com
-          scope: '@octopusappdev'
+          scope: '@appdev'
       - name: Install dependencies
         run: npm ci
       - name: Bump version

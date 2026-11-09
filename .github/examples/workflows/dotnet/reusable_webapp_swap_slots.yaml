@@ -165,10 +165,10 @@ jobs:
       #  #       username: ${{ vars.AWS_SMTP_MAIL_USERNAME }}
       #  #       password: ${{ secrets.AWS_SMTP_MAIL_PASSWORD }}
       #         #       subject: "Github Actions: UI WebApp Slot Swap Failed"
-      #  #       to: tzahi@octopus-app.com
-      #         #       from: "Github Actions Alert <github-actions-alert@octopus-app.com>"
+      #  #       to: user@app.com
+      #         #       from: "Github Actions Alert <github-actions-alert@app.com>"
       #  #       body: |
       #  #           UI WebApp Slot Swap Failed - ${{ inputs.swap-slot }}
       #  #           Check Github Actions for more details https://github.com/${{ github.repository }}/actions/workflows/webapp-swap-slot.yml
-      #         #       reply_to: "devops@octopus-app.com"
+      #         #       reply_to: "devops@app.com"
       #  #       priority: high

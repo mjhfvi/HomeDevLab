@@ -33,8 +33,8 @@ jobs:
     #   with:
     #     dotnet-version: "10.0.x" # Specify the .NET 10 version
       - name: Dotnet Add Nuget Source
-        run: dotnet nuget add source ${{ vars.NUGET_SOURCE_GITHUB }} --name OCTOPUS
-          --username ${{ vars.TOKEN_GITHUB_PACKAGES_REGISTRY_USER }} --password ${{ secrets.TOKEN_GITHUB_PACKAGES_REGISTRY_WRITE_ACCESS }}
+        run: dotnet nuget add source ${{ vars.NUGET_SOURCE_GITHUB }} --name NAME --username
+          ${{ vars.TOKEN_GITHUB_PACKAGES_REGISTRY_USER }} --password ${{ secrets.TOKEN_GITHUB_PACKAGES_REGISTRY_WRITE_ACCESS }}
       - name: Dotnet Run Unit Tests
         shell: pwsh
         id: run_unit_tests

@@ -69,8 +69,8 @@ jobs:
           msbuild-architecture: x64
                   # vs-version: 'latest' # Use 'latest' OR '[17.0,16.5)' to get the version of Visual Studio you want.
       - name: Dotnet add Nuget Source
-        run: dotnet nuget add source ${{ vars.NUGET_SOURCE_GITHUB }} --name OCTOPUS
-          --username ${{ vars.TOKEN_GITHUB_PACKAGES_REGISTRY_USER }} --password ${{ secrets.TOKEN_GITHUB_PACKAGES_REGISTRY_WRITE_ACCESS }}
+        run: dotnet nuget add source ${{ vars.NUGET_SOURCE_GITHUB }} --name NAME --username
+          ${{ vars.TOKEN_GITHUB_PACKAGES_REGISTRY_USER }} --password ${{ secrets.TOKEN_GITHUB_PACKAGES_REGISTRY_WRITE_ACCESS }}
 
             # - name: Dotnet NuGet Package Multiple Projects
             #   run: Get-ChildItem -Recurse -Filter *.csproj | ForEach-Object { dotnet pack $_.FullName --configuration Release --output ./artifacts }
@@ -106,7 +106,7 @@ jobs:
           retention-days: 14
     outputs:
       MSBUILD_VERSION: ${{ steps.get_msbuild_version.outputs.MSBUILD_VERSION }}
-      ASSEMBLY_NAME: ${{ steps.get_assembly_info.outputs.ASSEMBLY_NAME || 'OCTOPUS.Microservices' }}       # Default to OCTOPUS.Microservices if not found
+      ASSEMBLY_NAME: ${{ steps.get_assembly_info.outputs.ASSEMBLY_NAME || 'Microservices' }}       # Default to Microservices if not found
       ASSEMBLY_VERSION: ${{ steps.get_assembly_info.outputs.ASSEMBLY_VERSION || '0.0.0' }}
       ARTIFACTS_URL: ${{ steps.upload_artifacts.outputs.artifact-url }}
       ARTIFACTS_RETENTION_DAYS: '14'
@@ -140,8 +140,8 @@ jobs:
     #               Write-Host "Search path: $SearchPath"
     #               Write-Host ""
 
-    #  # Search for .dll and .exe files containing 'octopus' in the filename (including all subfolders)
-    #               $files = Get-ChildItem -Path $SearchPath -Include *.dll,*.exe -File -Recurse -ErrorAction SilentlyContinue | Where-Object { $_.Name -like "*octopus*" }
+    #  # Search for .dll and .exe files containing 'name' in the filename (including all subfolders)
+    #               $files = Get-ChildItem -Path $SearchPath -Include *.dll,*.exe -File -Recurse -ErrorAction SilentlyContinue | Where-Object { $_.Name -like "*name*" }
 
     #               foreach ($file in $files) {
     #                   $fileCount++
@@ -149,7 +149,7 @@ jobs:
 
     #                   try {
     #                       Write-Host "Signing Certificate Information to File"
-    #                       scsigntool /pin ${{ secrets.SCSIGNTOOL_PIN_CODE }} sign /a /sm /sha1 ${{ secrets.SCSIGNTOOL_CERTIFICATE_SHA }} /fd SHA256 /t "http://timestamp.digicert.com" /d ${{ needs.build-nuget-package-push.outputs.ASSEMBLY_NAME || 'OCTOPUS.Microservices' }} /du "https://www.octopus-app.com" $($file.FullName)
+    #                       scsigntool /pin ${{ secrets.SCSIGNTOOL_PIN_CODE }} sign /a /sm /sha1 ${{ secrets.SCSIGNTOOL_CERTIFICATE_SHA }} /fd SHA256 /t "http://timestamp.digicert.com" /d ${{ needs.build-nuget-package-push.outputs.ASSEMBLY_NAME || 'Microservices' }} /du "https://www.app.com" $($file.FullName)
 
     #                       Write-Host "Checking That File Missing Certificate Information"
     #                       signtool verify /pa $($file.FullName)

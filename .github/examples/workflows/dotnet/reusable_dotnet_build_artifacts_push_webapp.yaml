@@ -79,8 +79,8 @@ jobs:
           msbuild-architecture: x64
                   # vs-version: 'latest' # Use 'latest' OR '[17.0,16.5)' to get the version of Visual Studio you want.
       - name: Dotnet add Nuget Source
-        run: dotnet nuget add source ${{ vars.AZURE_NUGET_SOURCE }} --name OCTOPUS
-          --username ${{ vars.TOKEN_GITHUB_PACKAGES_REGISTRY_USER }} --password ${{ secrets.TOKEN_GITHUB_PACKAGES_REGISTRY_WRITE_ACCESS }}
+        run: dotnet nuget add source ${{ vars.AZURE_NUGET_SOURCE }} --name NAME --username
+          ${{ vars.TOKEN_GITHUB_PACKAGES_REGISTRY_USER }} --password ${{ secrets.TOKEN_GITHUB_PACKAGES_REGISTRY_WRITE_ACCESS }}
       - name: Dotnet Solution Restore
         run: dotnet restore ${{ inputs.DONTNET_PROJECT_FILE_PATH }} --verbosity Normal
       - name: Dotnet Solution Build
@@ -153,7 +153,7 @@ jobs:
           echo "- Dotnet Packages Security Reports: ${{ steps.upload_package_reports.outputs.artifact-url }}" >> $env:GITHUB_STEP_SUMMARY
     outputs:
       MSBUILD_VERSION: ${{ steps.get_msbuild_version.outputs.MSBUILD_VERSION }}
-      ASSEMBLY_NAME: ${{ steps.get_version.outputs.ASSEMBLY_NAME || 'OCTOPUS.Microservices' }}       # Default to OCTOPUS.Microservices if not found
+      ASSEMBLY_NAME: ${{ steps.get_version.outputs.ASSEMBLY_NAME || 'Microservices' }}       # Default to Microservices if not found
       ASSEMBLY_VERSION: ${{ steps.get_version.outputs.VERSION_NUMBER }}
       ARTIFACTS_URL: ${{ steps.upload_artifacts.outputs.artifact-url }}
       ARTIFACTS_RETENTION_DAYS: '14'
@@ -177,18 +177,18 @@ jobs:
         run: |
           $SearchPath = "artifacts"
           $fileCount = 0
-          Write-Host "Starting search for Octopus files..."
+          Write-Host "Starting search for  files..."
           Write-Host "Search path: $SearchPath"
           Write-Host ""
 
-          # Search for .dll and .exe files containing 'octopus' in the filename (including all subfolders)
-          $files = Get-ChildItem -Path $SearchPath -Include *.dll,*.exe -File -Recurse -ErrorAction SilentlyContinue | Where-Object { $_.Name -like "*octopus*" }
+          # Search for .dll and .exe files containing '' in the filename (including all subfolders)
+          $files = Get-ChildItem -Path $SearchPath -Include *.dll,*.exe -File -Recurse -ErrorAction SilentlyContinue | Where-Object { $_.Name -like "*name*" }
           foreach ($file in $files) {
               $fileCount++
               Write-Host "Processing [$fileCount]: $($file.FullName)"
               try {
                   Write-Host "Signing Certificate Information to File"
-                  scsigntool /pin ${{ secrets.SCSIGNTOOL_PIN_CODE }} sign /a /sm /sha1 ${{ secrets.SCSIGNTOOL_CERTIFICATE_SHA }} /fd SHA256 /t "http://timestamp.digicert.com" /d ${{ needs.build-solution.outputs.ASSEMBLY_NAME || 'OCTOPUS.Microservices' }} /du "https://www.octopus-app.com" $($file.FullName)
+                  scsigntool /pin ${{ secrets.SCSIGNTOOL_PIN_CODE }} sign /a /sm /sha1 ${{ secrets.SCSIGNTOOL_CERTIFICATE_SHA }} /fd SHA256 /t "http://timestamp.digicert.com" /d ${{ needs.build-solution.outputs.ASSEMBLY_NAME || 'Microservices' }} /du "https://www.app.com" $($file.FullName)
                   Write-Host "Checking That File Missing Certificate Information"
                   signtool verify /pa $($file.FullName)
               }
@@ -247,10 +247,10 @@ jobs:
       - name: DEBUG - List Content
         run: ls -la
       - name: DEBUG - test url access
-        run: curl https://connect.octopus-cloud.com
+        run: curl https://connect.cloud.com
 
             # - name: DEBUG - deployment credentials
-            #   run: az webapp deployment list-publishing-credentials --name octopus-prod-us-webapp-connect-api/slots/beta --resource-group octopus-production-northcentralus
+            #   run: az webapp deployment list-publishing-credentials --name prod-us-webapp-connect-api/slots/beta --resource-group production-northcentralus
       - name: Deploy WebApp to ${{ inputs.WEBAPP_SLOT }} Slot
         run: az webapp deploy --src-path artifacts.zip --type zip --subscription ${{ vars.AZURE_SUBSCRIPTION_ID }}
           --resource-group ${{ inputs.RESOURCE_GROUP }} --name ${{ inputs.AZURE_WEBAPP_NAME_URL }}
@@ -310,10 +310,10 @@ jobs:
         #         username: ${{ vars.AWS_SMTP_MAIL_USERNAME }}
         #         password: ${{ secrets.AWS_SMTP_MAIL_PASSWORD }}
         #         subject: "Github Actions: UI WebApp Slot Swap Failed"
-        #         to: tzahi@octopus-app.com
-        #         from: "Github Actions Alert <github-actions-alert@octopus-app.com>"
+        #         to: tzahi@app.com
+        #         from: "Github Actions Alert <github-actions-alert@app.com>"
         #         body: |
         #             UI WebApp Slot Swap Failed - ${{ inputs.swap-slot }}
         #             Check Github Actions for more details https://github.com/${{ github.repository }}/actions/workflows/webapp-swap-slot.yml
-        #         reply_to: "devops@octopus-app.com"
+        #         reply_to: "devops@app.com"
         #         priority: high

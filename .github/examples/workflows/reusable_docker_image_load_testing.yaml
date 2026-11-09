@@ -29,7 +29,7 @@ jobs:
       - name: Checkout 'devops.azure.pipeline.templates' Git Repository
         uses: actions/checkout@v4.2.2
         with:
-          repository: octopusappdev/devops.azure.pipeline.templates
+          repository: appdev/devops.azure.pipeline.templates
           ref: main
           token: ${{ secrets.TOKEN_GITHUB_PACKAGES_REGISTRY_WRITE_ACCESS }}
           path: templates
@@ -43,7 +43,7 @@ jobs:
           username: ${{ vars.TOKEN_GITHUB_PACKAGES_REGISTRY_USER }}
           password: ${{ secrets.TOKEN_GITHUB_PACKAGES_REGISTRY_WRITE_ACCESS }}
       - name: Pull Docker image ${{ steps.set_repository_data.outputs.REPOSITORY_NAME }}:latest
-        run: docker pull ghcr.io/octopusappdev/${{ steps.set_repository_data.outputs.REPOSITORY_NAME }}:latest
+        run: docker pull ghcr.io/appdev/${{ steps.set_repository_data.outputs.REPOSITORY_NAME }}:latest
 
     # - name: Run Docker Container from Image ${{ steps.set_repository_data.outputs.REPOSITORY_NAME }}:latest
     #   uses: addnab/docker-run-action@v3
@@ -51,10 +51,10 @@ jobs:
     #     username: ${{ vars.TOKEN_GITHUB_PACKAGES_REGISTRY_USER }}
     #     password: ${{ secrets.TOKEN_GITHUB_PACKAGES_REGISTRY_WRITE_ACCESS }}
     #     registry: ghcr.io
-    #     image: ghcr.io/octopusappdev/${{ steps.set_repository_data.outputs.REPOSITORY_NAME }}:latest
+    #     image: ghcr.io/appdev/${{ steps.set_repository_data.outputs.REPOSITORY_NAME }}:latest
     #     # run: echo "hello world"
       - name: Run Docker Container from Image
-        run: docker run -d -p 8080:8080 ghcr.io/octopusappdev/${{ steps.set_repository_data.outputs.REPOSITORY_NAME }}:latest
+        run: docker run -d -p 8080:8080 ghcr.io/appdev/${{ steps.set_repository_data.outputs.REPOSITORY_NAME }}:latest
       - name: Setup k6 Load Testing Tool
         uses: grafana/setup-k6-action@v1.1.0
       # with:

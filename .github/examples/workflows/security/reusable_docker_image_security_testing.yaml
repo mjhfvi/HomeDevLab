@@ -64,7 +64,7 @@ jobs:
       - name: Trivy Vulnerability Scanner
         uses: aquasecurity/trivy-action@0.33.1
         with:
-          image-ref: ghcr.io/octopusappdev/${{ steps.set_repository_data.outputs.REPOSITORY_NAME }}:latest
+          image-ref: ghcr.io/appdev/${{ steps.set_repository_data.outputs.REPOSITORY_NAME }}:latest
           format: table
           ignore-unfixed: true
           vuln-type: os,library
@@ -74,7 +74,7 @@ jobs:
         uses: docker/scout-action@f8c776824083494ab0d56b8105ba2ca85c86e4de
         with:
           command: cves,recommendations,sbom
-          image: ghcr.io/octopusappdev/${{ steps.set_repository_data.outputs.REPOSITORY_NAME }}:latest
+          image: ghcr.io/appdev/${{ steps.set_repository_data.outputs.REPOSITORY_NAME }}:latest
           sarif-file: sarif.output.json
           summary: true
         # github-token: ${{ secrets.GITHUB_TOKEN }}

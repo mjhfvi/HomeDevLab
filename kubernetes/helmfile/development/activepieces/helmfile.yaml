@@ -23,17 +23,17 @@ helmDefaults:
   deleteWait: false
   deleteTimeout: 300
 repositories:
-  - name: meyercharts
+  - name: activepieces
     url: https://mariomeyer.github.io/repo
 releases:
   - name: activepieces
     namespace: automation
     createNamespace: true
-    chart: meyercharts/activepieces
+    chart: '{{`{{ .Release.Name }}`}}/{{`{{ .Release.Name }}`}}'
     # version: 2.0.14
     # rollbackOnFailure: false
     labels:
       app.kubernetes.io/build-by: helmfile
-      # app.kubernetes.io/version: 2.0.14
-      app.kubernetes.io/chart: activepieces
+      # app.kubernetes.io/version: '{{`{{ .Release.ChartVersion }}`}}'
+      app.kubernetes.io/chart: '{{`{{ .Release.Name }}`}}'
     values: [..\..\..\manifests\automation\activepieces\values.yaml]

@@ -28,11 +28,11 @@ repositories:
 releases:
   - name: chromadb
     namespace: database
-    chart: infracloud/chromadb
+    chart: infracloud/'{{`{{ .Release.Name }}`}}'
     version: 0.3.0
     # rollbackOnFailure: false
     labels:
       app.kubernetes.io/build-by: helmfile
-      app.kubernetes.io/chart: chromadb
-      app.kubernetes.io/chart-version: 0.3.0
+      app.kubernetes.io/chart: '{{`{{ .Release.Name }}`}}'
+      app.kubernetes.io/chart-version: '{{`{{ .Release.ChartVersion }}`}}'
     values: [..\..\..\manifests\database\chromadb\values.yaml]

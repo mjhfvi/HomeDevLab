@@ -29,9 +29,9 @@ releases:
   - name: argocd
     namespace: delivery
     createNamespace: true
-    chart: argo/argo-cd
+    chart: argo/'{{`{{ .Release.Name }}`}}'
     labels:
       app.kubernetes.io/build-by: helmfile
-      # app.kubernetes.io/version: 2.0.14
-      app.kubernetes.io/chart: argo-cd
+      # app.kubernetes.io/version: '{{`{{ .Release.ChartVersion }}`}}'
+      app.kubernetes.io/chart: '{{`{{ .Release.Name }}`}}'
       values: [..\..\..\manifests\delivery\argocd\argocd\values.yaml]

@@ -29,10 +29,10 @@ releases:
   - name: argo-workflows
     namespace: automation
     chart: argo/argo-workflows
-    version: 2.0.14
+    # version: 2.0.14
     # rollbackOnFailure: false
     labels:
       app.kubernetes.io/build-by: helmfile
-      app.kubernetes.io/version: 2.0.14
-      app.kubernetes.io/chart: argo-workflows
-    values: [..\..\..\manifests\automation\argo-workflows\values.yaml]
+      # app.kubernetes.io/version: 2.0.14
+      # app.kubernetes.io/chart: argo-workflows
+    values: [../../../manifests/automation/argo-workflows/values.yaml]

@@ -19,22 +19,22 @@ on:
         description: Azure Resource Group
         required: true
         type: string
-        default: octopus-development-israelcentral
+        default: development-israelcentral
         # SOLUTION_UI:
         #   description: "Solution File to Build"
         #   required: true
         #   type: string
-        # default: "Octopus3.sln"
+        # default: "NAME3.sln"
       VERSIONKEY_UI:
         description: Version Key
         required: true
         type: string
-        # default: "numOfOctopusVersion"
+        # default: "numOfVersion"
         # AZURE_WEBAPP_NAME:
         #     description: "Azure Web App Name"
         #     required: true
         #     type: string
-        # default: "octopus-dev-il-webapp-ui"
+        # default: "dev-il-webapp-ui"
       DONTNET_PROJECT_FILE_PATH:
         description: Path to .NET Project File
         required: true
@@ -95,8 +95,8 @@ jobs:
           msbuild-architecture: ${{ inputs.BUILDPLATFORM }}
         # vs-version: 'latest' # Use 'latest' OR '[17.0,16.5)' to get the version of Visual Studio
       - name: Dotnet add Nuget Source
-        run: dotnet nuget add source ${{ vars.AZURE_NUGET_SOURCE }} --name OCTOPUS
-          --username ${{ vars.TOKEN_GITHUB_PACKAGES_REGISTRY_USER }} --password ${{ secrets.TOKEN_GITHUB_PACKAGES_REGISTRY_WRITE_ACCESS }}
+        run: dotnet nuget add source ${{ vars.AZURE_NUGET_SOURCE }} --name NAME --username
+          ${{ vars.TOKEN_GITHUB_PACKAGES_REGISTRY_USER }} --password ${{ secrets.TOKEN_GITHUB_PACKAGES_REGISTRY_WRITE_ACCESS }}
       - name: Dotnet NuGet Restore
       # run: dotnet restore ${{ inputs.DONTNET_PROJECT_FILE_PATH }} --verbosity Normal
         run: nuget restore ${{ inputs.DONTNET_PROJECT_FILE_PATH }} -SolutionDirectory
@@ -117,12 +117,12 @@ jobs:
 
     # - name: Remove Sections From WebConfig
     #   run: |
-    #       $xml = [xml](Get-Content 'OCTOPUS.API\web.config')
+    #       $xml = [xml](Get-Content 'API\web.config')
     #       $node = $xml.SelectSingleNode("//appSettings")
     #       $node.ParentNode.RemoveChild($node) | Out-Null
     #       $node = $xml.SelectSingleNode("//connectionStrings")
     #       $node.ParentNode.RemoveChild($node) | Out-Null
-    #       $xml.Save('OCTOPUS.API\web.config')
+    #       $xml.Save('API\web.config')
       - name: Upload ZIP to Artifact
         uses: actions/upload-artifact@v4.6.2
         id: upload_zip_artifacts
@@ -162,13 +162,13 @@ jobs:
           Write-Host "Searching for *.dll and *.exe Files to Sign ..."
           Write-Host "Search path: $SearchPath"
           Write-Host ""
-          $files = Get-ChildItem -Path $SearchPath -Include *.dll,*.exe -File -Recurse -ErrorAction SilentlyContinue | Where-Object { $_.Name -like "*octopus*" }
+          $files = Get-ChildItem -Path $SearchPath -Include *.dll,*.exe -File -Recurse -ErrorAction SilentlyContinue | Where-Object { $_.Name -like "*name*" }
           foreach ($file in $files) {
               $fileCount++
               Write-Host "Processing [$fileCount]: $($file.FullName)"
               try {
                   Write-Host "Signing Certificate Information to File"
-                  scsigntool /pin ${{ secrets.SCSIGNTOOL_PIN_CODE }} sign /a /sm /sha1 ${{ secrets.SCSIGNTOOL_CERTIFICATE_SHA }} /fd SHA256 /t "http://timestamp.digicert.com" /d ${{ needs.build-nuget-package-push.outputs.ASSEMBLY_NAME || 'OCTOPUS.Microservices' }} /du "https://www.octopus-app.com" $($file.FullName)
+                  scsigntool /pin ${{ secrets.SCSIGNTOOL_PIN_CODE }} sign /a /sm /sha1 ${{ secrets.SCSIGNTOOL_CERTIFICATE_SHA }} /fd SHA256 /t "http://timestamp.digicert.com" /d ${{ needs.build-nuget-package-push.outputs.ASSEMBLY_NAME || 'Microservices' }} /du "https://www.app.com" $($file.FullName)
                   Write-Host "Checking That File Missing Certificate Information"
                   signtool verify /pa $($file.FullName)
               }
@@ -227,7 +227,7 @@ jobs:
               ";!@Install@!UTF-8!"
               "InstallPath=."
               "GUIMode=0"
-              "Title=Octopus Application"
+              "Title=NAME Application"
               "BeginPrompt=Do You Want to Extract Files?"
               "FinishMessage=Extraction is Complete. Press OK to exit."
               "ErrorMessage=An error occurred."
@@ -258,16 +258,16 @@ jobs:
           cd artifacts
           Write-Host 'Creating Self-Extracting Executable Package'
           if ('${{ inputs.ZIP_FILE_CREATE_PASSWORD }}' -eq 'Yes') {
-              7z a Octopus.exe -sfx.\7zSD.sfx *.dll *.exe -xr!7*.* -xr!Uninstall.exe -p"${{ github.sha }}"
+              7z a exe -sfx.\7zSD.sfx *.dll *.exe -xr!7*.* -xr!Uninstall.exe -p"${{ github.sha }}"
           } else {
-              7z a Octopus.exe -sfx.\7zSD.sfx *.dll *.exe -xr!7*.* -xr!Uninstall.exe
+              7z a exe -sfx.\7zSD.sfx *.dll *.exe -xr!7*.* -xr!Uninstall.exe
           }
       - name: Upload Self-Extracting Executable Artifacts
         id: upload_executable_artifact
         uses: actions/upload-artifact@v4.6.2
         with:
           name: unsingned-executable-artifact
-          path: .\artifacts\Octopus.exe
+          path: .\artifacts\exe
           retention-days: 14
     outputs:
       SFX_PACKAGE_UNSIGNED_EXECUTABLE_URL: ${{ steps.upload_executable_artifact.outputs.artifact-url }}
@@ -288,15 +288,15 @@ jobs:
         with:
           name: unsingned-executable-artifact
           path: artifact
-      - name: Signing 'Octopus.exe' File with Certificate
+      - name: Signing 'exe' File with Certificate
       #   if: ${{ inputs.SIGNED_FILES_WORKFLOW == true }}
         id: find_singned_files_to_sign
         shell: pwsh
         run: |
           cd artifact
-          scsigntool /pin ${{ secrets.SCSIGNTOOL_PIN_CODE }} sign /a /sm /sha1 ${{ secrets.SCSIGNTOOL_CERTIFICATE_SHA }} /fd SHA256 /t "http://timestamp.digicert.com" /d ${{ needs.build-nuget-package-push.outputs.ASSEMBLY_NAME || 'OCTOPUS.Microservices' }} /du "https://www.octopus-app.com" Octopus.exe
+          scsigntool /pin ${{ secrets.SCSIGNTOOL_PIN_CODE }} sign /a /sm /sha1 ${{ secrets.SCSIGNTOOL_CERTIFICATE_SHA }} /fd SHA256 /t "http://timestamp.digicert.com" /d ${{ needs.build-nuget-package-push.outputs.ASSEMBLY_NAME || 'Microservices' }} /du "https://www.app.com" exe
           Write-Host "Checking That File Missing Certificate Information"
-          signtool verify /pa Octopus.exe
+          signtool verify /pa exe
           echo "SIGNED_FILES_COUNT=$fileCount" >> $env:GITHUB_OUTPUT
           echo "SIGNED_FILES_WORKFLOW=${{ inputs.SIGNED_FILES_WORKFLOW }}" >> $env:GITHUB_OUTPUT
       - name: Upload Singned Executable Artifacts
@@ -304,7 +304,7 @@ jobs:
         uses: actions/upload-artifact@v4.6.2
         with:
           name: singned-executable-artifact
-          path: .\artifact\Octopus.exe
+          path: .\artifact\exe
           retention-days: 14
     outputs:
       SFX_PACKAGE_SIGNED_EXECUTABLE_URL: ${{ steps.upload_singned_executable_artifact.outputs.artifact-url }}

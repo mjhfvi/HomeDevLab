@@ -24,7 +24,6 @@
   "editor.insertSpaces": false,
   "editor.guides.bracketPairs": "active", // Show clear vertical lines connecting matching brackets
   "editor.cursorSmoothCaretAnimation": "on", // Make the cursor slide smoothly as you type
-  "editor.wordWrap": "off", // Wrap long lines so you don't have to scroll horizontally
   "editor.codeActionsOnSave": {
     "source.fixAll": "never",
     "source.fixAll.eslint": "explicit",
