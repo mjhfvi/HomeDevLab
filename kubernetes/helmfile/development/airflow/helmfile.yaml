@@ -27,6 +27,6 @@ releases:
   - name: airflow
     namespace: automation
     chart: '{{ .Release.Name }}/{{ .Release.Name }}'
-    version: 1.22.0
+    version: 1.21.0
     values:
       - ../../../manifests/{{ .Release.Namespace }}/{{ .Release.Name }}/values.yaml
