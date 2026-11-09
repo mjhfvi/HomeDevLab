@@ -27,6 +27,6 @@ releases:
   - name: linkerd
     namespace: security
     chart: '{{ .Release.Name }}/{{ .Release.Name }}-control-plane'
-    version: 2.11.5
+    version: 1.16.11
     values:
       - ../../../manifests/{{ .Release.Namespace }}/{{ .Release.Name }}-control-plane/values.yaml
