@@ -42,7 +42,17 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           DEFAULT_BRANCH: main
+          DISABLE_ERRORS: 'false'
           VALIDATE_ALL_CODEBASE: 'false'
           SAVE_SUPER_LINTER_SUMMARY: 'false'
           ENABLE_GITHUB_ACTIONS_STEP_SUMMARY: 'false'
           ENABLE_GITHUB_PULL_REQUEST_SUMMARY_COMMENT: 'false'
+          VALIDATE_ANSIBLE: 'true'
+          VALIDATE_CHECKOV: 'true'
+          VALIDATE_GROOVY: 'true'
+          VALIDATE_JSON: 'true'
+          VALIDATE_MARKDOWN: 'true'
+          VALIDATE_TERRAFORM_FMT: 'true'
+          VALIDATE_TERRAGRUNT: 'true'
+          VALIDATE_YAML: 'true'
+          VALIDATE_XML: 'true'
