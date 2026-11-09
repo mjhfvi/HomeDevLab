@@ -20,7 +20,7 @@ commonLabels:
   app.helmfile.io/chart: '{{ .Release.Name }}'
   app.helmfile.io/version: '{{ .Release.ChartVersion }}'
 repositories:
-  - name: trivy
+  - name: trivy-operator
     url: https://aquasecurity.github.io/helm-charts/
     oci: false
 releases:
