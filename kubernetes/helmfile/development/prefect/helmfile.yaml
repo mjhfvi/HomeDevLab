@@ -24,9 +24,9 @@ repositories:
     url: https://prefecthq.github.io/prefect-helm
     oci: false
 releases:
-  - name: prefect
+  - name: prefect-server
     namespace: automation
-    chart: '{{ .Release.Name }}/{{ .Release.Name }}'
-    version: 2026.10.21032730
+    chart: prefect/{{ .Release.Name }}
+    version: 2026.11.6211926
     values:
       - ../../../manifests/{{ .Release.Namespace }}/{{ .Release.Name }}/values.yaml

@@ -16,6 +16,7 @@
     "devtron",
     "fastapi",
     "georeplications",
+    "HELMFILES",
     "helmforge",
     "helmforgedev",
     "helmignore",
