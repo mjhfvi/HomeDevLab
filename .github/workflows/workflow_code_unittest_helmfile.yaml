@@ -41,5 +41,31 @@ jobs:
         run: |-
           # Find all files strictly matching 'helmfile.yaml'
           # This excludes 'helmfile.d/' configs or sub-files unless they are named exactly 'helmfile.yaml'
-          FILES=${{ steps.list-modified-files.outputs.MODIFIED-FILES }}
-          echo $FILES
+          HELMFILES=${{ steps.list-modified-files.outputs.MODIFIED-FILES }}
+          if [ -z "$HELMFILES" ]; then
+            echo "No helmfile.yaml files found in this repository."
+            exit 0
+          fi
+          echo "Found the following helmfile.yaml manifests:"
+          echo "$HELMFILES"
+          echo "----------------------------------------"
+
+          # Loop through each found helmfile.yaml and run unit tests
+          for file in $HELMFILES; do
+            echo "Processing: $file"
+
+            # Step into the directory containing the helmfile to prevent relative path mapping issues
+            dir=$(dirname "$file")
+            base=$(basename "$file")
+            cd "$dir"
+
+            # Optional: pull chart dependencies if your helmfile references local charts with dependencies
+            helmfile --file "$base" deps || echo "No dependencies to update or setup failed."
+
+            # Execute the unit tests
+            echo "Running unittest for $file..."
+            helmfile --file "$base" unittest
+
+            # Return to repository root for next iteration
+            cd - > /dev/null
+          done

@@ -10,7 +10,7 @@
   "editor.find.addExtraSpaceOnTop": false,
   "editor.inlineSuggest.enabled": true,
   "editor.multiCursorModifier": "ctrlCmd",
-  "editor.suggestSelection": "first",
+  // "editor.suggestSelection": "first",
   "editor.tabSize": 2,
   "editor.unicodeHighlight.invisibleCharacters": false,
   "editor.stickyScroll.enabled": true,
