@@ -3,10 +3,10 @@ name: Workflow Helmfile Unit Test Modified Files
 on:
   push:
     branches: [main]
-    paths: [kubernetes/helmfile]
+    paths: ['**/helmfile']
   pull_request:
     branches: [main]
-    paths: [kubernetes/helmfile]
+    paths: ['**/helmfile']
   workflow_dispatch:  # Adds a "Run workflow" button in the GitHub Actions UI
   workflow_call:  # Allows this workflow to be called and reused by other workflows
 jobs:
