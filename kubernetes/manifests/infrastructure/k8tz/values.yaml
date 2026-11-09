@@ -3,7 +3,7 @@
 kind: Deployment
 replicaCount: 1
 
-namespace: system  # set to `null` to use helm built-in namespace
+namespace: infrastructure  # set to `null` to use helm built-in namespace
 createNamespace: false  # set to `false` to disable namespace creation by the helm chart
 injectionStrategy: initContainer
 timezone: Asia/Jerusalem

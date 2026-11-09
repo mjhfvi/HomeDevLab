@@ -1,14 +1,5 @@
 ---
 fileignoreconfig:
-
-- filename: terragrunt/README.md
-  checksum: 7cb7cf5320e04151907e1a92c699f97cbb9ab2bc28d983b7b42447a772d67399
-- filename: documentation/docker/DOCKER.md
-  checksum: 08fc717b0f166f5df1d575f7432c85ab1128640c4076dd96da1fc97f5af6e280
-- filename: documentation/certificates/GitHub/Build_Certificate.md
-  checksum: 04d954c2aabf98beef6acceb76783c26fdbfe1278e65e57101ef5036d919ba5a
-- filename: documentation/kubernetes/TROUBLESHOOTING.md
-  checksum: 4d93fd4f769b9d4b7dce6d0710ecf1d27ded308a11a41047b467067058fec279
-- filename: documentation/kubernetes/CLUSTER.md
-  checksum: fae820632db17d2114ecc29fcf08d0e2192c4d3a204fde2ebc0bbc5e12210b37
+- filename: kubernetes/manifests/database/mssql/configurations/credentials.yaml
+  checksum: ec48ca71d1387d10828bcf33d91c3f82b2b07e17aa165906302952a2c7d9cef0
 version: "1.0"

@@ -33,3 +33,7 @@ indent_size = 4
 
 [*.{csv,sql}-spec]
 trim_trailing_whitespace = false
+
+[*.groovy]
+indent_style = space
+indent_size = 4

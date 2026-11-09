@@ -107,6 +107,16 @@
 *.yaml     text=auto eol=lf whitespace=blank-at-eol,-blank-at-eof,-space-before-tab,tab-in-indent,tabwidth=2
 *.yml      text=auto eol=lf whitespace=blank-at-eol,-blank-at-eof,-space-before-tab,tab-in-indent,tabwidth=2
 
+# Groovy and Java Source Files
+*.groovy text diff=java
+*.java text diff=java
+
+# Gradle Build System Files
+*.gradle text diff=java
+gradlew text eol=lf
+*.bat text eol=crlf
+*.jar binary
+
 # Git Configuration Files
 .gitattributes linguist-language=YAML
 .talismanrc linguist-language=YAML

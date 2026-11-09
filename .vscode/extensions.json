@@ -55,7 +55,8 @@
     "yzhang.markdown-all-in-one",
     "howardzuo.vscode-git-tags",
     "waderyan.gitblame",
-    "adam-bender.commit-message-editor"
+    "adam-bender.commit-message-editor",
+    "nicolasvuillamy.vscode-groovy-lint"
   ],
   "unwantedRecommendations": []
 }
