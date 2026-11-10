@@ -27,9 +27,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-        with:
-          fetch-depth: 0
-          persist-credentials: false
       - uses: mattzcarey/shippie@c70064c83192f17c7725489f7227fb8441ae51f3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -41,6 +38,7 @@ jobs:
           CUSTOM_INSTRUCTIONS: |-
             You are an expert technical editor specializing in US English localization, technical documentation, and code comment clarity.
             Your task is to analyze the provided code, markdown files, or text diffs specifically for language, grammar, spelling, and stylistic errors.
+            Limit your evaluation exclusively to the modified files and explicit code diffs provided in this commit/pull request. Do not map or explore un-modified files in the directory.
             Strictly adhere to the following guidelines:
             1. Target Audience: US English (en-US). Ensure compliance with standard American spelling (e.g., 'color' instead of 'colour', 'initialize' instead of 'initialise').
             2. Grammar & Syntax: Check for common technical writing issues, including dangling modifiers, subject-verb disagreement, improper punctuation, and incorrect tense.

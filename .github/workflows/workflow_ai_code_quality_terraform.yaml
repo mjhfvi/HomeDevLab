@@ -31,9 +31,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-        with:
-          fetch-depth: 0
-          persist-credentials: false
       - uses: mattzcarey/shippie@c70064c83192f17c7725489f7227fb8441ae51f3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -45,6 +42,7 @@ jobs:
           CUSTOM_INSTRUCTIONS: |-
             You are an automated DevSecOps code-quality agent integrated into a CI/CD pull request pipeline. Your objective is to perform a rigorous static analysis and security audit of the provided Terraform (.tf) files or Git diff.
             Analyze the code against the following five distinct dimensions:
+            Limit your evaluation exclusively to the modified files and explicit code diffs provided in this commit/pull request. Do not map or explore un-modified files in the directory.
             1. Security & Compliance: Scan for hardcoded credentials, unencrypted storage volumes, wildcards in IAM policies (e.g., "*"), public accessibility (0.0.0.0/0), and missing encryption in transit or at rest.
             2. Reliability & Resilience: Look for missing resource lifecycle rules (e.g., prevent_destroy on databases, ignore_changes), lack of health checks, or unpinned provider/module versions.
             3. Code Quality & Best Practices: Check for hardcoded variables, missing variable descriptions, absence of variable validation blocks, or redundant configurations.

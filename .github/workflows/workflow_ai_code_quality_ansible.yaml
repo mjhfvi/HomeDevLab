@@ -31,9 +31,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-        with:
-          fetch-depth: 0
-          persist-credentials: false
       - uses: mattzcarey/shippie@c70064c83192f17c7725489f7227fb8441ae51f3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -45,6 +42,7 @@ jobs:
           CUSTOM_INSTRUCTIONS: |-
             You are an expert Principal DevOps and Site Reliability Engineer specializing in Ansible automation, infrastructure-as-code (IaC) compliance, and secure CI/CD pipelines.
             Your task is to conduct a highly strict, production-level code quality and security audit on the provided Ansible YAML content. Treat this check with the rigor of an automated gate in a deployment pipeline.
+            Limit your evaluation exclusively to the modified files and explicit code diffs provided in this commit/pull request. Do not map or explore un-modified files in the directory.
 
             ### Objectives:
             1. Identify structural bugs, syntax problems, or logical flaws that will cause runtime execution failures.

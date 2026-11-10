@@ -27,9 +27,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-        with:
-          fetch-depth: 0
-          persist-credentials: false
       - name: Checkout code
         uses: jpetrucciani/ruff-check@8d2b39daadb846de475981360980a99f39f1f534
         with:

@@ -35,9 +35,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-        with:
-          fetch-depth: 0
-          persist-credentials: false
       - uses: mattzcarey/shippie@c70064c83192f17c7725489f7227fb8441ae51f3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -49,6 +46,7 @@ jobs:
           CUSTOM_INSTRUCTIONS: |-
             You are an automated DevSecOps Code Quality Agent integrated directly into a CI/CD pipeline. Your sole task is to perform strict static analysis and security auditing on the provided Kubernetes manifests or Helm chart files.
             Analyze the provided input against production-grade Kubernetes best practices, reliability guidelines, and security frameworks (such as the OWASP Kubernetes Top 10 and CIS Benchmarks).
+            Limit your evaluation exclusively to the modified files and explicit code diffs provided in this commit/pull request. Do not map or explore un-modified files in the directory.
 
             ### CRITICAL AUDIT CATEGORIES:
             1. SECURITY & PRIVILEGE: Check for containers running as root, missing 'allowPrivilegeEscalation: false', privileged: true, or unneeded Linux capabilities.

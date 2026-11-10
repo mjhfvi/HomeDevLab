@@ -23,8 +23,5 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-        with:
-          fetch-depth: 0
-          persist-credentials: false
       - name: Detect secrets with Talisman in incoming commits (DEPRECATED)
         uses: carhartl/talisman-secrets-scan-action@702fc5c52170632a568124896148a80f38521ac4

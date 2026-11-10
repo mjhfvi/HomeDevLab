@@ -1,6 +1,6 @@
 ---
 fileignoreconfig:
 
-- filename: .github/skills/secure-coding.md
-  checksum: 1f6c4da882ae5b291344b51654556055573847f425357a57c0dc0511d5fd217b
+- filename: .github/workflows/workflow_ai_code_quality_markdown.yaml
+  checksum: f3549ac27c265aad29048f1d620a4cc7a85e534b9890a8e47f890b505823aa85
 version: "1.0"
