@@ -31,6 +31,7 @@ Ensure you have the following tools installed:
 - Helm
 - Helmfile
 - ansible
+- terraform
 
 ## 🏃 <font color="purple">Run Deployment</font>
 
