@@ -1,14 +1,12 @@
 ---
 name: Workflow Ai Code Quality Markdown
 on:  # yamllint disable-line rule:truthy
-  # push:
-  #   branches: [main]
-  #   paths:
-  #     - '**/*.md'
-  # pull_request:
-  #   branches: [main]
-  #   paths:
-  #     - '**/*.md'
+  push:
+    branches: [main]
+    paths: ['**/*.md']
+  pull_request:
+    branches: [main]
+    paths: ['**/*.md']
   workflow_dispatch:
   workflow_call:  # Allows this workflow to be called and reused by other workflows
 permissions: {}
@@ -33,7 +31,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           # ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          MODEL:
+          MODEL: ${{ secrets.OPENAI_MODEL }}
           THINKING_LEVEL: minimal
           # IGNORE: '**/*.test.ts,dist/**'
           CUSTOM_INSTRUCTIONS: |-
