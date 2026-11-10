@@ -7,7 +7,14 @@ on:  # yamllint disable-line rule:truthy
   pull_request:
     branches: [main]
     paths: ['**/helmfile/**']
-  # workflow_dispatch:
+  workflow_dispatch:
+    inputs:
+      Scan:
+        description: Scan All Helmfile in Project
+        required: false
+        default: FullScan
+        type: choice
+        options: [FullScan]
   workflow_call:  # Allows this workflow to be called and reused by other workflows
 jobs:
   unittest:
@@ -44,6 +51,39 @@ jobs:
             exit 0
           fi
           for file in ${{ steps.changed-files.outputs.modified_files }}; do
+            echo "Processing: $file"
+
+            # Step into the directory containing the helmfile to prevent relative path mapping issues
+            dir=$(dirname "$file")
+            base=$(basename "$file")
+            cd "$dir"
+
+            # Optional: pull chart dependencies if your helmfile references local charts with dependencies
+            helmfile --file "$base" deps || echo "No dependencies to update or setup failed."
+
+            # Execute the unit tests
+            echo "Running unittest for $file..."
+            helmfile --file "$base" unittest
+
+            # Return to repository root for next iteration
+            cd - > /dev/null
+          done
+      - name: Find and Test helmfile.yaml Files
+        if: github.event_name == 'workflow_dispatch'
+        run: |-
+          # Find all files strictly matching 'helmfile.yaml'
+          # This excludes 'helmfile.d/' configs or sub-files unless they are named exactly 'helmfile.yaml'
+          HELMFILES=$(find . -type f -name "helmfile.yaml")
+          if [ -z "$HELMFILES" ]; then
+            echo "No helmfile.yaml files found in this repository."
+            exit 0
+          fi
+          echo "Found the following helmfile.yaml manifests:"
+          echo "$HELMFILES"
+          echo "----------------------------------------"
+
+          # Loop through each found helmfile.yaml and run unit tests
+          for file in $HELMFILES; do
             echo "Processing: $file"
 
             # Step into the directory containing the helmfile to prevent relative path mapping issues

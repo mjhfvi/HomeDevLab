@@ -7,15 +7,10 @@ on:  # yamllint disable-line rule:truthy
   #     - '**/*.py'
   #   paths-ignore:
   #     - 'config/**'
-  #     - 'config/local.json'
-  #     - '/*.draft.md' # Ignores files matching extension globally
   # pull_request:
   #   branches: [main]
-  workflow_dispatch:  # Adds a "Run workflow" button in the GitHub Actions UI
+  workflow_dispatch:
   workflow_call:  # Allows this workflow to be called and reused by other workflows
-  # schedule:
-  #  # Runs at 00:00 every day
-  #   - cron: '0 0 * * *'
 permissions: {}
 env:
   PYTHON_VERSION: '3.13'
@@ -24,15 +19,10 @@ jobs:
     name: run-pip-package
     runs-on: ubuntu-latest
     permissions:
-      # contents permission to clone the repository
       contents: read
       packages: read
-      # issues and pull-requests permissions to write results as pull
-      # request comments. Omit them if you don't need summary comments
       issues: write
       pull-requests: write
-      # To report GitHub Actions status checks. Omit if you don't need
-      # to update commit status
       statuses: write
     steps:
       - name: Checkout code

@@ -6,10 +6,8 @@ on:  # yamllint disable-line rule:truthy
     paths-ignore: [.vscode/**, documentation/**]
   pull_request:
     branches: [main]
-    paths-ignore:
-      - .vscode/**
-      - documentation/**
-  # workflow_dispatch:
+    paths-ignore: [.vscode/**, documentation/**]
+  workflow_dispatch:
   workflow_call:  # Allows this workflow to be called and reused by other workflows
 permissions: {}
 jobs:
@@ -36,7 +34,7 @@ jobs:
           for file in ${{ steps.changed-files.outputs.modified_files }}; do
             echo "Modified: $file"
           done
-      - name: Super-linter
+      - name: Linter Scan Modified Files
         uses: super-linter/super-linter@2da136927bd4a73596db63044b504547c62cb854
         continue-on-error: true
         env:

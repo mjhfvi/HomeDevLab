@@ -1,38 +1,28 @@
 ---
 name: Workflow Ai Language and Grammar Check
 on:  # yamllint disable-line rule:truthy
-  # push:  # Triggers on any push event
+  # push:
   #   branches: [main]
   #   paths:
   #     - '**/*.md'
   #   paths-ignore:
   #     - 'config/**'
-  #     - 'config/local.json'
-  #     - '/*.draft.md' # Ignores files matching extension globally
   # pull_request:
   #   branches: [main]
   #   paths:
   #     - '**/*.md'
-  workflow_dispatch:  # Adds a "Run workflow" button in the GitHub Actions UI
+  workflow_dispatch:
   workflow_call:  # Allows this workflow to be called and reused by other workflows
-  # schedule:
-  #  # Runs at 00:00 every day
-  #   - cron: '0 0 * * *'
 permissions: {}
 jobs:
   build:
     name: claude-code-action-language-grammar
     runs-on: ubuntu-latest
     permissions:
-      # contents permission to clone the repository
       contents: read
       packages: read
-      # issues and pull-requests permissions to write results as pull
-      # request comments. Omit them if you don't need summary comments
       issues: write
       pull-requests: write
-      # To report GitHub Actions status checks. Omit if you don't need
-      # to update commit status
       statuses: write
     steps:
       - name: Checkout code
