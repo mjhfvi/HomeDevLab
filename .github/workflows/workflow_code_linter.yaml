@@ -1,5 +1,5 @@
 ---
-name: Workflow Code Super Linter Modified
+name: Workflow Code Linter
 on:  # yamllint disable-line rule:truthy
   # push:
   #   branches: [main]
@@ -12,7 +12,7 @@ on:  # yamllint disable-line rule:truthy
 permissions: {}
 jobs:
   build:
-    name: super-linter-modified
+    name: code-linter-modified
     runs-on: ubuntu-latest
     permissions:
       contents: read

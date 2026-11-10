@@ -16,7 +16,7 @@ on:  # yamllint disable-line rule:truthy
 permissions: {}
 jobs:
   build:
-    name: typos
+    name: code-typos
     runs-on: ubuntu-latest
     permissions:
       contents: read

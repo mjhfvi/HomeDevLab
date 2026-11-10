@@ -10,7 +10,7 @@ on:  # yamllint disable-line rule:truthy
 permissions: {}
 jobs:
   build:
-    name: aparte-scanner
+    name: security-code-aparte-scanner
     runs-on: ubuntu-latest
     permissions:
       contents: read

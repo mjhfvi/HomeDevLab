@@ -16,7 +16,7 @@ on:  # yamllint disable-line rule:truthy
 permissions: {}
 jobs:
   build:
-    name: python-ruff-linter
+    name: code-python-ruff-linter
     runs-on: ubuntu-latest
     permissions:
       contents: read

@@ -16,7 +16,7 @@ on:  # yamllint disable-line rule:truthy
 permissions: {}
 jobs:
   build:
-    name: check-crlf
+    name: code-check-crlf
     runs-on: ubuntu-latest
     permissions:
       contents: read

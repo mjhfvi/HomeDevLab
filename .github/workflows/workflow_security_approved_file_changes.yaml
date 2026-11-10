@@ -22,7 +22,7 @@ on:  # yamllint disable-line rule:truthy
 permissions: {}
 jobs:
   build:
-    name: approved-file-changes
+    name: security-code-approved-file-changes
     runs-on: ubuntu-latest
     permissions:
       contents: read
