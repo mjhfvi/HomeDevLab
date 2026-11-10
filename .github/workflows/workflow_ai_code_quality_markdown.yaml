@@ -32,19 +32,28 @@ jobs:
         #   files: |
         #     **/*.md
       - name: List All Modified Files
+        id: list_text_from_files
         run: |
           for file in ${{ steps.changed-files.outputs.modified_files }}; do
             echo "Modified: $file"
           done
-          # Example: iterate over all .log files in the current directory
-          for file in ${{ steps.changed-files.outputs.modified_files }}; do
-              [[ -e "$file" ]] || { echo "No matching files found."; exit 0; }
-              echo "========================================"
-              echo "  $file"
-              echo "========================================"
-              cat "$file"
+          DELIM="EOF_$(uuidgen)"
+          {
+            echo "content<<$DELIM"
+            for file in ${{ steps.changed-files.outputs.modified_files }}; do
+              [[ -f "$file" ]] || continue
+              echo "===== $file ====="
+              cat -- "$file"
               echo
-          done
+            done
+            echo "$DELIM"
+          } >> "$GITHUB_OUTPUT"
+      - name: Print in second step
+        env:
+          FILES_CONTENT: ${{ steps.list_text_from_files.outputs.content }}
+        run: |
+          echo "Received ${#FILES_CONTENT} characters"
+          echo "FILES_CONTENT"
       # - name: Code Review Agent
       #   uses: mattzcarey/shippie@c70064c83192f17c7725489f7227fb8441ae51f3
       #   with:
