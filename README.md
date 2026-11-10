@@ -31,6 +31,7 @@ Ensure you have the following tools installed:
 - Helm
 - Helmfile
 - Argo-CD
+- Fluxcd
 - Ansible
 - Terraform
 - Terragrunt
