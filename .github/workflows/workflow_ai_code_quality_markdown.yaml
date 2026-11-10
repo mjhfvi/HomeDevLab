@@ -53,16 +53,15 @@ jobs:
       #     FILES_CONTENT: ${{ steps.list_text_from_files.outputs.content }}
       #   run: |
       #     echo "FILES_CONTENT"
-      - name: Code Review Agent
-        uses: mattzcarey/shippie@c70064c83192f17c7725489f7227fb8441ae51f3
+      - name: Run Codex
+        id: run_codex
+        uses: openai/codex-action@bdf19a4a223ec2549a3e2274a0cf61556bc07675
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          MODEL: ${{ secrets.OPENAI_MODEL }}
-          THINKING_LEVEL: false
-          REVIEW_LANGUAGE: English
-          IGNORE: '**/*.txt,**/*.yml,**/*.yaml,**/*.groovy,**/*.ts,**/*.hcl,**/*.py,'
-          CUSTOM_INSTRUCTIONS: |-
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          permission-profile: :workspace
+          model: ${{ secrets.OPENAI_MODEL }}
+          prompt: |-
             # ROLE
             You are an automated, high-precision CI/CD Quality Assurance Bot specializing in technical documentation, code snippets, and Markdown syntax validation.
             Limit your evaluation exclusively to the modified files and explicit code diffs provided in this commit/pull request. Do not map or explore un-modified files in the directory.
