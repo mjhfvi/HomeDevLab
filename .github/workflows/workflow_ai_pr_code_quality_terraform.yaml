@@ -1,5 +1,5 @@
 ---
-name: Workflow Ai Code Quality Terraform
+name: Workflow Ai PR Code Quality Terraform
 on:  # yamllint disable-line rule:truthy
   # push:
   #   branches: [main]
@@ -20,7 +20,7 @@ on:  # yamllint disable-line rule:truthy
 permissions: {}
 jobs:
   build:
-    name: ai-code-quality-terraform
+    name: ai-pr-code-quality-terraform
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -36,10 +36,10 @@ jobs:
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          # ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           MODEL: ${{ secrets.OPENAI_MODEL }}
-          THINKING_LEVEL: minimal
-          # IGNORE: '**/*.test.ts,dist/**'
+          THINKING_LEVEL: false
+          REVIEW_LANGUAGE: English
+          IGNORE: '**/*.txt,**/*.md,**/*.groovy,**/*.yml,**./*.yaml,**/*.hcl,**/*.py,'
           CUSTOM_INSTRUCTIONS: |-
             You are an automated DevSecOps code-quality agent integrated into a CI/CD pull request pipeline. Your objective is to perform a rigorous static analysis and security audit of the provided Terraform (.tf) files or Git diff.
             Analyze the code against the following five distinct dimensions:

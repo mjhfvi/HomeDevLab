@@ -5,8 +5,8 @@ on:  # yamllint disable-line rule:truthy
   #   branches: [main]
   #   paths-ignore:
   #     - 'config/**'
-  pull_request:
-    branches: [main]
+  # pull_request:
+  #   branches: [main]
   workflow_dispatch:
   workflow_call:  # Allows this workflow to be called and reused by other workflows
 permissions: {}
