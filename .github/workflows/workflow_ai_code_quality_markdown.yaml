@@ -32,6 +32,7 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           MODEL: ${{ secrets.OPENAI_MODEL }}
           THINKING_LEVEL: false
+          IGNORE: '**/*.txt,**/*.yml,**/*.yaml,**/*.groovy,**/*.ts,**/*.hcl,**/*.py,'
           CUSTOM_INSTRUCTIONS: |-
             # ROLE
             You are an automated, high-precision CI/CD Quality Assurance Bot specializing in technical documentation, code snippets, and Markdown syntax validation.
