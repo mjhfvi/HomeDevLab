@@ -23,16 +23,14 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-      - name: Code Review Agent
-        uses: mattzcarey/shippie@c70064c83192f17c7725489f7227fb8441ae51f3
+      - uses: cirolini/genai-code-review@0b32576a38eca3a0dde5655830fb6307efaa85c5
         with:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          # ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          MODEL: ${{ secrets.OPENAI_MODEL }}
-          THINKING_LEVEL: minimal
-          # IGNORE: '**/*.test.ts,dist/**'
-          CUSTOM_INSTRUCTIONS: |-
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_pr_id: ${{ github.event.number }}
+          provider: openai
+          api_key: ${{ secrets.OPENAI_API_KEY }}
+          model: ${{ secrets.OPENAI_MODEL }}
+          custom_prompt: |-
             # ROLE
             You are an automated, high-precision CI/CD Quality Assurance Bot specializing in technical documentation, code snippets, and Markdown syntax validation.
             Limit your evaluation exclusively to the modified files and explicit code diffs provided in this commit/pull request. Do not map or explore un-modified files in the directory.
