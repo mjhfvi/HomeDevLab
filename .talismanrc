@@ -1,13 +1,6 @@
 ---
 fileignoreconfig:
-- filename: .github/workflows/workflow_ai_code_quality_helm.yaml
-  checksum: 25843a00306b57573d09bbff4dc2932515d75e2b5aaa91693fa3dbdd32c09b7f
-- filename: .github/workflows/workflow_ai_code_quality_terraform.yaml
-  checksum: 55443f0d7cac89b7b7a8d3d04b9ceef00fee3e8f1f07427dc38279a2d4a4a3a8
-- filename: .github/workflows/workflow_ai_code_quality_ansible.yaml
-  checksum: 456a191c41debf4f10097db95e4dc48805a41314ef6b2948f0ba5346f6d89cc9
-- filename: .github/workflows/workflow_ai_code_quality_markdown.yaml
-  checksum: 044a7fc82519abd41978ffaba4151ce08ace3f47a98a25985d3f608407c195f3
-- filename: .github/workflows/workflow_ai_language_grammar.yaml
-  checksum: 94a22258e6882bc5e937021b9c38bc5e033758e7482272edc71042af56324f1c
+
+- filename: .github/skills/secure-coding.md
+  checksum: 1f6c4da882ae5b291344b51654556055573847f425357a57c0dc0511d5fd217b
 version: "1.0"
