@@ -9,7 +9,6 @@ This repository is designed to deploy a kali linux distribution for kubernetes f
 **kali linux**: deploy kali linux desktop pod in kubernetes\
 **VSCode**: deploy VSCode desktop pod in kubernetes\
 **Chromium**: deploy Chromium browser pod in kubernetes\
-**Terminal**: deploy Terminal pod in kubernetes
 
 ## 🎯 <font color="purple">Key Features</font>
 
