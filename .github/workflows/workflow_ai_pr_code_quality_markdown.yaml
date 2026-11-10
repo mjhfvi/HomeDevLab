@@ -24,7 +24,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
-          fetch-depth: 0
+          fetch-depth: 1
       - name: Code Review Agent
         uses: mattzcarey/shippie@c70064c83192f17c7725489f7227fb8441ae51f3
         with:
