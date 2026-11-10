@@ -49,7 +49,7 @@ jobs:
             echo "$DELIM"
           } >> "$GITHUB_OUTPUT"
       - name: Code Review Agent
-        uses: dlidstrom/genai-code-review@v3
+        uses: dlidstrom/genai-code-review@51dbff23ca46af733250a732705eabb355b830f6
         with:
           openai_api_key: ${{ secrets.OPENAI_API_KEY }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
