@@ -6,7 +6,6 @@ on:  # yamllint disable-line rule:truthy
     paths:
       - .pre-commit-config.yaml
       - .gitleaks.toml
-      - .talismanrc
       - settings.json
       - extensions.json
       - tasks.json
@@ -15,7 +14,6 @@ on:  # yamllint disable-line rule:truthy
     paths:
       - .pre-commit-config.yaml
       - .gitleaks.toml
-      - .talismanrc
       - settings.json
       - extensions.json
       - tasks.json
@@ -41,7 +39,7 @@ jobs:
       - name: Find users who changed the file
         run: |-
           # 1. Define your space-separated list of target files here
-          TARGET_FILES=(".pre-commit-config.yaml" ".gitleaks.toml" ".talismanrc" "settings.json" "extensions.json" "tasks.json")
+          TARGET_FILES=(".pre-commit-config.yaml" ".gitleaks.toml" "settings.json" "extensions.json" "tasks.json")
 
           # Initialize a flag to track if we need to fail at the end
           VIOLATION_FOUND=false

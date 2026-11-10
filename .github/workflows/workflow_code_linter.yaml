@@ -1,12 +1,12 @@
 ---
 name: Workflow Code Super Linter Modified
 on:  # yamllint disable-line rule:truthy
-  push:
-    branches: [main]
-    paths-ignore: [.vscode/**, documentation/**]
-  pull_request:
-    branches: [main]
-    paths-ignore: [.vscode/**, documentation/**]
+  # push:
+  #   branches: [main]
+  #   paths-ignore: [.vscode/**, documentation/**]
+  # pull_request:
+  #   branches: [main]
+  #   paths-ignore: [.vscode/**, documentation/**]
   workflow_dispatch:
   workflow_call:  # Allows this workflow to be called and reused by other workflows
 permissions: {}
