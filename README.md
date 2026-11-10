@@ -30,6 +30,7 @@ Ensure you have the following tools installed:
 - Kubernetes
 - Helm
 - Helmfile
+- ansible
 
 ## 🏃 <font color="purple">Run Deployment</font>
 
