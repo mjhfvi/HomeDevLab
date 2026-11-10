@@ -1,6 +1,14 @@
 ---
 fileignoreconfig:
 
+- filename: .github/workflows/workflow_ai_code_quality_ansible.yaml
+  checksum: de9cfdb60ed3c8aa61863f48f85c3d003bf6ebc1b60740af62ce94d471740917
+- filename: .github/workflows/workflow_ai_code_quality_helm.yaml
+  checksum: 2c8730514952810abc4f46902b6de22e10c8eb959a1fef3b74fa0d0deccfda15
+- filename: .github/workflows/workflow_ai_language_grammar.yaml
+  checksum: f843ab8813eadf7d28e4eb79bb26aebd4ca868a7288953208f3ed4f054182881
+- filename: .github/workflows/workflow_ai_code_quality_terraform.yaml
+  checksum: a7e47283b6c9d9ac28591b07b6dcb53eecad8ab3e396a4960c70313115b6e458
 - filename: .github/workflows/workflow_ai_code_quality_markdown.yaml
-  checksum: f3549ac27c265aad29048f1d620a4cc7a85e534b9890a8e47f890b505823aa85
+  checksum: 53e05b4b30ed3e7b74f94f1b505d2d5f159dbf533d98a08e67f48970ffefe8e4
 version: "1.0"

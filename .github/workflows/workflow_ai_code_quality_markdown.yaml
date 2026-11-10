@@ -23,20 +23,9 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-      - name: Get Changed Files
-        id: changed-files
-        uses: tj-actions/changed-files@9426d40962ed5378910ee2e21d5f8c6fcbf2dd96
+      - name: Code Review Agent
+        uses: mattzcarey/shippie@c70064c83192f17c7725489f7227fb8441ae51f3
         with:
-          files: |
-            **/helmfile.yaml
-            **/helmfile.yml
-      - name: List All Modified Files
-        run: |
-          for file in ${{ steps.changed-files.outputs.modified_files }}; do
-            echo "Modified: $file"
-          done
-      - uses: mattzcarey/shippie@c70064c83192f17c7725489f7227fb8441ae51f3
-        env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           # ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}

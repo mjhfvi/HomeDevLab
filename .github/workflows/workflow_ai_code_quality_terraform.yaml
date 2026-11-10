@@ -31,12 +31,13 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-      - uses: mattzcarey/shippie@c70064c83192f17c7725489f7227fb8441ae51f3
-        env:
+      - name: Code Review Agent
+        uses: mattzcarey/shippie@c70064c83192f17c7725489f7227fb8441ae51f3
+        with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           # ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          MODEL:
+          MODEL: ${{ secrets.OPENAI_MODEL }}
           THINKING_LEVEL: minimal
           # IGNORE: '**/*.test.ts,dist/**'
           CUSTOM_INSTRUCTIONS: |-
