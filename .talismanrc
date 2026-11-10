@@ -1,6 +1,5 @@
----
 fileignoreconfig:
 
 - filename: .github/workflows/workflow_ai_code_quality_markdown.yaml
-  checksum: 089cd90c9c47d8c8f6a9b5b21d472a9aa71cf9bd73ec0159fcd917cfe9a081fd
+  checksum: 78c9beac5b632706d3c4b436a1589090e2deab5f62a4927ac4163758df5ec60b
 version: "1.0"
