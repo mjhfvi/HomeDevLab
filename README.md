@@ -30,6 +30,7 @@ Ensure you have the following tools installed:
 - Kubernetes
 - Helm
 - Helmfile
+- Argo-CD
 - Ansible
 - Terraform
 - Terragrunt
