@@ -30,8 +30,9 @@ Ensure you have the following tools installed:
 - Kubernetes
 - Helm
 - Helmfile
-- ansible
-- terraform
+- Ansible
+- Terraform
+- Terragrunt
 
 ## 🏃 <font color="purple">Run Deployment</font>
 
