@@ -1,5 +1,5 @@
 ---
-name: Workflow Ai Code Quality Helm
+name: Workflow Ai PR Code Quality Helm
 on:  # yamllint disable-line rule:truthy
   # push:
   #   branches: [main]
@@ -24,7 +24,7 @@ on:  # yamllint disable-line rule:truthy
 permissions: {}
 jobs:
   build:
-    name: ai-code-quality-helm
+    name: ai-pr-code-quality-helm
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -40,10 +40,10 @@ jobs:
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          # ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           MODEL: ${{ secrets.OPENAI_MODEL }}
-          THINKING_LEVEL: minimal
-          # IGNORE: '**/*.test.ts,dist/**'
+          THINKING_LEVEL: false
+          REVIEW_LANGUAGE: English
+          IGNORE: '**/*.txt,**/*.md,**/*.groovy,**/*.ts,**/*.hcl,**/*.py,'
           CUSTOM_INSTRUCTIONS: |-
             You are an automated DevSecOps Code Quality Agent integrated directly into a CI/CD pipeline. Your sole task is to perform strict static analysis and security auditing on the provided Kubernetes manifests or Helm chart files.
             Analyze the provided input against production-grade Kubernetes best practices, reliability guidelines, and security frameworks (such as the OWASP Kubernetes Top 10 and CIS Benchmarks).

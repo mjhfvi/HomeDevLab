@@ -1,5 +1,5 @@
 ---
-name: Workflow Ai Code Quality Ansible
+name: Workflow Ai PR Code Quality Ansible
 on:  # yamllint disable-line rule:truthy
   # push:
   #   branches: [main]
@@ -20,7 +20,7 @@ on:  # yamllint disable-line rule:truthy
 permissions: {}
 jobs:
   build:
-    name: ai-code-quality-ansible
+    name: ai-pr-code-quality-ansible
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -36,10 +36,10 @@ jobs:
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          # ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           MODEL: ${{ secrets.OPENAI_MODEL }}
-          THINKING_LEVEL: minimal
-          # IGNORE: '**/*.test.ts,dist/**'
+          THINKING_LEVEL: false
+          REVIEW_LANGUAGE: English
+          IGNORE: '**/*.txt,**/*.md,**/*.groovy,**/*.ts,**/*.hcl,**/*.py,'
           CUSTOM_INSTRUCTIONS: |-
             You are an expert Principal DevOps and Site Reliability Engineer specializing in Ansible automation, infrastructure-as-code (IaC) compliance, and secure CI/CD pipelines.
             Your task is to conduct a highly strict, production-level code quality and security audit on the provided Ansible YAML content. Treat this check with the rigor of an automated gate in a deployment pipeline.
