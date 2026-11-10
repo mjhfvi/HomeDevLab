@@ -12,7 +12,7 @@ on:  # yamllint disable-line rule:truthy
 permissions: {}
 jobs:
   build:
-    name: talisman
+    name: talisman-scanner
     runs-on: ubuntu-latest
     permissions:
       contents: read

@@ -1,0 +1,83 @@
+---
+name: Workflow Ai Code Quality Ansible
+on:  # yamllint disable-line rule:truthy
+  # push:
+  #   branches: [main]
+  #   paths:
+  #     - '**/ansible/**'
+  #     - '**/*.yaml'
+  #   paths-ignore:
+  #     - '**/documentation/**'
+  # pull_request:
+  #   branches: [main]
+  #   paths:
+  #     - '**/ansible/**'
+  #     - '**/*.yaml'
+  #   paths-ignore:
+  #     - '**/documentation/**'
+  workflow_dispatch:
+  workflow_call:  # Allows this workflow to be called and reused by other workflows
+permissions: {}
+jobs:
+  build:
+    name: ai-code-quality-ansible
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+      issues: write
+      pull-requests: write
+      statuses: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: mattzcarey/shippie@c70064c83192f17c7725489f7227fb8441ae51f3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          # ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          MODEL:
+          THINKING_LEVEL: minimal
+          # IGNORE: '**/*.test.ts,dist/**'
+          CUSTOM_INSTRUCTIONS: |-
+            You are an expert Principal DevOps and Site Reliability Engineer specializing in Ansible automation, infrastructure-as-code (IaC) compliance, and secure CI/CD pipelines.
+            Your task is to conduct a highly strict, production-level code quality and security audit on the provided Ansible YAML content. Treat this check with the rigor of an automated gate in a deployment pipeline.
+
+            ### Objectives:
+            1. Identify structural bugs, syntax problems, or logical flaws that will cause runtime execution failures.
+            2. Uncover security vulnerabilities, privilege escalation flaws, or exposed secrets.
+            3. Detect anti-patterns that break idempotency or cause unmanaged configurations.
+
+            ### Analysis Criteria:
+            Evaluate the code specifically against these critical lenses:
+            - Idempotency & State: Flag tasks using 'command' or 'shell' modules that lack 'creates', 'removes', or 'changed_when: false' controls. Ensure modules like 'template' or 'copy' are prioritized over raw command alternatives.
+            - Error Handling & Resilience: Ensure long-running or critical steps leverage appropriate timeout values, 'failed_when', 'ignore_errors' (with justification), or 'block/rescue/always' structures where state recovery is vital.
+            - Hardcoded Secrets & Variables: Flag any plaintext passwords, API keys, private keys, or certificates. Ensure 'no_log: true' is present on tasks processing sensitive information.
+            - Privilege Escalation: Validate the usage of 'become' rules. Flag global 'become: true' parameters if they can be restricted to specific high-privilege tasks.
+            - Deprecation & Best Practices: Check for deprecated modules, legacy parameter syntax (like string-formatted arguments instead of native YAML dictionaries), and missing item loops formatting conventions.
+
+            ### Output Format (Strict JSON Schema):
+            You must output exclusively a valid JSON object matching the schema below. Do not include conversational filler, markdown formatting (like ```json), or preambles. If no issues are found, return an empty array for "findings".
+            {
+              "summary": {
+                "total_findings": <integer>,
+                "critical_count": <integer>,
+                "warning_count": <integer>
+              },
+              "findings": [
+                {
+                  "task_name": "String (Name of the task or block, or 'Global' if applicable)",
+                  "line_number": "Integer or 'Unknown'",
+                  "severity": "CRITICAL" | "WARNING",
+                  "category": "Security" | "Idempotency" | "Syntax/Runtime" | "Maintainability",
+                  "problem": "Clear, precise explanation of what is wrong.",
+                  "remediation": "Provide the exact code modification or fix required to resolve the issue."
+                }
+              ]
+            }
+
+            ### Input Content To Audit:
+            <PASTE_YOUR_ANSIBLE_CODE_HERE>

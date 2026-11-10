@@ -1,0 +1,78 @@
+---
+name: Workflow Ai Code Quality Terraform
+on:  # yamllint disable-line rule:truthy
+  # push:
+  #   branches: [main]
+  #   paths:
+  #     - '**/terragrunt/**'
+  #     - '**/*.tf'
+  #   paths-ignore:
+  #     - '**/documentation/**'
+  # pull_request:
+  #   branches: [main]
+  #   paths:
+  #     - '**/terragrunt/**'
+  #     - '**/*.tf'
+  #   paths-ignore:
+  #     - '**/documentation/**'
+  workflow_dispatch:
+  workflow_call:  # Allows this workflow to be called and reused by other workflows
+permissions: {}
+jobs:
+  build:
+    name: ai-code-quality-terraform
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+      issues: write
+      pull-requests: write
+      statuses: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: mattzcarey/shippie@c70064c83192f17c7725489f7227fb8441ae51f3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          # ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          MODEL:
+          THINKING_LEVEL: minimal
+          # IGNORE: '**/*.test.ts,dist/**'
+          CUSTOM_INSTRUCTIONS: |-
+            You are an automated DevSecOps code-quality agent integrated into a CI/CD pull request pipeline. Your objective is to perform a rigorous static analysis and security audit of the provided Terraform (.tf) files or Git diff.
+            Analyze the code against the following five distinct dimensions:
+            1. Security & Compliance: Scan for hardcoded credentials, unencrypted storage volumes, wildcards in IAM policies (e.g., "*"), public accessibility (0.0.0.0/0), and missing encryption in transit or at rest.
+            2. Reliability & Resilience: Look for missing resource lifecycle rules (e.g., prevent_destroy on databases, ignore_changes), lack of health checks, or unpinned provider/module versions.
+            3. Code Quality & Best Practices: Check for hardcoded variables, missing variable descriptions, absence of variable validation blocks, or redundant configurations.
+            4. Maintainability & Standards: Identify missing standard tagging strategies (e.g., Environment, Owner, Project) and violation of clear naming conventions.
+            5. Syntax Flaws: Detect structural inconsistencies or configuration patterns known to break or cause drift during deployment.
+            Output Format Requirements:
+            You must respond strictly in valid JSON format. Do not include markdown code blocks, conversational text, or preambles outside the JSON payload.
+            The JSON structure must match this schema exactly:
+            {
+              "summary": {
+                "critical_issues": <int>,
+                "warning_issues": <int>,
+                "pipeline_verdict": "<"APPROVE" | "FAIL">"
+              },
+              "findings": [
+                {
+                  "file": "<filename>",
+                  "resource": "<terraform_resource_or_module_name>",
+                  "severity": "<"CRITICAL" | "WARNING" | "INFO">",
+                  "dimension": "<dimension_name>",
+                  "description": "<clear description of the violation>",
+                  "suggested_fix": "<exact HCL code snippet to resolve the issue>"
+                }
+              ]
+            }
+            Pipeline Logic Rules:
+            - Set "pipeline_verdict" to "FAIL" if there is at least one "CRITICAL" issue or more than three "WARNING" issues.
+            - Otherwise, set "pipeline_verdict" to "APPROVE".
+            - Base your findings strictly on the code provided; do not extrapolate or invent resources not present in the input.
+            Input Data to Analyze:
+            [PASTE_TERRAFORM_CODE_OR_DIFF_HERE]

@@ -1,19 +1,24 @@
 ---
-name: Workflow Helmfile Unit Test All Files
-on:
-  # push:
-  #   branches: [ main ]
-  #   paths:
-  #     - '**/helmfile.yaml'
-  # pull_request:
-  #   branches: [ main ]
-  #   paths:
-  #     - '**/helmfile.yaml'
+name: Workflow Helmfile Unit Test Modified Files
+on:  # yamllint disable-line rule:truthy
+  push:
+    branches: [main]
+    paths: ['**/helmfile/**']
+  pull_request:
+    branches: [main]
+    paths: ['**/helmfile/**']
   workflow_dispatch:
+    inputs:
+      Scan:
+        description: Scan All Helmfile in Project
+        required: false
+        default: FullScan
+        type: choice
+        options: [FullScan]
   workflow_call:  # Allows this workflow to be called and reused by other workflows
 jobs:
   unittest:
-    name: helmfile-unittest-full
+    name: helmfile-unittest
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -27,7 +32,44 @@ jobs:
       - name: Install helm-unittest Plugin
         run: |
           helm plugin install https://github.com/helm-unittest/helm-unittest --verify=false
+      - name: Get Changed Files
+        id: changed-files
+        uses: tj-actions/changed-files@9426d40962ed5378910ee2e21d5f8c6fcbf2dd96
+        with:
+          files: |
+            **/helmfile.yaml
+            **/helmfile.yml
+      - name: List All Modified Files
+        run: |
+          for file in ${{ steps.changed-files.outputs.modified_files }}; do
+            echo "Modified: $file"
+          done
       - name: Find and Test helmfile.yaml Files
+        run: |-
+          if [ -z ${{ steps.changed-files.outputs.modified_files }} ]; then
+            echo "No helmfile.yaml files found in this repository."
+            exit 0
+          fi
+          for file in ${{ steps.changed-files.outputs.modified_files }}; do
+            echo "Processing: $file"
+
+            # Step into the directory containing the helmfile to prevent relative path mapping issues
+            dir=$(dirname "$file")
+            base=$(basename "$file")
+            cd "$dir"
+
+            # Optional: pull chart dependencies if your helmfile references local charts with dependencies
+            helmfile --file "$base" deps || echo "No dependencies to update or setup failed."
+
+            # Execute the unit tests
+            echo "Running unittest for $file..."
+            helmfile --file "$base" unittest
+
+            # Return to repository root for next iteration
+            cd - > /dev/null
+          done
+      - name: Find and Test helmfile.yaml Files
+        if: github.event_name == 'workflow_dispatch'
         run: |-
           # Find all files strictly matching 'helmfile.yaml'
           # This excludes 'helmfile.d/' configs or sub-files unless they are named exactly 'helmfile.yaml'

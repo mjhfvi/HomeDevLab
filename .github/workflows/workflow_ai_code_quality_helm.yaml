@@ -1,0 +1,88 @@
+---
+name: Workflow Ai Code Quality Helm
+on:  # yamllint disable-line rule:truthy
+  # push:
+  #   branches: [main]
+  #   paths:
+  #     - '**/kubernetes/**'
+  #     - '**/*.yaml'
+  #   paths-ignore:
+  #     - '**/manifests/**'
+  #     - '**/template/**'
+  #     - '**/documentation/**'
+  # pull_request:
+  #   branches: [main]
+  #   paths:
+  #     - '**/kubernetes/**'
+  #     - '**/*.yaml'
+  #   paths-ignore:
+  #     - '**/manifests/**'
+  #     - '**/template/**'
+  #     - '**/documentation/**'
+  workflow_dispatch:
+  workflow_call:  # Allows this workflow to be called and reused by other workflows
+permissions: {}
+jobs:
+  build:
+    name: ai-code-quality-helm
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+      issues: write
+      pull-requests: write
+      statuses: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: mattzcarey/shippie@c70064c83192f17c7725489f7227fb8441ae51f3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          # ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          MODEL:
+          THINKING_LEVEL: minimal
+          # IGNORE: '**/*.test.ts,dist/**'
+          CUSTOM_INSTRUCTIONS: |-
+            You are an automated DevSecOps Code Quality Agent integrated directly into a CI/CD pipeline. Your sole task is to perform strict static analysis and security auditing on the provided Kubernetes manifests or Helm chart files.
+            Analyze the provided input against production-grade Kubernetes best practices, reliability guidelines, and security frameworks (such as the OWASP Kubernetes Top 10 and CIS Benchmarks).
+
+            ### CRITICAL AUDIT CATEGORIES:
+            1. SECURITY & PRIVILEGE: Check for containers running as root, missing 'allowPrivilegeEscalation: false', privileged: true, or unneeded Linux capabilities.
+            2. RESOURCE MANAGEMENT: Identify missing, inadequate, or unsafe CPU/Memory requests and limits (prevent OOMKills and resource starvation).
+            3. RESILIENCY & HA: Check for missing liveness/readiness/startup probes, missing replica counts, or lack of PodDisruptionBudgets/AntiAffinity rules for critical workloads.
+            4. HELM TEMPLATING BEST PRACTICES: Ensure proper use of helpers, naming conventions, dry-run safety, and appropriate configuration parametrizations in values.yaml.
+            5. DATA PROTECTION: Flag hardcoded secrets, plain-text environment variables containing sensitive names, or unencrypted ConfigMaps holding credentials.
+
+            ### OUTPUT FORMAT CONSTRAINTS:
+            - You must output ONLY a valid JSON object.
+            - Do NOT include any markdown formatting (e.g., do not wrap the JSON in ```json ``` blocks).
+            - Do NOT include conversational filler, introductory remarks, or concluding explanations.
+            - If no issues are found, return an empty "findings" array.
+
+            ### TARGET JSON SCHEMA:
+            {
+              "summary": {
+                "total_findings": 0,
+                "high_severity_count": 0,
+                "medium_severity_count": 0,
+                "low_severity_count": 0
+              },
+              "findings": [
+                {
+                  "file": "path/to/file.yaml",
+                  "kind": "Deployment/StatefulSet/etc",
+                  "name": "resource-name",
+                  "category": "Security | Resource Management | Resiliency | Helm Best Practices",
+                  "severity": "HIGH | MEDIUM | LOW",
+                  "issue": "Brief description of the problem",
+                  "remediation": "Exact YAML snippet or structural adjustment required to fix the issue"
+                }
+              ]
+            }
+
+            ### INPUT DATA FOR ANALYSIS:
+            [INSERT_YOUR_CODE_OR_DIFF_HERE]

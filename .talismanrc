@@ -1,5 +1,13 @@
 ---
 fileignoreconfig:
-- filename: .github/workflows/workflow_code_super_linter_full.yaml
-  checksum: 4f93fece3d45784ddae8d8bd6d5040c2e6e0f0d47ab2181dc901c44873e17265
+- filename: .github/workflows/workflow_ai_code_quality_helm.yaml
+  checksum: 25843a00306b57573d09bbff4dc2932515d75e2b5aaa91693fa3dbdd32c09b7f
+- filename: .github/workflows/workflow_ai_code_quality_terraform.yaml
+  checksum: 55443f0d7cac89b7b7a8d3d04b9ceef00fee3e8f1f07427dc38279a2d4a4a3a8
+- filename: .github/workflows/workflow_ai_code_quality_ansible.yaml
+  checksum: 456a191c41debf4f10097db95e4dc48805a41314ef6b2948f0ba5346f6d89cc9
+- filename: .github/workflows/workflow_ai_code_quality_markdown.yaml
+  checksum: 044a7fc82519abd41978ffaba4151ce08ace3f47a98a25985d3f608407c195f3
+- filename: .github/workflows/workflow_ai_language_grammar.yaml
+  checksum: 94a22258e6882bc5e937021b9c38bc5e033758e7482272edc71042af56324f1c
 version: "1.0"

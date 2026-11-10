@@ -16,7 +16,7 @@ on:  # yamllint disable-line rule:truthy
 permissions: {}
 jobs:
   build:
-    name: claude-code-action-language-grammar
+    name: ai-code-language-grammar
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -30,10 +30,15 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
-      - uses: anthropics/claude-code-action@61a9c274fa7110a66dfafc1bbbced03833eb25fe
-        with:
-          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          prompt: |-
+      - uses: mattzcarey/shippie@c70064c83192f17c7725489f7227fb8441ae51f3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          # ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          MODEL:
+          THINKING_LEVEL: minimal
+          # IGNORE: '**/*.test.ts,dist/**'
+          CUSTOM_INSTRUCTIONS: |-
             You are an expert technical editor specializing in US English localization, technical documentation, and code comment clarity.
             Your task is to analyze the provided code, markdown files, or text diffs specifically for language, grammar, spelling, and stylistic errors.
             Strictly adhere to the following guidelines:
