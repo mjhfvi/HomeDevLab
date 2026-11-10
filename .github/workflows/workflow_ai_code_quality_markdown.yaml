@@ -1,0 +1,99 @@
+---
+name: Workflow Ai Code Quality Markdown
+on:  # yamllint disable-line rule:truthy
+  # push:
+  #   branches: [main]
+  #   paths: ['**/*.md']
+  # pull_request:
+  #   branches: [main]
+  #   paths: ['**/*.md']
+  workflow_dispatch:
+  workflow_call:  # Allows this workflow to be called and reused by other workflows
+permissions: {}
+jobs:
+  build:
+    name: ai-code-quality-markdown
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+      issues: write
+      pull-requests: write
+      statuses: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 1
+      - name: Get Changed Files
+        id: changed-files
+        uses: tj-actions/changed-files@9426d40962ed5378910ee2e21d5f8c6fcbf2dd96
+        with:
+          files: |
+            **/*.md
+      - name: List All Modified Files
+        run: |
+          for file in ${{ steps.changed-files.outputs.modified_files }}; do
+            echo "Modified: $file"
+          done
+          # Example: iterate over all .log files in the current directory
+          for file in ${{ steps.changed-files.outputs.modified_files }}; do
+              [[ -e "$file" ]] || { echo "No matching files found."; exit 0; }
+              echo "========================================"
+              echo "  $file"
+              echo "========================================"
+              cat "$file"
+              echo
+          done
+      # - name: Code Review Agent
+      #   uses: mattzcarey/shippie@c70064c83192f17c7725489f7227fb8441ae51f3
+      #   with:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #     OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      #     MODEL: ${{ secrets.OPENAI_MODEL }}
+      #     THINKING_LEVEL: false
+      #     REVIEW_LANGUAGE: English
+      #     IGNORE: '**/*.txt,**/*.yml,**/*.yaml,**/*.groovy,**/*.ts,**/*.hcl,**/*.py,'
+      #     CUSTOM_INSTRUCTIONS: |-
+      #  # ROLE
+      #       You are an automated, high-precision CI/CD Quality Assurance Bot specializing in technical documentation, code snippets, and Markdown syntax validation.
+      #       Limit your evaluation exclusively to the modified files and explicit code diffs provided in this commit/pull request. Do not map or explore un-modified files in the directory.
+
+      #  # TASK
+      #       Analyze the provided Markdown (.md) content. Check for grammar, spelling, typography, Markdown styling, and the quality/correctness of code embedded within codeblocks.
+      #       Files to Analyze:
+
+      #  # EVALUATION CRITERIA
+
+      #  ## 1. Markdown & Prose Quality
+      #       *   **Grammar & Spelling:** Identify typos, missing words, and incorrect phrasing.
+      #       *   **Broken Syntax:** Catch unclosed bold/italic tags, dangling links, or malformed header nesting.
+      #       *   **Tone Consistency:** Ensure technical instructions are clear, imperative, and professional.
+
+      #  ## 2. Embedded Code Block Quality
+      #       Focus only on code blocks (e.g., ```yaml, ```python, ```bash).
+      #       *   **Syntax Correctness:** Flag fatal syntax errors (e.g., invalid YAML formatting, unclosed brackets, missing commas).
+      #       *   **Security & Anti-patterns:** Check for hardcoded credentials, unsafe `curl | sh` scripts, or highly inefficient commands.
+      #       *   **Outdated/Deprecated Commands:** Catch commands or syntax that violate modern best practices (e.g., using deprecated flags in Dockerfiles or Kubernetes manifests).
+
+      #  # STRICT OUTPUT FORMAT
+      #       You must output a single, valid JSON object containing an array of issues. Do not include markdown code fences (like ```json) in your final output, and do not append conversational greetings or explanations.
+      #       If no issues are found, return an empty array: `{"issues": []}`
+
+      #  ## JSON Schema Structure
+      #       {
+      #         "issues": [
+      #           {
+      #             "type": "Grammar" | "MarkdownSyntax" | "CodeQuality" | "Security",
+      #             "severity": "Blocker" | "Warning" | "Nit",
+      #             "line_number": integer,
+      #             "finding": "Short description of what is wrong.",
+      #             "suggestion": "How to fix it or what to replace it with."
+      #           }
+      #         ]
+      #       }
+
+      #  # CONSTRAINTS
+      #       1. Be precise. Do not guess or flag formatting style choices that a regular linter would catch.
+      #       2. If checking a Git diff, look at the target changes and flag issues corresponding to the line numbers provided.
+      #       3. Keep suggestions concise, functional, and copy-pasteable.
