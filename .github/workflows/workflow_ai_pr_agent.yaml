@@ -22,7 +22,7 @@ jobs:
       pull-requests: write
       statuses: write
     steps:
-      - name: Checkout code
+      - name: Checkout Code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
       - name: PR-Agent AI-powered code review agent
         uses: the-pr-agent/pr-agent@e673a02076ce09a4726c3d0c3cc85780e59ca52b

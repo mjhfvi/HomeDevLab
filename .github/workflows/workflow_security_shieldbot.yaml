@@ -21,7 +21,7 @@ jobs:
       pull-requests: write
       statuses: write
     steps:
-      - name: Checkout code
+      - name: Checkout Code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
       - name: Shieldbot AI-powered security scanner that runs with Claude Code
         uses: BalaSriharsha/shieldbot@6cc67b21b5ce6770e400d30f6403b5e0d51b2c27

@@ -25,7 +25,7 @@ jobs:
       pull-requests: write
       statuses: write
     steps:
-      - name: Checkout code
+      - name: Checkout Code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
       - name: Check for CRLF line endings
         uses: gi-org-pl/check-crlf-action@464995c09f1659cd4b0f7e2bf7234994f0fd705e
