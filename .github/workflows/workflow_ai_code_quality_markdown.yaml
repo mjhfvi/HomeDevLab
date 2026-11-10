@@ -49,15 +49,17 @@ jobs:
             echo "$DELIM"
           } >> "$GITHUB_OUTPUT"
       - name: Code Review Agent
-        uses: mattzcarey/shippie@c70064c83192f17c7725489f7227fb8441ae51f3
+        uses: dlidstrom/genai-code-review@v3
         with:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          MODEL: ${{ secrets.OPENAI_MODEL }}
-          THINKING_LEVEL: false
-          REVIEW_LANGUAGE: English
-          # IGNORE: '**/*.txt,**/*.md,**/*.groovy,**/*.ts,**/*.hcl,**/*.py,'
-          CUSTOM_INSTRUCTIONS: |-
+          openai_api_key: ${{ secrets.OPENAI_API_KEY }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          # github_pr_id: ${{ github.event.number }}
+          openai_model: ${{ secrets.OPENAI_MODEL }}
+          # openai_temperature: 0.5  # optional
+          # openai_max_tokens: 2048  # optional
+          # mode: files  # files or patch
+          language: en # optional, default is 'en'
+          custom_prompt: |-
             # ROLE
             You are an automated, high-precision CI/CD Quality Assurance Bot specializing in technical documentation, code snippets, and Markdown syntax validation.
             Limit your evaluation exclusively to the modified files and explicit code diffs provided in this commit/pull request. Do not map or explore un-modified files in the directory.
