@@ -30,7 +30,7 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           MODEL: ${{ secrets.OPENAI_MODEL }}
           THINKING_LEVEL: false
-          cusCUSTOM_INSTRUCTIONStom_prompt: |-
+          CUSTOM_INSTRUCTIONS: |-
             # ROLE
             You are an automated, high-precision CI/CD Quality Assurance Bot specializing in technical documentation, code snippets, and Markdown syntax validation.
             Limit your evaluation exclusively to the modified files and explicit code diffs provided in this commit/pull request. Do not map or explore un-modified files in the directory.
