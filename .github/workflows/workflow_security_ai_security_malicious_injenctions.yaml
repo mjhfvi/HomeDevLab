@@ -1,0 +1,38 @@
+---
+name: Workflow Security Aguara
+on:  # yamllint disable-line rule:truthy
+  # push:
+  #   branches: [main]
+  #   paths-ignore:
+  #     - 'config/**'
+  # pull_request:
+  #   branches: [main]
+  # schedule:
+  #   - cron: "0 0 * * 6"
+  workflow_dispatch:
+  workflow_call:  # Allows this workflow to be called and reused by other workflows
+permissions: {}
+jobs:
+  build:
+    name: security-code-ai-security-scanner
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+      issues: write
+      pull-requests: write
+      statuses: write
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - name: aguara - security engine for AI agent and supply-chain trust.
+        uses: garagon/aguara@d1fbdcb07ba24bab2caddf265be4c13e77ef9d45
+        with:
+          path: .vscode
+          fail-on: high
+          version: v0.28.0
+      - name: skillshield - Scan AI agent skills for known prompt-injection, data-exfiltration
+          and malicious-payload
+        uses: obielin/skillshield@5cb3330b8a4807ccf2f0f65eba954df66ae138f7
+        with:
+          path: skills

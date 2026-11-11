@@ -1,0 +1,67 @@
+---
+name: Workflow Helmfile Unit Test Modified Files
+on:  # yamllint disable-line rule:truthy
+  push:
+    branches: [main]
+    paths: ['**/*.yaml']
+    paths-ignore:
+      - .github/*
+      - .jenkins/*
+      - ansible/*
+      - documentation/*
+      - kubernetes/manifests
+      - kubernetes/templates
+      - terragrunt/*
+  pull_request:
+    branches: [main]
+    paths: ['**/*.yaml']
+    paths-ignore:
+      - .github/*
+      - .jenkins/*
+      - ansible/*
+      - documentation/*
+      - kubernetes/manifests
+      - kubernetes/templates
+      - terragrunt/*
+  workflow_dispatch:
+    inputs:
+      Scan:
+        description: Scan All Helmfile in Project
+        required: false
+        default: FullScan
+        type: choice
+        options: [FullScan]
+  workflow_call:  # Allows this workflow to be called and reused by other workflows
+jobs:
+  unittest:
+    name: unittest-helmfile
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - name: Setup Helm
+        uses: azure/setup-helm@9bc31f4ebc9c6b171d7bfbaa5d006ae7abdb4310
+        with:
+          version: latest
+      - name: Setup Helmfile
+        uses: helmfile/helmfile-action@614b4cd063ada10b87f668f6ffd35485bce0cac5
+      - name: Install helm-unittest Plugin
+        run: |
+          helm plugin install https://github.com/helm-unittest/helm-unittest --verify=false
+      - name: Get Changed Files
+        id: changed-files
+        uses: tj-actions/changed-files@9426d40962ed5378910ee2e21d5f8c6fcbf2dd96
+        with:
+          files: |
+            **/helmfile.yaml
+            **/helmfile.yml
+      - name: List All Modified Files
+        run: |
+          for file in ${{ steps.changed-files.outputs.modified_files }}; do
+            echo "Modified: $file"
+          done
+      - name: Kubernetes manifest validation
+        uses: docker://ghcr.io/yannh/kubeconform:latest
+        with:
+          entrypoint: /kubeconform
+          args: -summary -output json kubeconfigs/

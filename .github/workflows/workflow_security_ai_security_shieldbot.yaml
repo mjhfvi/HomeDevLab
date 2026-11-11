@@ -1,0 +1,29 @@
+---
+name: Workflow Security Shieldbot
+on:  # yamllint disable-line rule:truthy
+  # push:
+  #   branches: [main]
+  #   paths-ignore:
+  #     - 'config/**'
+  # pull_request:
+  #   branches: [main]
+  # schedule:
+  #   - cron: "0 0 * * 6"
+  workflow_dispatch:
+  workflow_call:  # Allows this workflow to be called and reused by other workflows
+permissions: {}
+jobs:
+  build:
+    name: security-code-shieldbot-scanner
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+      issues: write
+      pull-requests: write
+      statuses: write
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - name: Shieldbot AI-powered security scanner that runs with Claude Code
+        uses: BalaSriharsha/shieldbot@6cc67b21b5ce6770e400d30f6403b5e0d51b2c27

@@ -1,0 +1,56 @@
+---
+name: Workflow Ai PR-Agent
+on:  # yamllint disable-line rule:truthy
+  # push:
+  #   branches: [main]
+  #   paths-ignore:
+  #     - 'config/**'
+  # pull_request:
+  #   branches: [main]
+  #   types: [opened, synchronize]
+  workflow_dispatch:
+  workflow_call:  # Allows this workflow to be called and reused by other workflows
+permissions: {}
+jobs:
+  build:
+    name: ai-code-pr-agent
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+      issues: write
+      pull-requests: write
+      statuses: write
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - name: Run Ai Prompt - test01
+        uses: v-fidelusaleksander/prompt-action@v2
+        with:
+          system-prompt: |
+            You are a {{ language }} expert translator.
+            You will be provided with text to translate to {{ language }}.
+            Respond with nothing but the translated text.
+          prompt-file: README.md
+          vars: |
+            language: English
+      # - name: Run Ai Prompt - test02
+      #   uses: lemonberrylabs/openai-codex-action@main
+      #   with:
+      #     github_token: ${{ secrets.GITHUB_TOKEN }}
+      #     provider_api_key: ${{ secrets.OPENAI_API_KEY }}  # Uses OpenAI by default
+      #     prompt: ${{ github.event.inputs.prompt }}
+      #     model: 'o4-mini'  # Optional: defaults to 'o4-mini'
+      # - name: Run Ai Prompt - test03
+      #   uses: erans/autoagent@main
+      #   env:
+      #     CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
+      #   with:
+      #     rules: |
+      #       - owasp-check
+      #       - code-review
+      #     custom: |
+      #       Please check for inefficient SQL queries and suggest optimizations.
+      #     action: comment
+      #     install-agent: true
+      #     agent: cursor

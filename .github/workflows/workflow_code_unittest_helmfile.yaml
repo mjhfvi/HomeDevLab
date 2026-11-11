@@ -1,12 +1,12 @@
 ---
 name: Workflow Helmfile Unit Test Modified Files
 on:  # yamllint disable-line rule:truthy
-  push:
-    branches: [main]
-    paths: ['**/helmfile/**']
-  pull_request:
-    branches: [main]
-    paths: ['**/helmfile/**']
+  # push:
+  #   branches: [main]
+  #   paths: ['**/helmfile/**']
+  # pull_request:
+  #   branches: [main]
+  #   paths: ['**/helmfile/**']
   workflow_dispatch:
     inputs:
       Scan:
