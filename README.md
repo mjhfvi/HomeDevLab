@@ -1,76 +1,202 @@
-# <font color="orange">Home Development Lab</font>
+# HomeDevLab
 
-## 📌 <font color="purple">Overview</font>
+A technical home lab and infrastructure engineering repository focused on automating, hardening, and validating a self-hosted Kubernetes platform using Infrastructure as Code, configuration management, and security-first DevOps practices.
 
-This repository is designed to deploy a kali linux distribution for kubernetes for network debugging in docker container using helm
+This project is designed as a practical portfolio for DevOps and platform engineering roles, showcasing automation for cluster bootstrap, cloud provisioning, environment standardization, and secure deployment workflows.
 
-## 🧰 <font color="purple">Projects list in Helmfile</font>
+## Overview
 
-**kali linux**: deploy kali linux desktop pod in kubernetes\
-**VSCode**: deploy VSCode desktop pod in kubernetes\
-**Chromium**: deploy Chromium browser pod in kubernetes\
-**Terminal**: deploy Terminal pod in kubernetes
+HomeDevLab combines:
 
-## 🎯 <font color="purple">Key Features</font>
+- Ansible for operating system and cluster bootstrap automation
+- Terragrunt + Terraform-style IaC patterns for multi-cloud and Kubernetes provisioning
+- Kubernetes deployment patterns for self-hosted workloads
+- Security controls and policy hardening (secret scanning, linting, CI checks)
+- Documentation and testing strategies to demonstrate production-minded engineering practices
 
-- **helm Chart**: deploy applications and desktop environment with web UI over HTTP
+The repository is intentionally structured to look and behave like a real-world platform automation codebase rather than a toy lab, with clear separation between infrastructure, applications, security, and delivery concerns.
 
-## 🛠️ <font color="purple">Tech Stack</font>
+## Architecture
 
-- **helm**: Helm
-- **helm Chart**: Helefile
+```text
+┌───────────────────────────────┐
+│        Operations Layer       │
+│  Ansible + Jenkins + tooling  │
+└───────────────┬───────────────┘
+                │
+                ▼
+┌───────────────────────────────┐
+│      Infrastructure Layer     │
+│    Terragrunt / Terraform     │
+│  AWS / Azure / Cloudflare     │
+│  Kubernetes / Network Config  │
+└───────────────┬───────────────┘
+                │
+                ▼
+┌───────────────────────────────┐
+│      Workload Layer           │
+│  Kubernetes workloads, apps   │
+│  Helm / runtime services      │
+└───────────────┬───────────────┘
+                │
+                ▼
+┌───────────────────────────────┐
+│      Security & Validation    │
+│  linting, secret scanning,    │
+│  checks, test strategies      │
+└───────────────────────────────┘
+```
 
-## 🔧 <font color="purple">Setup & Installation</font>
+## Repository Structure
 
-### Prerequisites
+```text
+.
+├── .github/                 # CI/CD and workflow automation
+├── .jenkins/               # Jenkins-related configuration
+├── .vscode/                # Editor and workspace settings
+├── ansible/                # Provisioning and Kubernetes bootstrap automation
+│   ├── group_vars/
+│   ├── roles/
+│   ├── templates/
+│   ├── playbook.yaml
+│   ├── requirements.yaml
+│   ├── README.md
+│   ├── SECURITY.md
+│   └── CLEANUP.md
+├── continuous_testing/     # Test and validation strategy notes
+├── documentation/          # Architecture and operational docs
+├── kubernetes/             # Kubernetes manifests and workload assets
+├── security/               # Security hardening and policy assets
+├── terragrunt/             # Environment orchestration and cloud IaC modules
+│   ├── aws/
+│   ├── azure/
+│   ├── cloudflare/
+│   ├── kubernetes/
+│   ├── global.hcl
+│   └── README.md
+├── .pre-commit-config.yaml # Local validation hooks
+├── .gitleaks.toml          # Secret scanning configuration
+├── .yamllint               # YAML linting config
+├── tox.ini                 # Python test configuration
+├── sonar-project.properties # Code quality config
+├── README.md               # Project overview
+└── LICENSE                 # Project licensing (if present in the repository)
+```
 
-Ensure you have the following tools installed:
+## Core Technologies
 
-- Docker
-- Kubernetes
-- Helm
-- Helmfile
-- Argo-CD
-- Fluxcd
-- Ansible
-- Terraform
-- Terragrunt
+- Ansible: configuration management and OS / cluster setup automation
+- Kubernetes: control-plane and workload orchestration for self-hosted services
+- Terragrunt: reusable environment orchestration for cloud and platform infrastructure
+- Helm / Kubernetes packaging patterns: deployment of applications into cluster environments
+- Python: automation support, tooling, and validation scripts
+- Groovy / Jenkins pipeline automation
+- HCL: infrastructure definition and configuration
+- Bash / Shell: operational tooling and environment bootstrapping
+- GitHub Actions / CI integration patterns
+- Static analysis and security scanning: gitleaks, yamllint, pre-commit, SonarQube
 
-## 🏃 <font color="purple">Run Deployment</font>
+## What This Project Demonstrates
 
-### Helm
+### Infrastructure as Code
 
-cd charts/**'Project Name'**\
+The repository illustrates a practical IaC mindset with environment-aware configuration, modular folder structure, and provider-specific orchestration for multi-cloud and hybrid-lab setups.
 
-helm install **'Project Name'** --values=values.yaml .
+### Automated Provisioning
 
-🌋 Cleanup\
-helm uninstall **'Project Name'**
+Ansible playbooks automate the core lifecycle tasks:
 
-### Helmfile
+- base OS preparation
+- package installation
+- Docker installation
+- Kubernetes node configuration
+- CNI and cluster bootstrap operations
+- Helm installation
+- ArgoCD or platform service setup
+- cleanup and fail-safe teardown flows
 
-cd ./helmfile
+### Platform Hardening
 
-helmfile apply -f helmfile-**'Project Name'**.yml
+The project includes strong DevSecOps patterns with:
 
-🌋 Cleanup
+- secret scanning via gitleaks
+- YAML validation
+- linting configuration
+- pre-commit validation hooks
+- security documentation and review-oriented setup files
 
-helmfile delete -f helmfile-**'Project Name'**.yml
+### Operational Readiness
 
-## 🔒 <font color="purple">Security Controls Implemented</font>
+The structure is intentionally designed around production operational patterns:
 
-## ⚙️ <font color="purple">Future Enhancements</font>
+- environment separation
+- repeatable automation
+- documentation for troubleshooting
+- cleanup procedures for lab and testing environments
+- modularized cloud/platform configuration
 
-## 📡 <font color="purple">Projects & Acknowledgments</font>
+## Typical Deployment Flow
 
-This project relies on various open-source tools and services. \
-A huge thanks to the amazing projects that make this possible:
+```bash
+# 1. Configure environment and inventory
+# 2. Bootstrap OS and packages via Ansible
+ansible-playbook -i inventory.yaml playbook.yaml --tags ubuntu_setup,docker_setup
 
-- [linuxserver](https://github.com/linuxserver)
-- [raonigabriel](https://github.com/raonigabriel/web-terminal)
+# 3. Build Kubernetes control plane / workers
+ansible-playbook -i inventory.yaml playbook.yaml --tags kubeadm_setup
 
-If your project benefits from these technologies, consider supporting their development! 🚀
+# 4. Deploy platform services and workloads
+helm install <release> ./charts/<chart>
 
-## 📧 <font color="purple">Contact</font>
+# 5. Validate environment and security posture
+pre-commit run --all-files
+```
 
-For any questions or collaboration opportunities, reach out via [LinkedIn](https://www.linkedin.com/in/mjhfvi) or email at `mjhfvi@gmail.com`.
+## Security & Quality Controls
+
+This repository follows a security-first engineering mindset:
+
+- pre-commit hooks for code hygiene and consistency
+- secret detection and baseline management
+- YAML linting and formatting validation
+- SonarQube configuration for static quality analysis
+- environment-specific documentation to reduce deployment drift
+
+## DevOps Competencies Highlighted
+
+This project is aligned to the following DevOps capability areas:
+
+- Cloud infrastructure automation
+- Kubernetes platform operations
+- Configuration management
+- CI/CD and pipeline thinking
+- Environment standardization
+- Infrastructure hardening
+- Operational documentation and troubleshooting
+- Security-conscious automation practices
+
+## Career / CV Note for DevOps Recruitment
+
+This project reflects hands-on experience in building and automating a self-hosted infrastructure platform using modern DevOps tooling and practices. It demonstrates competence in Infrastructure as Code, configuration management, Kubernetes operations, environment automation, and security hardening. The repository was designed to showcase practical skills relevant to DevOps Engineer, Platform Engineer, Cloud Engineer, and Site Reliability Engineering roles, with emphasis on repeatability, automation, troubleshooting, and secure deployment workflows.
+
+## CV-Friendly Summary
+
+DevOps Engineer with hands-on experience designing and automating self-hosted infrastructure using Ansible, Kubernetes, Terragrunt, Helm, and cloud-native tooling. Focused on Infrastructure as Code, environment provisioning, operational automation, platform security, and production-ready deployment workflows. Experienced in building repeatable, secure, and maintainable automation for hybrid and multi-environment infrastructure projects.
+
+## Recommended Use
+
+This repository is suitable as:
+
+- a personal DevOps portfolio project
+- an infrastructure automation lab
+- a practical example of enterprise-style automation structure
+- a basis for discussing real-world platform engineering responsibilities in interviews
+
+## Contact
+
+For collaboration opportunities, platform engineering discussions, or DevOps recruitment conversations:
+
+- LinkedIn: <https://www.linkedin.com/in/mjhfvi>
+- Email: <mjhfvi@gmail.com>
+
+---
