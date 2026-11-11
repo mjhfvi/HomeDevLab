@@ -1,12 +1,6 @@
 ---
 fileignoreconfig:
 
-- filename: kubernetes/manifests/automation/awx-operator/values.yaml
-  checksum: 6aac1ad0b19ddbb26c00a9b7fbe416ca5ef1598d7d88b99784636c6e818034ea
-- filename: kubernetes/manifests/automation/awx-operator/values.example.yaml
-  checksum: 19c0ff2003b730ec09d5ce65512c7e9d6e62014eaaa842908e980267ea3ca743
-- filename: kubernetes/manifests/gpt/unsloth/values.example.yaml
-  checksum: 2701bc13fcfd269dab43054fcbcd88186234524981a5a36a3834523a5e266e7d
-- filename: kubernetes/manifests/gpt/unsloth/values.yaml
-  checksum: dc41c62026a3d69ac23cf9afc3fdefec1ae305dde2c254448dc864d5af54beda
+- filename: kubernetes/templates/helm/values.yaml
+  checksum: 4cc073a15e12934ba734a8569f83798cb3cc196c07c27a92b8c6f726416178a0
 version: "1.0"
