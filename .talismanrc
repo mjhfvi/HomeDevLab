@@ -1,14 +1,12 @@
 ---
 fileignoreconfig:
 
-- filename: .github/workflows/workflow_security_ai_security_malicious_injenctions.yaml
-  checksum: 4d8ac98b3523176d64c1ab0970db54902f250bc9e767dc6184ff60537800287f
-- filename: .github/workflows/workflow_security_docker_sbom.yaml
-  checksum: d46db7651ac000d72050d8f96eb2c13bcac909d086ebd96eef29686149514718
-- filename: .github/workflows/workflow_security_vulnerability.yaml
-  checksum: 36c91be653b0038b884ce74707415871d1ac5a8928d1bc0be088e298c27e66c6
-- filename: .github/workflows/testing_workflow_ai_prompt.yaml
-  checksum: 9b16538c95b1c569a25de72c3d4763baf0276c79655aead197a95096fd442a84
-- filename: .github/workflows/workflow_code_unittest_kubernetes.yaml
-  checksum: 52b761fd223ac4acb827f7bcfd8777488f032cb46248e31d34ef8d8de3117cab
+- filename: kubernetes/manifests/automation/awx-operator/values.yaml
+  checksum: 6aac1ad0b19ddbb26c00a9b7fbe416ca5ef1598d7d88b99784636c6e818034ea
+- filename: kubernetes/manifests/automation/awx-operator/values.example.yaml
+  checksum: 19c0ff2003b730ec09d5ce65512c7e9d6e62014eaaa842908e980267ea3ca743
+- filename: kubernetes/manifests/gpt/unsloth/values.example.yaml
+  checksum: 2701bc13fcfd269dab43054fcbcd88186234524981a5a36a3834523a5e266e7d
+- filename: kubernetes/manifests/gpt/unsloth/values.yaml
+  checksum: dc41c62026a3d69ac23cf9afc3fdefec1ae305dde2c254448dc864d5af54beda
 version: "1.0"

@@ -1,0 +1,32 @@
+---
+# helmfile apply  # Apply all resources from state file only when there are changes
+# helmfile sync  # Sync releases defined in state file
+# helmfile destroy  # Destroys and then purges releases
+# configuration:  https://helmfile.readthedocs.io/en/latest/configuration/#full-reference
+helmDefaults:
+  verify: false
+  force: false
+  cleanupOnFail: false
+  skipDeps: false
+  wait: true
+  deleteWait: false
+  deleteTimeout: 300
+  timeout: 600
+  waitForJobs: true
+  historyMax: 10
+  createNamespace: true
+commonLabels:
+  app.helmfile.io/build-by: helmfile
+  app.helmfile.io/chart: '{{ .Release.Name }}'
+  app.helmfile.io/version: '{{ .Release.ChartVersion }}'
+repositories:
+  - name: unsloth
+    url: https://danchev.github.io/helm-charts
+    oci: false
+releases:
+  - name: unsloth
+    namespace: authentication
+    chart: '{{ .Release.Name }}/{{ .Release.Name }}'
+    version: 0.0.3
+    values:
+      - ../../../manifests/{{ .Release.Namespace }}/{{ .Release.Name }}/values.yaml
