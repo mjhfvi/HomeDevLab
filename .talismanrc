@@ -1,6 +1,6 @@
 ---
 fileignoreconfig:
 
-- filename: kubernetes/templates/helm/values.yaml
-  checksum: 4cc073a15e12934ba734a8569f83798cb3cc196c07c27a92b8c6f726416178a0
+- filename: llm/heretic/config.default.toml
+  checksum: 3f49dfd7aeaf5510c72585b0134910c3d893dab5d355a95177e7bf6ea13628ce
 version: "1.0"
